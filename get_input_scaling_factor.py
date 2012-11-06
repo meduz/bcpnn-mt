@@ -12,6 +12,7 @@ we can now find a relation between blur_X _V and the scaling factors needed for 
 to achieve a balanced input excitation for different blur_X _V parameters.
 """
 
+import sys
 import pylab
 import numpy as np
 import matplotlib.mlab as mlab
@@ -39,7 +40,9 @@ def peval_function(x, p):
     return y
 
 
-input_fn = 'Figures_BlurSweep/nspikes_blur_sweep.dat'
+#input_fn = 'Figures_BlurSweep/nspikes_blur_sweep.dat'
+input_fn = sys.argv[1]
+
 d = np.loadtxt(input_fn)
 # input_fn stores:
 # (params['blur_X'], params['blur_V'], all_spikes.sum(), all_spikes.mean(), all_spikes.std(), input_spikes.mean(), input_spikes.std())
@@ -66,7 +69,7 @@ blur_x = d[idx_0:idx_1, 0]
 blur_v = d[idx_0:idx_1, 1]
 ax.plot(x, d[idx_0:idx_1, y_axis_idx], 'o-', label='blur_v=%.3f' % blur_v.mean())
 ax.legend(loc='upper left')
-ax.set_ylabel('Average number of input spikes into one cell')
+ax.set_ylabel('Number of input spikes into the network')
 ax.set_xlabel('blur_x')
 
 
@@ -120,8 +123,8 @@ print 'debug', opt_func[0], d[idx_0:idx_0+1, y_axis_idx]
 #print 'debug', opt_func[0] * 1./ d[idx_0:idx_0+1, y_axis_idx]
 print 'y_scale', y_scaled
 ax.plot(x, y_scaled, label='fit * data')
-ax.set_title('Expected number of average input spikes after scaling\nshould be constant at desired_value=%d' % (desired_value))
-ax.set_ylabel('Average number of input spikes')
+ax.set_title('Expected total number of input spikes after scaling\nshould be constant at desired_value=%d' % (desired_value))
+ax.set_ylabel('Total number of input spikes into the network')
 ax.set_xlabel('blur_x')
 ax.legend()
 

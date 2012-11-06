@@ -49,6 +49,16 @@ for fn in sys.argv[1:]:
     #cax = ax.imshow(data[:,:12])
     #cax = ax.pcolor(data, edgecolor='k', linewidths='1')
 
+#    n_hc = 30
+#    n_cells_per_hc = 16
+#    n_time_steps = data[:, 0].size
+#    for t in xrange(n_time_steps):
+#        for hc in xrange(n_hc):
+#            idx0 = hc * n_cells_per_hc
+#            idx1 = (hc + 1) * n_cells_per_hc
+#            s = data[t, idx0:idx1].sum()
+#            if s > 1.0:
+#                print 'hc %d t %d %.20e' % (hc, t, s)
 
     ax.set_title(fn)
     cax = ax.pcolormesh(data)#, edgecolor='k', linewidths='1')

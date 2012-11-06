@@ -92,7 +92,7 @@ def create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=No
 
 
 
-def get_input(tuning_prop, params, t, contrast=.9, motion='dot'):
+def get_input(tuning_prop, params, t, motion_params=None, contrast=.9, motion='dot'):
     """
     This function computes the input to each cell for one point in time t based on the given tuning properties.
 
@@ -107,7 +107,8 @@ def get_input(tuning_prop, params, t, contrast=.9, motion='dot'):
         motion: type of motion (TODO: filename to movie, ... ???)
     """
     n_cells = tuning_prop[:, 0].size
-    motion_params = params['motion_params']
+    if motion_params == None:
+        motion_params = params['motion_params']
     L = np.zeros(n_cells)
     if motion=='dot':
         # define the parameters of the motion

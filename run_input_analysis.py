@@ -1,8 +1,8 @@
 import os
 import numpy as np
 
-blur_x_start = 0.01
-blur_x_stop = 0.6
+blur_x_start = 0.02
+blur_x_stop = 0.5
 blur_x_step = 0.01
 blur_range = np.arange(blur_x_start, blur_x_stop, blur_x_step)
 

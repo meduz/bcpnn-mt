@@ -44,12 +44,13 @@ def return_plot(subplot_code, iteration=None, fig=None):
         (r, g, b) = utils.convert_hsl_to_rgb(h, s, l)
         x, y, u, v = tp[i, :]
         ax.plot(x, y, 'o', c=(r,g,b), markersize=ms)
-        if l < .75:
+        if l < .9:
             ax.annotate('%d' % i, (x+0.005, y+0.005), fontsize=10)
 
     stim_color = 'k'
-    motion_params_fn = "%sTrainingInput_%d/input_params.txt" % (params['folder_name'], iteration)
-    mp = np.loadtxt(motion_params_fn)
+    motion_params_fn = self.params['parameters_folder'] + 'input_params.txt'
+    all_mp = np.loadtxt(motion_params_fn)
+    mp = all_mp[iteration, :]
     ax.quiver(mp[0], mp[1], mp[2], mp[3], angles='xy', scale_units='xy', scale=1, color=stim_color, headwidth=4)
     ax.annotate('Stimulus', (mp[0]+.5*mp[2], mp[1]+0.1), fontsize=12, color=stim_color)
 

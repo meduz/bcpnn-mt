@@ -66,15 +66,6 @@ class PlotOutputActivity(BasicPlotter):
         title = 'Stimulus vx=%.2f, vy=%.2f' % (self.stim_params[2], self.stim_params[3])
         self.ax.set_title(title)
 
-#    def calculate_v_predicted(self):
-#        self.vx_pred = np.zeros(self.n_time_steps)
-#        self.vy_pred = np.zeros(self.n_time_steps)
-#        for t in xrange(self.n_time_steps):
-#            normed_activity = self.activity[t, :] / self.activity[t, :].sum()
-#            self.vx_pred[t] = np.dot(self.vx_tuning, normed_activity)
-#            self.vy_pred[t] = np.dot(self.vy_tuning, normed_activity)
-
-
 if __name__ == '__main__':
     if (len(sys.argv) < 2):
         iteration = 0
@@ -83,24 +74,30 @@ if __name__ == '__main__':
     P1 = PlotOutputActivity(iteration, n_fig_x=1, n_fig_y=3)
     print 'debug vx:', P1.prediction[:, 1]
     P1.plot_data_vs_time(P1.prediction[:, 1], ylabel='$v_x$', update_subfig_cnt=False, label='Prediction')
-    P1.plot_data_vs_time(P1.prediction_error[:, 1], ylabel='$v_x$', label='Error')
+    P1.plot_data_vs_time(P1.prediction_error[:, 1], ylabel='$v_x$', label='Error in v_x', update_subfig_cnt=False)
+    P1.plot_data_vs_time(P1.stim_params[2] * np.ones(P1.t_axis.size), label='vx_stimulus')
     P1.set_title()
     P1.plot_data_vs_time(P1.prediction[:, 2], ylabel='$v_y$', update_subfig_cnt=False, label='Prediction')
-    P1.plot_data_vs_time(P1.prediction_error[:, 2], ylabel='$v_y$', label='Error')
-    P1.plot_data_vs_time(P1.prediction_error[:, 3], ylabel='$|v_diff|$', label='Absolute prediction error')
+    P1.plot_data_vs_time(P1.prediction_error[:, 2], ylabel='$v_y$', label='Error in v_y', update_subfig_cnt=False)
+    P1.plot_data_vs_time(P1.stim_params[3] * np.ones(P1.t_axis.size), label='vy_stimulus')
+
+    P1.plot_data_vs_time(P1.prediction_error[:, 3], ylabel='$|v_{diff}|$', label='Absolute prediction error')
+#    P1.plot_data_vs_time(label='vy_stimulus')
 
     output_fn = P1.params['figures_folder'] + 'ann_prediction_%d.png' % (iteration)
     print 'Saving prediction figure to:', output_fn
     pylab.savefig(output_fn)
 
-#    P2 = PlotOutputActivity(input_fn, n_fig_x=4, n_fig_y=2)
+    P2 = PlotOutputActivity(iteration, n_fig_x=1, n_fig_y=4)
 #    n_cells_to_plot = 32
 #    idx = np.random.randint(0, P2.params['n_exc'], n_cells_to_plot)
-#    for i in xrange(n_cells_to_plot):
-#        cell = idx[i]
-#        P2.plot_data_vs_time(P2.activity[:, cell], label='%d' % cell, ylabel='Activity')
-
-#    pylab.show()
+    idx = [85, 161, 71, 339]
+    for i in xrange(len(idx)):
+        cell = idx[i]
+        P2.plot_data_vs_time(P2.activity[:, cell], label='%d' % cell, ylabel='Activity')
+    output_fn = P2.params['figures_folder'] + 'ann_sample_activities_%d.png' % (iteration)
+    print 'Saving prediction figure to:', output_fn
+    pylab.show()
 
 
 #n_fig_x = 2

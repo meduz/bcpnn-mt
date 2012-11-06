@@ -121,8 +121,7 @@ def bcpnn_offline_noColumns(params, conn_list, sim_cnt=0, save_all=False, comm=N
 
 
 
-def compute_traces(si, tau_z=10, tau_e=100, tau_p=1000, eps=1e-6, initial_value=None):
-    dt = 1.
+def compute_traces(si, tau_z=10, tau_e=100, tau_p=1000, dt=1., eps=1e-6, initial_value=None):
     n = si.size
     if initial_value == None:
         initial_value = (0.01, 0.01, 0.01)

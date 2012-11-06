@@ -20,10 +20,11 @@ class AbstractNetwork(object):
         self.training_input_folder = "%sTrainingInput_%d/" % (self.params['folder_name'], iteration)
 
 
-    def set_weights(self):
-        weight_matrix_fn = params['folder_name'] + 'TrainingResults_%d/' % iteration + 'wij_matrix_%d.dat' % (iteration)
+    def set_weights(self, iteration):
+        weight_matrix_fn = params['folder_name'] + 'TrainingResults_%d/' % (iteration)+ 'wij_matrix_%d.dat' % (iteration)
         if not os.path.exists(weight_matrix_fn):
-            self.wij = self.get_weight_matrix()
+            self.wij = self.get_weight_matrix(iteration)
+            np.savetxt(weight_matrix_fn, self.wij)
         else:
             self.wij = np.loadtxt(weight_matrix_fn)
 
@@ -32,15 +33,16 @@ class AbstractNetwork(object):
 
         fn_base = self.training_input_folder + self.params['abstract_input_fn_base']
         n_cells = self.params['n_exc']
+        n_hc = self.params['N_RF_X']*self.params['N_RF_Y']
+        n_cells_per_hc = self.params['N_theta'] * self.params['N_V']
 
         cell = 0
         fn = fn_base + '%d.dat' % (cell)
         d_sample = np.loadtxt(fn)
         self.n_time_steps = d_sample.size
-        hc_idx = np.loadtxt(params['parameters_folder'] + 'hc_list.dat')
 
         activity_traces = np.zeros((self.n_time_steps, n_cells))
-        output_activity = np.zeros((self.n_time_steps, n_cells))
+        self.output_activity = np.zeros((self.n_time_steps, n_cells))
         fn_bias = params['folder_name'] + 'TrainingResults_%d/' % self.iteration + 'bias_%d.dat' % (self.iteration)
         bias = np.loadtxt(fn_bias)
 
@@ -53,37 +55,42 @@ class AbstractNetwork(object):
             fn = fn_base + '%d.dat' % (cell)
             activity_traces[:, cell] = np.loadtxt(fn)
 
+        
         for t in xrange(self.n_time_steps):
-            output_activity[t, :] = activity_traces[t, :] + np.dot(self.wij.transpose(), activity_traces[t, :])# + bias[cell]
+            self.output_activity[t, :] = activity_traces[t, :] + np.dot(self.wij.transpose(), activity_traces[t, :])# + bias[cell]
             # map activity in the range (0, 1)
             for cell in xrange(n_cells):
-                if (output_activity[t, cell] < 0):
-                    output_activity[t, cell] = 0
+                if (self.output_activity[t, cell] < 0):
+                    self.output_activity[t, cell] = 0
+
 
 #             normalize activity within one HC to 1 (if larger than 1)
-            for hc in xrange(hc_idx[:, 0].size):
-                o_sum = output_activity[t, hc_idx[hc, 0]:hc_idx[hc, -1]].sum()
+            for hc in xrange(n_hc):
+                idx_0 = hc * n_cells_per_hc
+                idx_1 = (hc + 1) * n_cells_per_hc
+                o_sum = self.output_activity[t, idx_0:idx_1].sum()
                 if o_sum > 1:
-                    output_activity[t, hc_idx[hc, 0]:hc_idx[hc, -1]] /= output_activity[t, hc_idx[hc, 0]:hc_idx[hc, -1]].sum()
+                    self.output_activity[t, idx_0:idx_1] /= o_sum
 
-            normed_activity = output_activity[t, :] / output_activity[t, :].sum()
+            normed_activity = self.output_activity[t, :] / self.output_activity[t, :].sum()
             self.v_pred[t, 1] = np.dot(self.vx_tuning, normed_activity)
             self.v_pred[t, 2] = np.dot(self.vy_tuning, normed_activity)
-
 
 
         if output_fn_base == None:
             output_fn_activity = params['activity_folder'] + 'output_activity_%d.dat' % (self.iteration)
         print 'Saving ANN activity to:', output_fn_activity
-        np.savetxt(output_fn_activity, output_activity)
+        np.savetxt(output_fn_activity, self.output_activity)
         output_fn_prediction = params['activity_folder'] + 'prediction_%d.dat' % (self.iteration)
         print 'Saving ANN prediction to:', output_fn_prediction
         np.savetxt(output_fn_prediction, self.v_pred)
 
 
-    def get_weight_matrix(self):
-        all_wij_fn= '%sTrainingResults_%d/all_wij_%d.dat' % (self.params['folder_name'], self.iteration, self.iteration)
+    def get_weight_matrix(self, iteration):
+        all_wij_fn= '%sTrainingResults_%d/all_wij_%d.dat' % (self.params['folder_name'], iteration, iteration)
         print 'Getting weights from ', all_wij_fn
+        if not os.path.exists(all_wij_fn):
+            os.system('python merge_abstract_training_files.py %d' % (iteration))
         d = np.loadtxt(all_wij_fn)
         n_cells = self.params['n_exc']
         wij_matrix = np.zeros((n_cells, n_cells))
@@ -99,7 +106,9 @@ class AbstractNetwork(object):
 
 
     def eval_prediction(self):
-        x0, y0, u0, v0 = np.loadtxt(self.training_input_folder + 'input_params.txt')
+
+        input_params = np.loadtxt(self.params['parameters_folder'] + 'input_params.txt')
+        x0, y0, u0, v0 = input_params[self.iteration, :]
         v_stim = np.zeros((self.n_time_steps, 3))
         v_stim[:, 0] = self.t_axis
         v_stim[:, 1] = u0 * np.ones(self.n_time_steps) 
@@ -120,6 +129,26 @@ class AbstractNetwork(object):
         np.savetxt(output_fn_prediction_error, v_diff_out)
 
 
+    def test_cycle(self, blank_stim=False):
+
+        distance_from_center = 0.5
+        center = (0.5, 0.5)
+        thetas = np.linspace(np.pi, 3*np.pi, n_stim, endpoint=False)
+#        r = 0.5 # how far the stimulus will move
+        v_default = np.sqrt(self.params['motion_params'][2]**2 + self.params['motion_params'][3]**2)
+        iteration = 0
+        for cycle in xrange(self.n_cycles):
+            for stim in stimulus_order:
+                x0 = distance_from_center * np.cos(thetas[stim] + random_rotation[iteration]) + center[0]
+                y0 = distance_from_center * np.sin(thetas[stim] + random_rotation[iteration]) + center[1]
+                u0 = np.cos(np.pi + thetas[stim] + random_rotation[iteration]) * speeds[speed_cycle]#v_default
+                v0 = np.sin(np.pi + thetas[stim] + random_rotation[iteration]) * speeds[speed_cycle]#v_default
+                self.params['motion_params'] = (x0, y0, u0, v0)
+                if blank_stim:
+                    self.create_input_vectors_blanking(t_blank=(0.4, 0.6), normalize=self.normalize)
+                else:
+                    self.create_input_vectors(normalize=self.normalize)
+                iteration += 1
 
 
 
@@ -127,15 +156,22 @@ if __name__ == '__main__':
 
     PS = simulation_parameters.parameter_storage()
     params = PS.params
-    n_iter = 80
+
+    n_iterations = 40
+    n_time_steps = params['t_sim'] / params['dt_rate']
+    output_activity_all_iterations = np.zeros((n_iterations * n_time_steps, params['n_exc']),dtype=np.double)
 
     ANN = AbstractNetwork(params)
-
-    for iteration in xrange(n_iter):
+    for iteration in xrange(n_iterations):
         ANN.set_iteration(iteration)
-        ANN.set_weights() # load weight matrix
+#        ANN.set_weights(n_iterations-1) # load weight matrix
+        ANN.set_weights(iteration) # load weight matrix
         ANN.calculate_dynamics() # load activity files 
         ANN.eval_prediction()
+        output_activity_all_iterations[iteration*n_time_steps:(iteration+1)*n_time_steps, :] = ANN.output_activity
+
+    fn_out = params['activity_folder'] + 'ann_activity_%diterations.dat' % n_iterations
+    np.savetxt(fn_out, output_activity_all_iterations)
 
 
 

@@ -16,7 +16,12 @@ fn = params['tuning_prop_means_fn']
 tp = np.loadtxt(fn)
 plt.rcParams['lines.markeredgewidth'] = 0
 
-iteration = 23
+iteration = 4
+motion_params_fn = params['parameters_folder'] + 'input_params.txt'
+all_mp = np.loadtxt(motion_params_fn)
+mp = all_mp[iteration, :]
+
+
 activity_fn = params['activity_folder'] + 'output_activity_%d.dat' % (iteration)
 activity = np.loadtxt(activity_fn)
 activity_max = activity.max()
@@ -32,6 +37,10 @@ def paint_dots(num, pos, colors):
 #        l, = plt.plot(pos[i, 0], pos[i, 1], 'o', c=c)
         l = plt.quiver(tp[i, 0], tp[i, 1], scale * tp[i, 2], scale * tp[i, 3], angles='xy', scale_units='xy', scale=1, color=c, headwidth=1)
         dots.append(l)
+    l = plt.quiver(mp[0], mp[1], mp[2], mp[3], angles='xy', scale_units='xy', scale=1, color='k', headwidth=4)
+    dots.append(l)
+    l = plt.annotate('Stimulus', (mp[0]+.5*mp[2], mp[1]+0.1), fontsize=12, color='k')
+    dots.append(l)
     return dots
 
 
