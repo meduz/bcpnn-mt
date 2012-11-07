@@ -172,6 +172,44 @@ def compute_pij(zi, zj, pi, pj, tau_eij, tau_pij, get_traces=False, dt=1., initi
         return pij[-1], wij[-1], bias[-1]
 
 
+def compute_traces_new(si, z, e, p, tau_z=10, tau_e=100, tau_p=1000, dt=1., eps=1e-6):
+    n = si.size
+    for i in xrange(1, n):
+        dz = dt * (si[i] - z[i-1] + eps) / tau_z
+        z[i] = z[i-1] + dz
+
+        # pre-synaptic trace z follows z
+        de = dt * (z[i] - e[i-1]) / tau_e
+        e[i] = e[i-1] + de
+
+        # pre-synaptic probability p follows z
+        dp = dt * (e[i] - p[i-1]) / tau_p
+        p[i] = p[i-1] + dp
+
+
+def compute_pij_new(zi, zj, pi, pj, eij, pij, wij, bias, tau_eij, tau_pij, get_traces=False, dt=1.):
+    n = zi.size
+    for i in xrange(1, n):
+        # joint 
+        deij = dt * (zi[i] * zj[i] - eij[i-1]) / tau_eij
+        eij[i] = eij[i-1] + deij
+
+        # joint probability pij follows zi * zj
+        dpij = dt * (eij[i] - pij[i-1]) / tau_pij
+        pij[i] = pij[i-1] + dpij
+
+        # weights
+        wij[i] = np.log(pij[i] / (pi[i] * pj[i]))
+
+        # bias
+        bias[i] = np.log(pj[i])
+
+    if (get_traces):
+        return wij, bias, pij, eij
+    else:
+        return pij[-1], wij[-1], bias[-1]
+
+
 def get_spiking_weight_and_bias(pre_trace, post_trace, get_traces=False, bin_size=1, \
         tau_dict = None, dt=1., f_max=1000., initial_value=0.01):#, eps=1e-6):
     """

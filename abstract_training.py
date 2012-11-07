@@ -54,7 +54,17 @@ class AbstractTrainer(object):
                 if i != j:
                     all_conns.append((i, j))
         self.my_conns = utils.distribute_list(all_conns, n_proc, pc_id)
-#        self.my_conns = np.array(self.my_conns)
+
+        # setup data structures
+        self.my_conns = np.array(self.my_conns)
+        self.pre_ids = np.unique(self.my_conns[:, 0])
+        self.post_ids = np.unique(self.my_conns[:, 1])
+        self.gid_idx_map_pre = {}
+        self.gid_idx_map_post = {}
+        for i in xrange(self.pre_ids.size):
+            self.gid_idx_map_pre[self.pre_ids[i]] = i
+        for i in xrange(self.post_ids.size):
+            self.gid_idx_map_post[self.post_ids[i]] = i
 
  
     def create_stimuli(self, random_order=False, test_stim=False):
@@ -156,20 +166,16 @@ class AbstractTrainer(object):
             if (i_time % 100 == 0):
                 print "t:", time_
             L_input[:, i_time] = utils.get_input(self.tuning_prop[self.my_units, :], self.params, time_/self.params['t_stimulus'])
-
         for i in blank_idx:
             L_input[:, i] = 0.
-
         for i_, unit in enumerate(self.my_units):
             output_fn = output_fn_base + str(unit) + '.dat'
             np.savetxt(output_fn, L_input[i_, :])
 
         if self.comm != None:
             self.comm.barrier()
-
         if normalize:
             self.normalize_input(output_fn_base)
-
         if self.comm != None:
             self.comm.barrier()
 
@@ -186,7 +192,6 @@ class AbstractTrainer(object):
             assert (n_cells == n_hc * n_cells_per_hc)
             for cell in xrange(n_cells):
                 fn = fn_base + str(cell) + '.dat'
-#                print 'debug', fn
                 L_input[:, cell] = np.loadtxt(fn)
 
             for t in xrange(int(self.n_time_steps)):
@@ -204,10 +209,6 @@ class AbstractTrainer(object):
                     cell = hc * n_cells_per_hc + i
                     output_fn = fn_base + str(cell) + '.dat'
                     np.savetxt(output_fn, L_input[:, cell])
-#                for t in xrange(int(self.n_time_steps)):
-#                    s = L_input[t, idx0:idx1].sum()
-#                    print 'debug t s', t, s, s <= 1.0
-#                    assert (s <= 1.0), '%.20e %d' % (s, s <= 1.0)
 
             all_output_fn = params['activity_folder'] + 'input_%d.dat' % (self.iteration)
             print 'Normalized input is written to:', all_output_fn
@@ -235,16 +236,18 @@ class AbstractTrainer(object):
                 for stim in xrange(self.n_stim):
                     t0= time.time()
                     # M A K E    D I R E C T O R Y 
-                    training_folder = '%sTrainingResults_%d/' % (self.params['folder_name'], self.iteration)
-                    if not os.path.exists(training_folder) and self.pc_id == 0:
-                        mkdir = 'mkdir %s' % training_folder
+                    self.training_output_folder = '%sTrainingResults_%d/' % (self.params['folder_name'], self.iteration)
+                    self.training_input_folder = "%sTrainingInput_%d/" % (self.params['folder_name'], self.iteration)
+                    if not os.path.exists(self.training_output_folder) and self.pc_id == 0:
+                        mkdir = 'mkdir %s' % self.training_output_folder
                         print mkdir
                         os.system(mkdir)
                     if self.comm != None:
                         self.comm.barrier()
 
                     # C O M P U T E    
-                    self.compute_my_pijs(training_folder, self.iteration)
+#                    self.compute_my_pijs(self.training_output_foldertraining_folder, self.iteration)
+                    self.compute_my_pijs_new()
 
                     t_comp = time.time() - t0
                     comp_times.append(t_comp)
@@ -258,17 +261,125 @@ class AbstractTrainer(object):
             total_time += t
         print 'Total computation time for %d training iterations: %d sec = %.1f min' % (self.n_stim * self.n_cycles, total_time, total_time/ 60.)
 
-    def compute_my_pijs_new(self, training_folder, iteration=0):
-        pre_ids = np.unique(self.my_conns[:, 0])
-        post_ids = np.unique(self.my_conns[:, 0])
+    def compute_my_pijs_new(self):
+
+        pre_traces_computed = np.zeros(params['n_exc'], dtype=np.bool)
+        post_traces_computed = np.zeros(params['n_exc'], dtype=np.bool)
+
         tau_dict = self.tau_dict
-        zi_traces = np.zeros((self.n_time_steps, pre_ids.size))
-        zj_traces = np.zeros((self.n_time_steps, pre_ids.size))
-        ei_traces = np.zeros((self.n_time_steps, pre_ids.size))
-        ej_traces = np.zeros((self.n_time_steps, pre_ids.size))
-        pi_traces = np.zeros((self.n_time_steps, pre_ids.size))
-        pj_traces = np.zeros((self.n_time_steps, pre_ids.size))
-        bias_values = np.zeros(post_ids.size)
+        zi_traces = self.initial_value * np.ones((self.n_time_steps, self.pre_ids.size), dtype=np.double)
+        zj_traces = self.initial_value * np.ones((self.n_time_steps, self.post_ids.size), dtype=np.double)
+        ei_traces = self.initial_value * np.ones((self.n_time_steps, self.pre_ids.size), dtype=np.double)
+        ej_traces = self.initial_value * np.ones((self.n_time_steps, self.post_ids.size), dtype=np.double)
+        pi_traces = self.initial_value * np.ones((self.n_time_steps, self.pre_ids.size), dtype=np.double)
+        pj_traces = self.initial_value * np.ones((self.n_time_steps, self.post_ids.size), dtype=np.double)
+        eij_trace = self.initial_value ** 2 * np.ones(self.n_time_steps, dtype=np.double)
+        pij_trace = self.initial_value ** 2 * np.ones(self.n_time_steps, dtype=np.double)
+        wij_trace = np.zeros(self.n_time_steps, dtype=np.double)
+        bias_trace = np.log(self.initial_value) * np.ones(self.n_time_steps, dtype=np.double)
+        input_fn_base = self.training_input_folder + self.params['abstract_input_fn_base']
+
+        self.my_wijs = np.zeros((self.my_conns[:, 0].size, 4), dtype=np.double) # array for wij and pij
+        self.my_bias = np.zeros((self.post_ids.size, 2), dtype=np.double) # array for wij and pij
+        bias_idx = 0
+        for i in xrange(self.my_conns[:, 0].size):
+            if (i % 1000) == 0:
+                print "Pc %d conn: \t%d / %d\t%.4f percent complete; Stimulus iteration: %d" % (pc_id, i, self.my_conns[:, 0].size, i * 100./self.my_conns[:, 0].size, self.iteration)
+            pre_id = self.my_conns[i, 0]
+            post_id = self.my_conns[i, 1]
+            if pre_traces_computed[pre_id]:
+                idx = self.gid_idx_map_pre[pre_id]
+                (zi, ei, pi) = zi_traces[:, idx], ei_traces[:, idx], pi_traces[:, idx]
+            else:
+                pre_trace = np.loadtxt(input_fn_base + str(pre_id) + '.dat')
+                idx = self.gid_idx_map_pre[pre_id]
+                Bcpnn.compute_traces_new(pre_trace, zi_traces[:, idx], ei_traces[:, idx], pi_traces[:, idx], \
+                        tau_dict['tau_zi'], tau_dict['tau_ei'], tau_dict['tau_pi'], \
+                        dt=self.params['dt_rate'], eps=self.eps)
+                pre_traces_computed[pre_id] = True
+
+            if post_traces_computed[post_id]:
+                idx = self.gid_idx_map_post[post_id]
+                (zj, ej, pj) = zj_traces[:, idx], ej_traces[:, idx], pj_traces[:, idx]
+            else:
+                post_trace = np.loadtxt(input_fn_base + str(post_id) + '.dat')
+                idx = self.gid_idx_map_post[post_id]
+                Bcpnn.compute_traces_new(post_trace, zj_traces[:, idx], ej_traces[:, idx], pj_traces[:, idx], \
+                        tau_dict['tau_zj'], tau_dict['tau_ej'], tau_dict['tau_pj'], \
+                        dt=self.params['dt_rate'], eps=self.eps)
+                post_traces_computed[post_id] = True
+                self.my_bias[bias_idx, :] = post_id, np.log(pj_traces[-1, idx])
+                bias_idx += 1
+
+            idx_pre = self.gid_idx_map_pre[pre_id]
+            idx_post = self.gid_idx_map_post[post_id]
+            pij_trace[0] = self.pij_init[pre_id, post_id]
+            wij_trace[0] = self.wij_init[pre_id, post_id]
+            bias_trace[0] = self.bias_init[post_id]
+            Bcpnn.compute_pij_new(zi_traces[:, idx_pre], zj_traces[:, idx_post], pi_traces[:, idx_pre], pj_traces[:, idx_post], \
+                    eij_trace, pij_trace, wij_trace, bias_trace, \
+                    tau_dict['tau_eij'], tau_dict['tau_pij'], dt=self.params['dt_rate'])
+                    
+            # update the nr.0 value for the next stimulus
+            self.pij_init[pre_id, post_id] = pij_trace[-1]
+            self.wij_init[pre_id, post_id] = wij_trace[-1]
+            self.bias_init[post_id] = bias_trace[-1]
+            self.my_wijs[i, :] = pre_id, post_id, wij_trace[-1], pij_trace[-1]
+
+        # store wijs and bias in the tmp folder
+        np.savetxt(self.params['tmp_folder'] + 'wij_%d_%d.dat' % (self.iteration, self.pc_id), self.my_wijs)
+        np.savetxt(self.params['tmp_folder'] + 'bias_%d_%d.dat' % (self.iteration, self.pc_id), self.my_bias)
+
+        # write selected traces to files
+        for c in self.selected_conns:
+            pre_id, post_id = c[0], c[1]
+            if pre_id in self.pre_ids:
+                print 'Proc %d prints BCPNN pre-traces for cell %d:' % (self.pc_id, pre_id)
+                idx = self.gid_idx_map_pre[pre_id]
+                np.savetxt(self.params['bcpnntrace_folder'] + 'zi_%d_%d.dat' % (self.iteration, pre_id), zi_traces[:, idx])
+                np.savetxt(self.params['bcpnntrace_folder'] + 'ei_%d_%d.dat' % (self.iteration, pre_id), ei_traces[:, idx])
+                np.savetxt(self.params['bcpnntrace_folder'] + 'pi_%d_%d.dat' % (self.iteration, pre_id), pi_traces[:, idx])
+            if post_id in self.post_ids:
+                idx = self.gid_idx_map_post[post_id]
+                np.savetxt(self.params['bcpnntrace_folder'] + 'zj_%d_%d.dat' % (self.iteration, post_id), zj_traces[:, idx])
+                np.savetxt(self.params['bcpnntrace_folder'] + 'ej_%d_%d.dat' % (self.iteration, post_id), ej_traces[:, idx])
+                np.savetxt(self.params['bcpnntrace_folder'] + 'pj_%d_%d.dat' % (self.iteration, post_id), pj_traces[:, idx])
+
+        if self.comm != None:
+            self.comm.barrier()
+        for c in self.selected_conns:
+            pre_id, post_id = c[0], c[1]
+            if (pre_id in self.pre_ids) and (post_id in self.pre_ids):
+                # for selected connections compute the eij, pij, weight and bias traces
+                idx_pre = self.gid_idx_map_pre[pre_id]
+                idx_post = self.gid_idx_map_post[post_id]
+                pij_trace[0] = self.pij_init[pre_id, post_id]
+                wij_trace[0] = self.wij_init[pre_id, post_id]
+                bias_trace[0] = self.bias_init[post_id]
+                wij, bias, pij, eij = Bcpnn.compute_pij_new(zi_traces[:, idx_pre], zj[:, idx_post], pi[:, idx_pre], pj[:, idx_post], \
+                                        eij_trace, pij_trace, wij_trace, bias_trace, \
+                                        tau_dict['tau_eij'], tau_dict['tau_pij'], get_traces=True, dt=self.params['dt_rate'])
+                np.savetxt(self.params['bcpnntrace_folder'] + 'wij_%d_%d_%d.dat' % (self.iteration, pre_id, post_id), wij)
+                np.savetxt(self.params['bcpnntrace_folder'] + 'bias_%d_%d_%d.dat' % (self.iteration, pre_id, post_id), bias)
+                np.savetxt(self.params['bcpnntrace_folder'] + 'eij_%d_%d_%d.dat' % (self.iteration, pre_id, post_id), eij)
+                np.savetxt(self.params['bcpnntrace_folder'] + 'pij_%d_%d_%d.dat' % (self.iteration, pre_id, post_id), pij)
+            else:
+                if self.pc_id == 0:
+                    zi = np.loadtxt(self.params['bcpnntrace_folder'] + 'zi_%d_%d.dat' % (self.iteration, pre_id))
+                    pi = np.loadtxt(self.params['bcpnntrace_folder'] + 'pi_%d_%d.dat' % (self.iteration, pre_id))
+                    zj = np.loadtxt(self.params['bcpnntrace_folder'] + 'zj_%d_%d.dat' % (self.iteration, post_id))
+                    pj = np.loadtxt(self.params['bcpnntrace_folder'] + 'pj_%d_%d.dat' % (self.iteration, post_id))
+                    wij, bias, pij, eij = Bcpnn.compute_pij(zi, zj, pi, pj, self.tau_dict['tau_eij'], self.tau_dict['tau_pij'], dt=self.params['dt_rate'], get_traces=True, 
+                        initial_values=(self.initial_value**2, self.pij_init[pre_id, post_id], self.wij_init[pre_id, post_id], self.bias_init[post_id]))
+                    np.savetxt(self.params['bcpnntrace_folder'] + 'wij_%d_%d_%d.dat' % (self.iteration, pre_id, post_id), wij)
+                    np.savetxt(self.params['bcpnntrace_folder'] + 'bias_%d_%d_%d.dat' % (self.iteration, pre_id, post_id), bias)
+                    np.savetxt(self.params['bcpnntrace_folder'] + 'eij_%d_%d_%d.dat' % (self.iteration, pre_id, post_id), eij)
+                    np.savetxt(self.params['bcpnntrace_folder'] + 'pij_%d_%d_%d.dat' % (self.iteration, pre_id, post_id), pij)
+
+        if self.comm != None:
+            self.comm.barrier()
+
+
 
     def compute_my_pijs(self, training_folder, iteration=0):
 
@@ -288,7 +399,8 @@ class AbstractTrainer(object):
         bias_string = '#GID\tp_j\n'
         z_init = self.initial_value
         e_init = self.initial_value
-        eij_init = self.initial_value ** 2 * np.ones((params['n_exc'], params['n_exc']))
+
+
 
         self.training_input_folder = "%sTrainingInput_%d/" % (self.params['folder_name'], iteration)
         input_fn_base = self.training_input_folder + self.params['abstract_input_fn_base']
@@ -318,7 +430,7 @@ class AbstractTrainer(object):
                 bias_string += '%d\t%.6e\n' % (post_id, np.log(pj[-1]))
 
             pij, wij, bias = Bcpnn.compute_pij(zi, zj, pi, pj, tau_dict['tau_eij'], tau_dict['tau_pij'], dt=self.params['dt_rate'], \
-                    initial_values=(eij_init[pre_id, post_id], self.pij_init[pre_id, post_id], self.wij_init[pre_id, post_id], self.bias_init[post_id]))
+                    initial_values=(self.initial_value**2, self.pij_init[pre_id, post_id], self.wij_init[pre_id, post_id], self.bias_init[post_id]))
             self.pij_init[pre_id, post_id] = pij
             self.wij_init[pre_id, post_id] = wij
             self.bias_init[post_id] = bias
@@ -350,7 +462,7 @@ class AbstractTrainer(object):
                 zj = np.loadtxt(self.params['bcpnntrace_folder'] + 'zj_%d_%d.dat' % (iteration, post_id))
                 pj = np.loadtxt(self.params['bcpnntrace_folder'] + 'pj_%d_%d.dat' % (iteration, post_id))
                 wij, bias, pij, eij = Bcpnn.compute_pij(zi, zj, pi, pj, self.tau_dict['tau_eij'], self.tau_dict['tau_pij'], dt=self.params['dt_rate'], get_traces=True, 
-                    initial_values=(eij_init[pre_id, post_id], self.pij_init[pre_id, post_id], self.wij_init[pre_id, post_id], self.bias_init[post_id]))
+                    initial_values=(self.initial_value**2, self.pij_init[pre_id, post_id], self.wij_init[pre_id, post_id], self.bias_init[post_id]))
                 np.savetxt(self.params['bcpnntrace_folder'] + 'wij_%d_%d_%d.dat' % (iteration, pre_id, post_id), wij)
                 np.savetxt(self.params['bcpnntrace_folder'] + 'bias_%d_%d_%d.dat' % (iteration, pre_id, post_id), bias)
                 np.savetxt(self.params['bcpnntrace_folder'] + 'eij_%d_%d_%d.dat' % (iteration, pre_id, post_id), eij)
@@ -388,6 +500,15 @@ class AbstractTrainer(object):
             self.comm.barrier()
         
 
+#    def merge_weight_files(self, n_iterations):
+#        if self.pc_id == 0:
+#        cmd = 'cat '
+#        for iteration in xrange(n_iterations):
+#            for pc_id in xrange(self.n_proc):
+#                cat += ' %s' % (self.params['tmp_folder'] + 'wij_%d_%d.dat' % (iteration, pc_id))
+#                self.params['tmp_folder'] + 'bias_%d_%d.dat' % (iteration, pc_id)
+
+
 
 
 if __name__ == '__main__':
@@ -413,7 +534,7 @@ if __name__ == '__main__':
         comm.barrier()
 
     n_speeds = 1
-    n_cycles = 5
+    n_cycles = 2
     n_stim = 8
 
     AT = AbstractTrainer(params, n_speeds, n_cycles, n_stim, comm)
@@ -424,10 +545,12 @@ if __name__ == '__main__':
         for tgt in cells_to_record:
             if src != tgt:
                 selected_connections.append((src, tgt))
-    AT.selected_conns = selected_connections
+    my_selected_conns = utils.distribute_list(selected_connections, n_proc, pc_id)
+    AT.selected_conns = my_selected_conns
                         
     AT.create_stimuli(random_order=True, test_stim=False)
     AT.train()
+
 
 
 

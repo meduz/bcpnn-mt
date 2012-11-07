@@ -48,7 +48,7 @@ def return_plot(subplot_code, iteration=None, fig=None):
             ax.annotate('%d' % i, (x+0.005, y+0.005), fontsize=10)
 
     stim_color = 'k'
-    motion_params_fn = self.params['parameters_folder'] + 'input_params.txt'
+    motion_params_fn = params['parameters_folder'] + 'input_params.txt'
     all_mp = np.loadtxt(motion_params_fn)
     mp = all_mp[iteration, :]
     ax.quiver(mp[0], mp[1], mp[2], mp[3], angles='xy', scale_units='xy', scale=1, color=stim_color, headwidth=4)
@@ -65,7 +65,7 @@ def return_plot(subplot_code, iteration=None, fig=None):
 
 
 if __name__ == '__main__':
-    utils.sort_cells_by_distance_to_stimulus(448)
+#    utils.sort_cells_by_distance_to_stimulus(448)
 
     if len(sys.argv) > 1:
         iteration = int(sys.argv[1])

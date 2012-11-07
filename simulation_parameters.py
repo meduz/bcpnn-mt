@@ -188,6 +188,7 @@ class parameter_storage(object):
 
 #        folder_name = 'LargeScaleModel_selectiveInh_LT_delayScale20_blurX1.50e-01_blurV3.50e-01_wsigmax3.00e-01_wsigmav3.00e-01/'
         folder_name = 'Abstract/'
+#        folder_name = 'AndersWij/'
 #        folder_name = 'InputAnalysis_SpikingModel_ScaledInput/'
 		
         self.params['folder_name'] = folder_name 
@@ -205,6 +206,7 @@ class parameter_storage(object):
         self.params['bcpnntrace_folder'] = "%sBcpnnTraces/" % self.params['folder_name']
         self.params['figures_folder'] = "%sFigures/" % self.params['folder_name']
         self.params['movie_folder'] = "%sMovies/" % self.params['folder_name']
+        self.params['tmp_folder'] = "%stmp/" % self.params['folder_name']
         self.params['training_input_folder'] = "%sTrainingInput/"   % self.params['folder_name']# folder containing the input spike trains for the network generated from a certain stimulus
         self.params['folder_names'] = [self.params['folder_name'], \
                             self.params['spiketimes_folder'], \
@@ -217,6 +219,7 @@ class parameter_storage(object):
                             self.params['bcpnntrace_folder'], \
                             self.params['figures_folder'], \
                             self.params['movie_folder'], \
+                            self.params['tmp_folder'], \
 #                            self.params['training_input_folder'], \
                             self.params['input_folder']] # to be created if not yet existing
 
