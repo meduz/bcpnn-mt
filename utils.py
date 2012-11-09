@@ -564,18 +564,20 @@ def get_min_distance_to_stim(mp, tp_cell, n_steps=100):
     dist =  min_spatial_dist + velocity_dist
     return dist, spatial_dist
     
-#def torus_distance(x0, x1):
-#    return x0 - x1
 
 def torus_distance(x0, x1):
-    x_lim =  1
-    dx = np.abs(x0 - x1) % x_lim
-    increasing = (np.int(2. * dx) / x_lim) % 2
-    decreasing = (np.int(2. * dx) / x_lim + 1) % 2
-    b = dx % x_lim
-    c = x_lim - increasing * b
-    dx = (increasing * c + decreasing * b) % x_lim
-    return dx
+    return x0 - x1
+
+
+#def torus_distance(x0, x1):
+#    x_lim =  1
+#    dx = np.abs(x0 - x1) % x_lim
+#    increasing = (np.int(2. * dx) / x_lim) % 2
+#    decreasing = (np.int(2. * dx) / x_lim + 1) % 2
+#    b = dx % x_lim
+#    c = x_lim - increasing * b
+#    dx = (increasing * c + decreasing * b) % x_lim
+#    return dx
 
 
 

@@ -32,7 +32,8 @@ class PlotOutputActivity(BasicPlotter):
         pylab.rcParams.update(rcParams)
         self.t_axis = self.prediction[:, 0]
         training_input_folder = "%sTrainingInput_%d/" % (self.params['folder_name'], iteration)
-        self.stim_params = np.loadtxt(training_input_folder + 'input_params.txt')
+        input_params = np.loadtxt(self.params['parameters_folder'] + 'input_params.txt')
+        self.stim_params = input_params[self.iteration, :]
 
 #        self.vx_tuning = self.tuning_prop[:, 2]
 #        self.vy_tuning = self.tuning_prop[:, 3]
@@ -53,7 +54,7 @@ class PlotOutputActivity(BasicPlotter):
 
         label = kwargs.get('label', None)
         self.ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, self.subfig_cnt)
-        self.ax.plot(self.t_axis, data, label=label)
+        self.ax.plot(self.t_axis, data, lw=2, label=label)
         self.ax.set_ylabel(ylabel)
         self.ax.set_xlabel(xlabel)
         if update_subfig_cnt :
@@ -66,37 +67,94 @@ class PlotOutputActivity(BasicPlotter):
         title = 'Stimulus vx=%.2f, vy=%.2f' % (self.stim_params[2], self.stim_params[3])
         self.ax.set_title(title)
 
+
+
+    def plot_stim_prediction_as_quiver(self):
+        fig = pylab.figure()
+        ax = fig.add_subplot(111)
+
+        vx = self.prediction[:, 1].mean()
+        vx_std = self.prediction[:, 1].std()
+        vy = self.prediction[:, 2].mean()
+        vy_std = self.prediction[:, 2].std()
+        scale = 1.
+
+        stim_color = 'k'
+        pred_color = 'r'
+        std_color = 'b'
+
+        ax.quiver(0.5, 0.5, vx+vx_std, vy-vy_std, \
+              angles='xy', scale_units='xy', scale=scale, color=std_color, headwidth=4, pivot='middle')
+        std = ax.quiver(0.5, 0.5, vx-vx_std, vy+vy_std, \
+              angles='xy', scale_units='xy', scale=scale, color=std_color, headwidth=4, pivot='middle')
+
+        pred = ax.quiver(0.5, 0.5, vx, vy, \
+              angles='xy', scale_units='xy', scale=scale, color=pred_color, headwidth=4, pivot='middle')
+
+        stim = ax.quiver(0.5, 0.5, self.stim_params[2], self.stim_params[3], 
+              angles='xy', scale_units='xy', scale=scale, color=stim_color, headwidth=4, pivot='middle')
+
+#        ax.quiverkey(std, 
+#        ax.legend((std, pred, stim), \
+#                'Prediction variation over time', \
+#                'Average network prediction', \
+#                'Stimulus')
+        x_lim = (0., 1.)
+        y_lim = (0., 1.)
+        ax.annotate('Stimulus',                         (.6, .8), fontsize=12, color=stim_color)
+        ax.annotate('Prediction variation\nover time',  (.6, .7), fontsize=12, color=std_color)
+        ax.annotate('Average network prediction',       (.6, .6), fontsize=12, color=pred_color)
+            
+        #(0+.1*self.stim_params[2], 0.+0.1*self.stim_params[1]), fontsize=12, color=stim_color)
+#        y_lim = (-.9 * self.stim_params[3], .9 * self.stim_params[3])
+        print 'stim_params', self.stim_params 
+        ax.set_xlim(x_lim)
+        ax.set_ylim(y_lim)
+
+        
+
+
+
 if __name__ == '__main__':
     if (len(sys.argv) < 2):
         iteration = 0
     else:
         iteration = int(sys.argv[1])
+
     P1 = PlotOutputActivity(iteration, n_fig_x=1, n_fig_y=3)
     print 'debug vx:', P1.prediction[:, 1]
-    P1.plot_data_vs_time(P1.prediction[:, 1], ylabel='$v_x$', update_subfig_cnt=False, label='Prediction')
-    P1.plot_data_vs_time(P1.prediction_error[:, 1], ylabel='$v_x$', label='Error in v_x', update_subfig_cnt=False)
-    P1.plot_data_vs_time(P1.stim_params[2] * np.ones(P1.t_axis.size), label='vx_stimulus')
+    P1.plot_data_vs_time(P1.prediction[:, 1], ylabel='$v_x$', label='Prediction', update_subfig_cnt=False)
+    print 'debug', P1.stim_params[2] * np.ones(P1.t_axis.size)
+    P1.plot_data_vs_time(P1.stim_params[2] * np.ones(P1.t_axis.size), ylabel='$v_x$', label='vx_stimulus')
+#    P1.ax.set_ylim((0., P1.stim_params[2]*1.05))
+    P1.ax.set_ylim((P1.prediction[:, 1].min()*0.95, P1.stim_params[2]*1.05))
     P1.set_title()
-    P1.plot_data_vs_time(P1.prediction[:, 2], ylabel='$v_y$', update_subfig_cnt=False, label='Prediction')
-    P1.plot_data_vs_time(P1.prediction_error[:, 2], ylabel='$v_y$', label='Error in v_y', update_subfig_cnt=False)
-    P1.plot_data_vs_time(P1.stim_params[3] * np.ones(P1.t_axis.size), label='vy_stimulus')
+
+
+
+    P1.plot_data_vs_time(P1.prediction[:, 2], ylabel='$v_y$', label='Prediction',update_subfig_cnt=False)
+    P1.plot_data_vs_time(P1.stim_params[3] * np.ones(P1.t_axis.size), ylabel='$v_y$',label='vy_stimulus')
+#    P1.ax.set_ylim((P1.prediction[:, 2].min(), P1.stim_params[3]*1.05))
 
     P1.plot_data_vs_time(P1.prediction_error[:, 3], ylabel='$|v_{diff}|$', label='Absolute prediction error')
 #    P1.plot_data_vs_time(label='vy_stimulus')
 
     output_fn = P1.params['figures_folder'] + 'ann_prediction_%d.png' % (iteration)
     print 'Saving prediction figure to:', output_fn
+
+    P1.plot_stim_prediction_as_quiver()
+
     pylab.savefig(output_fn)
 
-    P2 = PlotOutputActivity(iteration, n_fig_x=1, n_fig_y=4)
-#    n_cells_to_plot = 32
-#    idx = np.random.randint(0, P2.params['n_exc'], n_cells_to_plot)
-    idx = [85, 161, 71, 339]
-    for i in xrange(len(idx)):
-        cell = idx[i]
-        P2.plot_data_vs_time(P2.activity[:, cell], label='%d' % cell, ylabel='Activity')
-    output_fn = P2.params['figures_folder'] + 'ann_sample_activities_%d.png' % (iteration)
-    print 'Saving prediction figure to:', output_fn
+
+    
+
+#    idx = [85, 161, 71, 339]
+#    for i in xrange(len(idx)):
+#        cell = idx[i]
+#        P2.plot_data_vs_time(P2.activity[:, cell], label='%d' % cell, ylabel='Activity')
+#    output_fn = P2.params['figures_folder'] + 'ann_sample_activities_%d.png' % (iteration)
+#    print 'Saving prediction figure to:', output_fn
     pylab.show()
 
 

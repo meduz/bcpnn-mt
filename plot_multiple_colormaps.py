@@ -1,5 +1,5 @@
 import pylab
-import numpy
+import numpy as np
 import sys
 import os
 
@@ -17,27 +17,32 @@ for fn in sys.argv[1:]:
     print "loading data ....", fn
 
     # if it's only one line:
-    #d = numpy.loadtxt(path)
-    #data = numpy.zeros((1, d.size))
+    #d = np.loadtxt(path)
+    #data = np.zeros((1, d.size))
     #for i in xrange(d.size):
     #    data[0, i] = d[i]
 
     try:
-        data = numpy.loadtxt(path, delimiter=",")#.transpose()
+        data = np.loadtxt(path, delimiter=",")#.transpose()
     except:
-        data = numpy.loadtxt(path)
+        data = np.loadtxt(path)
+    
+#    data = np.exp(data)
+#    data = data[1000:,:]
+#    print '\nEXPONENTIAL VALUES PLOTTED!!!\n'
 
-    # if you want to take the log of the data to plot
-    #n_row = data[:, 0].size
-    #n_col = data[0, :].size
-    #log_data = numpy.zeros((n_row, n_col))
-    #for i in xrange(n_row):
-    #    for j in xrange(n_col):
-    #        if data[i, j] > 0:
-    #            log_data[i, j] = numpy.log(data[i, j])
-    #data = log_data.copy()
+     # LOG
+#    n_row = data[:, 0].size
+#    n_col = data[0, :].size
+#    log_data = np.zeros((n_row, n_col))
+#    for i in xrange(n_row):
+#        for j in xrange(n_col):
+#            if data[i, j] > 0:
+#                log_data[i, j] = np.log(data[i, j])
+#    data = log_data.copy()
+#    print '\nLOGARITHMIC VALUES PLOTTED!!!\n'
 
-    #data_rev = numpy.zeros(data.shape)
+    #data_rev = np.zeros(data.shape)
     #n_row = data[:, 0].size - 1
     #for row in xrange(data[:, 0].size):
     #    data_rev[n_row - row, :] = data[row, :]

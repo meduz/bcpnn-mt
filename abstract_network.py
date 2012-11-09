@@ -20,13 +20,20 @@ class AbstractNetwork(object):
         self.training_input_folder = "%sTrainingInput_%d/" % (self.params['folder_name'], iteration)
 
 
-    def set_weights(self, iteration):
-        weight_matrix_fn = params['folder_name'] + 'TrainingResults_%d/' % (iteration)+ 'wij_matrix_%d.dat' % (iteration)
+    def set_weights(self, iteration, no_rec=False):
+
+        if no_rec:
+            self.wij = np.zeros((self.params['n_exc'], self.params['n_exc']))
+            self.bias = np.zeros((self.params['n_exc'], 2))
+            return
+
+        weight_matrix_fn = self.params['weights_folder'] + 'weight_matrix_%d.dat' % (iteration)
         if not os.path.exists(weight_matrix_fn):
-            self.wij = self.get_weight_matrix(iteration)
+            self.wij = self.get_weight_matrix(iteration) # deprecated
             np.savetxt(weight_matrix_fn, self.wij)
         else:
             self.wij = np.loadtxt(weight_matrix_fn)
+            self.bias = np.loadtxt(self.params['weights_folder'] + 'bias_array_%d.dat' % (iteration))
 
 
     def calculate_dynamics(self, output_fn_base=None):
@@ -41,38 +48,51 @@ class AbstractNetwork(object):
         d_sample = np.loadtxt(fn)
         self.n_time_steps = d_sample.size
 
-        activity_traces = np.zeros((self.n_time_steps, n_cells))
+        stimulus = np.zeros((self.n_time_steps, n_cells))
         self.output_activity = np.zeros((self.n_time_steps, n_cells))
-        fn_bias = params['folder_name'] + 'TrainingResults_%d/' % self.iteration + 'bias_%d.dat' % (self.iteration)
-        bias = np.loadtxt(fn_bias)
 
         self.v_pred = np.zeros((self.n_time_steps, 3))
         self.t_axis = np.arange(self.n_time_steps)
         self.t_axis *= self.params['dt_rate']
         self.v_pred[:, 0] = self.t_axis
 
+        print 'Loading files %s' % fn_base, 
         for cell in xrange(n_cells):
             fn = fn_base + '%d.dat' % (cell)
-            activity_traces[:, cell] = np.loadtxt(fn)
+            stimulus[:, cell] = np.loadtxt(fn)
 
+            
         
+        print '\t... and computing ...'
         for t in xrange(self.n_time_steps):
-            self.output_activity[t, :] = activity_traces[t, :] + np.dot(self.wij.transpose(), activity_traces[t, :])# + bias[cell]
-            # map activity in the range (0, 1)
             for cell in xrange(n_cells):
-                if (self.output_activity[t, cell] < 0):
-                    self.output_activity[t, cell] = 0
+                input_from_network = 0.
+                for hc in xrange(n_hc):
+                    idx_0 = hc * n_cells_per_hc
+                    idx_1 = (hc + 1) * n_cells_per_hc
+                    input_from_hc = np.dot(self.wij[idx_0:idx_1, cell], stimulus[t, idx_0:idx_1])
+                    if input_from_hc > 1.:
+                        input_from_hc = 1
+                    input_from_network += np.log(input_from_hc)
+                self.output_activity[t, cell] = input_from_network + self.bias[cell, 1]
 
+            # map activity in the range (0, 1)
+#            for cell in xrange(n_cells):
+#                if (self.output_activity[t, cell] < 0):
+#                    self.output_activity[t, cell] = 0
 
 #             normalize activity within one HC to 1 (if larger than 1)
-            for hc in xrange(n_hc):
-                idx_0 = hc * n_cells_per_hc
-                idx_1 = (hc + 1) * n_cells_per_hc
-                o_sum = self.output_activity[t, idx_0:idx_1].sum()
-                if o_sum > 1:
-                    self.output_activity[t, idx_0:idx_1] /= o_sum
+#            for hc in xrange(n_hc):
+#                idx_0 = hc * n_cells_per_hc
+#                idx_1 = (hc + 1) * n_cells_per_hc
+#                o_sum = self.output_activity[t, idx_0:idx_1].sum()
+#                if o_sum > 1:
+#                    self.output_activity[t, idx_0:idx_1] /= o_sum
 
-            normed_activity = self.output_activity[t, :] / self.output_activity[t, :].sum()
+            if self.output_activity[t, :].sum() != 0:
+                normed_activity = self.output_activity[t, :] / self.output_activity[t, :].sum()
+            else:
+                normed_activity = np.zeros(n_cells)
             self.v_pred[t, 1] = np.dot(self.vx_tuning, normed_activity)
             self.v_pred[t, 2] = np.dot(self.vy_tuning, normed_activity)
 
@@ -87,6 +107,10 @@ class AbstractNetwork(object):
 
 
     def get_weight_matrix(self, iteration):
+        """
+        DEPRECATED!!!
+        """
+
         all_wij_fn= '%sTrainingResults_%d/all_wij_%d.dat' % (self.params['folder_name'], iteration, iteration)
         print 'Getting weights from ', all_wij_fn
         if not os.path.exists(all_wij_fn):
@@ -164,13 +188,14 @@ if __name__ == '__main__':
     ANN = AbstractNetwork(params)
     for iteration in xrange(n_iterations):
         ANN.set_iteration(iteration)
-#        ANN.set_weights(n_iterations-1) # load weight matrix
-        ANN.set_weights(iteration) # load weight matrix
+        ANN.set_weights(n_iterations-1)#, no_rec=True) # load weight matrix
+#        ANN.set_weights(iteration) # load weight matrix
         ANN.calculate_dynamics() # load activity files 
         ANN.eval_prediction()
         output_activity_all_iterations[iteration*n_time_steps:(iteration+1)*n_time_steps, :] = ANN.output_activity
 
     fn_out = params['activity_folder'] + 'ann_activity_%diterations.dat' % n_iterations
+    print 'Saving all network activity to:', fn_out
     np.savetxt(fn_out, output_activity_all_iterations)
 
 

@@ -46,7 +46,8 @@ def plot_all(params, pre_id, post_id, iteration, fig=None, text=None, show=True,
     # --------------------------------------------------------------------------
     
     motion_params_fn = "%sTrainingInput_%d/input_params.txt" % (params['folder_name'], iteration)
-    mp = np.loadtxt(motion_params_fn)
+    input_params = np.loadtxt(params['parameters_folder'] + 'input_params.txt')
+    mp = input_params[iteration, :]
 
     # get filenames from keywords or set the default names
     input_fn_base = kwargs.get('input_fn_base', params['input_rate_fn_base'])

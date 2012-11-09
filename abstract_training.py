@@ -80,7 +80,7 @@ class AbstractTrainer(object):
 
         sigma_theta = 2 * np.pi * 0.05
         random_rotation = sigma_theta * (np.random.rand(self.n_cycles * self.n_stim * self.n_speeds) - .5 * np.ones(self.n_cycles * self.n_stim * self.n_speeds))
-        v_min, v_max = 0.3, 0.4
+        v_min, v_max = 0.2, 0.6
         speeds = np.linspace(v_min, v_max, self.n_speeds)
 
         output_file = open(self.params['parameters_folder'] + 'input_params.txt', 'w')
@@ -330,7 +330,20 @@ class AbstractTrainer(object):
         np.savetxt(self.params['tmp_folder'] + 'wij_%d_%d.dat' % (self.iteration, self.pc_id), self.my_wijs)
         np.savetxt(self.params['tmp_folder'] + 'bias_%d_%d.dat' % (self.iteration, self.pc_id), self.my_bias)
 
+
         # write selected traces to files
+        print 'P %d write selected traces to files for stim %d' % (self.pc_id, self.iteration)
+#        store_all = False
+#        if store_all:
+#            output_data = np.zeros((zi_traces[:, 0].size + 1, self.pre_ids.size))
+#            np.savetxt(self.params['bcpnntrace_folder'] + 'zitraces_%d_%d.dat' % (self.iteration, self.pc_id), zi_traces)
+#            np.savetxt(self.params['bcpnntrace_folder'] + 'zjtraces_%d_%d.dat' % (self.iteration, self.pc_id), zj_traces)
+
+#            np.savetxt(self.params['bcpnntrace_folder'] + 'zitraces_%d_%d.dat' % (self.iteration, self.pc_id), zi_traces)
+#            np.savetxt(self.params['bcpnntrace_folder'] + 'zitraces_%d_%d.dat' % (self.iteration, self.pc_id), zi_traces)
+#            np.savetxt(self.params['bcpnntrace_folder'] + 'zitraces_%d_%d.dat' % (self.iteration, self.pc_id), zi_traces)
+#            np.savetxt(self.params['bcpnntrace_folder'] + 'zitraces_%d_%d.dat' % (self.iteration, self.pc_id), zi_traces)
+
         for c in self.selected_conns:
             pre_id, post_id = c[0], c[1]
             if pre_id in self.pre_ids:
@@ -349,14 +362,14 @@ class AbstractTrainer(object):
             self.comm.barrier()
         for c in self.selected_conns:
             pre_id, post_id = c[0], c[1]
-            if (pre_id in self.pre_ids) and (post_id in self.pre_ids):
+            if (pre_id in self.pre_ids) and (post_id in self.post_ids):
                 # for selected connections compute the eij, pij, weight and bias traces
                 idx_pre = self.gid_idx_map_pre[pre_id]
                 idx_post = self.gid_idx_map_post[post_id]
                 pij_trace[0] = self.pij_init[pre_id, post_id]
                 wij_trace[0] = self.wij_init[pre_id, post_id]
                 bias_trace[0] = self.bias_init[post_id]
-                wij, bias, pij, eij = Bcpnn.compute_pij_new(zi_traces[:, idx_pre], zj[:, idx_post], pi[:, idx_pre], pj[:, idx_post], \
+                wij, bias, pij, eij = Bcpnn.compute_pij_new(zi_traces[:, idx_pre], zj_traces[:, idx_post], pi_traces[:, idx_pre], pj_traces[:, idx_post], \
                                         eij_trace, pij_trace, wij_trace, bias_trace, \
                                         tau_dict['tau_eij'], tau_dict['tau_pij'], get_traces=True, dt=self.params['dt_rate'])
                 np.savetxt(self.params['bcpnntrace_folder'] + 'wij_%d_%d_%d.dat' % (self.iteration, pre_id, post_id), wij)
@@ -500,13 +513,44 @@ class AbstractTrainer(object):
             self.comm.barrier()
         
 
-#    def merge_weight_files(self, n_iterations):
-#        if self.pc_id == 0:
-#        cmd = 'cat '
-#        for iteration in xrange(n_iterations):
-#            for pc_id in xrange(self.n_proc):
-#                cat += ' %s' % (self.params['tmp_folder'] + 'wij_%d_%d.dat' % (iteration, pc_id))
-#                self.params['tmp_folder'] + 'bias_%d_%d.dat' % (iteration, pc_id)
+    def merge_weight_files(self, n_iterations):
+        if self.pc_id == 0:
+            for iteration in xrange(n_iterations):
+                cmd = 'cat '
+                for pc_id in xrange(self.n_proc):
+                    cmd += ' %s' % (self.params['tmp_folder'] + 'wij_%d_%d.dat' % (iteration, pc_id))
+
+                output_fn = self.params['weights_folder'] + 'all_weights_%d.dat' % (iteration)
+                cmd += ' > %s' % output_fn
+                print cmd
+                os.system(cmd)
+
+                print 'creating weight matrix for iteration', iteration
+                wij_list = np.loadtxt(output_fn)
+                wij_matrix = np.zeros((self.params['n_exc'], self.params['n_exc']))
+                pij_matrix = np.zeros((self.params['n_exc'], self.params['n_exc']))
+                for line in xrange(wij_list[:, 0].size):
+                    i, j, wij, pij = wij_list[line, :]
+                    wij_matrix[i, j] = wij
+                    pij_matrix[i, j] = pij
+                np.savetxt(self.params['weights_folder'] + 'weight_matrix_%d.dat' % (iteration), wij_matrix)
+#                np.savetxt(self.params['weights_folder'] + 'pij_matrix_%d.dat' % (iteration), pij_matrix)
+                
+            for iteration in xrange(n_iterations):
+                cmd = 'cat '
+                for pc_id in xrange(self.n_proc):
+                    cmd += ' %s' % (self.params['tmp_folder'] + 'bias_%d_%d.dat' % (iteration, pc_id))
+
+                output_fn = self.params['weights_folder'] + 'all_bias_%d.dat' % (iteration)
+                cmd += ' > %s' % output_fn
+                print cmd
+                os.system(cmd)
+                bias_list = np.loadtxt(output_fn)
+                bias_array = np.zeros((self.params['n_exc'], 2))
+                for line in xrange(bias_list[:, 0].size):
+                    cell, bias = bias_list[line, :]
+                    bias_array[cell] = bias
+                np.savetxt(self.params['weights_folder'] + 'bias_array_%d.dat' % (iteration), bias_array)
 
 
 
@@ -534,7 +578,7 @@ if __name__ == '__main__':
         comm.barrier()
 
     n_speeds = 1
-    n_cycles = 2
+    n_cycles = 5
     n_stim = 8
 
     AT = AbstractTrainer(params, n_speeds, n_cycles, n_stim, comm)
@@ -549,7 +593,8 @@ if __name__ == '__main__':
     AT.selected_conns = my_selected_conns
                         
     AT.create_stimuli(random_order=True, test_stim=False)
-    AT.train()
+#    AT.train()
+#    AT.merge_weight_files(n_speeds * n_cycles * n_stim)
 
 
 

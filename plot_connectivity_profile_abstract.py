@@ -41,7 +41,11 @@ conn_mat = np.loadtxt(conn_mat_fn)
 tgts_ee = np.arange(0, params['n_exc'], 1)
 srcs_ee = np.arange(0, params['n_exc'], 1)
 
-def plot_weights(subplot_code=111, relative=True):
+x_lim = (-.2, 1.2)
+y_lim = (-.2, 1.2)
+
+ms_max = 4
+def plot_target_weights(subplot_code=111, relative=True):
     """
     relative means weights are scaled according to their group (exc / inh)
     if relative==False: weights are scaled in proportion to the maximum exc & inh weight
@@ -55,14 +59,6 @@ def plot_weights(subplot_code=111, relative=True):
 #    w_max = conn_mat[exc_cell, :].max()
     w_min = -1.
     w_max = 1.
-    if w_max == 0:
-        w_max = abs(w_min)
-        print 'WARNING w_max == 0!'
-        print 'Only negative weights!'
-
-    print 'debug w_max:', w_max, 'w_mean', conn_mat[exc_cell, :].mean(), 'w_min', w_min
-    ms_max = 4
-
 
     for i_, tgt in enumerate(tgts_ee):
         x_tgt, y_tgt, u_tgt, v_tgt = tp_exc[tgt, :]
@@ -73,28 +69,26 @@ def plot_weights(subplot_code=111, relative=True):
                 ms = abs(w) / w_abs_max * ms_max
             else:
                 ms = w / w_min * ms_max
-#            print 'w_inh ms:', ms
+            ms += 2
             color = 'b'
         else:
             if relative==False:
                 ms = abs(w) / w_abs_max * ms_max
             else:
                 ms = w / w_max * ms_max
+            ms += 2
             color = 'r'
-#            print 'w_exc ms:', ms
-
         target_cell_exc = ax.plot(x_tgt, y_tgt, '%so' % color, markersize=ms)
     #    target_plot_ee = ax.plot((x0, x_tgt), (y0, y_tgt), '%s--' % color, lw=line_width)
 
         if with_annotations:
             ax.annotate('(%d, %.2e, %.2e)' % (tgt, w, d), (x_tgt, y_tgt), fontsize=8)
 
-
-    direction = ax.plot((x0, x0+u0), (y0, (y0+v0)), 'yD-.', lw=1)
-
+#    direction = ax.plot((x0, x0+u0), (y0, (y0+v0)), 'yD-.', lw=1)
     #ax.legend((target_cell_exc[0], source_plot_ee[0], source_cell_exc[0], direction[0], target_plot_ei[0], source_plot_ie[0]), \
     #        ('exc target cell', 'incoming connections from exc', 'exc source cell', 'predicted direction', 'outgoing connections to inh', 'incoming connections from inh'))
-    ax.quiver(x0, y0, u0, v0, angles='xy', scale_units='xy', scale=1, color='y', headwidth=6)
+    ax.quiver(x0, y0, u0, v0, angles='xy', scale_units='xy', scale=1, color='y', headwidth=6, pivot='tail')
+    ax.annotate('Predicted direction', (x0+.5*u0, y0*1.05), fontsize=12, color='y')
 
     title = 'Connectivity profile of cell %d' % (exc_cell)
     if relative:
@@ -104,13 +98,26 @@ def plot_weights(subplot_code=111, relative=True):
 
     title += 'w_min%.2e   w_max=%.2e' % (w_min, w_max)
 
-#    title += '\nw_sigma_x=%.2f w_sigma_v=%.2f' % (params['w_sigma_x'], params['w_sigma_v'])
     ax.set_title(title)
     ax.set_xlabel('x position')
     ax.set_ylabel('y position')
+    ax.set_xlim(x_lim)
+    ax.set_ylim(y_lim)
     return ax
 
-
+def plot_source_weights(subplot_code=111, relative=True):
+    w_min = -1.
+    w_max = 1.
+    for src in xrange(params['n_exc']):
+        x_src, y_src, u_src, v_src = tp_exc[src, :]
+        w = conn_mat[src, exc_cell]
+        if w < 0:
+            ms = w / w_min * ms_max
+            c = 'b'
+        if w > 0:
+            ms = w / w_max * ms_max
+            c = 'r'
+        target_plot_ee = ax.plot((x0, x_src), (y0, y_src), '%s--' % color, lw=line_width)
 
 def plot_cells_by_euclidean_tuning_distance(subplot_code=111, direction=False):
     def get_dist(x, y):
@@ -131,7 +138,6 @@ def plot_cells_by_euclidean_tuning_distance(subplot_code=111, direction=False):
             x = (x_tgt, y_tgt, u_tgt, v_tgt)
             y = (x0, y0, u0, v0)
         dist[i_] = get_dist(x, y)
-#        print 'debug', i_, tgt, get_dist(x, y), x, y
     #sorted_idx = np.argsort(dist)
     dist_min, dist_max = dist.min(), dist.max()
     print 'direction %s, dist_min=%.2e dist_max=%.2e' % (str(direction), dist_min, dist_max)
@@ -160,17 +166,19 @@ def plot_cells_by_euclidean_tuning_distance(subplot_code=111, direction=False):
     return ax2
 
 
-def plot_stimulus(ax, motion_params_fn):
+def plot_stimulus(ax, mp):
     stim_color = 'k'
-    mp = np.loadtxt(motion_params_fn)
     ax.quiver(mp[0], mp[1], mp[2], mp[3], angles='xy', scale_units='xy', scale=1, color=stim_color, headwidth=4)
     ax.annotate('Stimulus', (mp[0]+.5*mp[2], mp[1]+0.1), fontsize=12, color=stim_color)
 
 
 
-ax = plot_weights(111, True)
-motion_params_fn = "%sTrainingInput_%d/input_params.txt" % (params['folder_name'], iteration)
-plot_stimulus(ax, motion_params_fn)
+ax = plot_target_weights(111, True)
+
+input_params = np.loadtxt(params['parameters_folder'] + 'input_params.txt')
+mp = input_params[iteration, :]
+#plot_stimulus(ax, mp)
+
 #ax = plot_weights(122, False)
 #plot_stimulus(ax, motion_params_fn)
 #plot_cells_by_euclidean_tuning_distance(223, False)

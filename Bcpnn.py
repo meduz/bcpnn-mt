@@ -199,7 +199,7 @@ def compute_pij_new(zi, zj, pi, pj, eij, pij, wij, bias, tau_eij, tau_pij, get_t
         pij[i] = pij[i-1] + dpij
 
         # weights
-        wij[i] = np.log(pij[i] / (pi[i] * pj[i]))
+        wij[i] = pij[i] / (pi[i] * pj[i])
 
         # bias
         bias[i] = np.log(pj[i])
