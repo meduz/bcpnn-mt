@@ -8,8 +8,8 @@ params = PS.load_params()                       # params stores cell numbers, et
 
 
 print 'n_cells=%d\tn_exc=%d\tn_inh=%d' % (params['n_cells'], params['n_exc'], params['n_inh'])
-params['blur_X'], params['blur_V'] = float(sys.argv[1]), float(sys.argv[2])
-print 'Blur', params['blur_X'], params['blur_V']
+#params['blur_X'], params['blur_V'] = float(sys.argv[1]), float(sys.argv[2])
+#print 'Blur', params['blur_X'], params['blur_V']
 
 PS.create_folders()
 PS.write_parameters_to_file()

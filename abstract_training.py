@@ -222,6 +222,8 @@ class AbstractTrainer(object):
 
     def train(self):
 
+        self.ei_init = self.initial_value * np.ones(params['n_exc'])
+        self.ej_init = self.initial_value * np.ones(params['n_exc'])
         self.pi_init = self.initial_value * np.ones(params['n_exc'])
         self.pj_init = self.initial_value * np.ones(params['n_exc'])
         self.pij_init = self.initial_value ** 2 * np.ones((params['n_exc'], params['n_exc']))
@@ -410,10 +412,6 @@ class AbstractTrainer(object):
         pij_string = '#pre_id\tpost_id\tp_ij\n'
         wij_string = '#pre_id\tpost_id\tpij[-1]\tw_ij[-1]\tbias\n'
         bias_string = '#GID\tp_j\n'
-        z_init = self.initial_value
-        e_init = self.initial_value
-
-
 
         self.training_input_folder = "%sTrainingInput_%d/" % (self.params['folder_name'], iteration)
         input_fn_base = self.training_input_folder + self.params['abstract_input_fn_base']
@@ -427,8 +425,10 @@ class AbstractTrainer(object):
                 (zi, ei, pi) = my_traces_pre[pre_id]
             else:
                 pre_trace = np.loadtxt(input_fn_base + str(pre_id) + '.dat')
-                zi, ei, pi = Bcpnn.compute_traces(pre_trace, tau_dict['tau_zi'], tau_dict['tau_ei'], tau_dict['tau_pi'], dt=self.params['dt_rate'], eps=self.eps, initial_value=(z_init, e_init, self.pi_init[pre_id]))
+                zi, ei, pi = Bcpnn.compute_traces(pre_trace, tau_dict['tau_zi'], tau_dict['tau_ei'], tau_dict['tau_pi'], \
+                        dt=self.params['dt_rate'], eps=self.eps, initial_value=(z_init, self.ei_init[pre_id], self.pi_init[pre_id]))
                 my_traces_pre[pre_id] = (zi, ei, pi)
+                self.ei_init[pre_id] = ei[-1]
                 self.pi_init[pre_id] = pi[-1]
                 pi_string += '%d\t%.6e\n' % (pre_id, pi[-1])
 
@@ -436,8 +436,10 @@ class AbstractTrainer(object):
                 (zj, ej, pj) = my_traces_post[post_id]
             else: 
                 post_trace = np.loadtxt(input_fn_base  + str(post_id) + '.dat')
-                zj, ej, pj = Bcpnn.compute_traces(post_trace, tau_dict['tau_zj'], tau_dict['tau_ej'], tau_dict['tau_pj'], dt=self.params['dt_rate'], eps=self.eps, initial_value=(z_init, e_init, self.pj_init[post_id]))
+                zj, ej, pj = Bcpnn.compute_traces(post_trace, tau_dict['tau_zj'], tau_dict['tau_ej'], tau_dict['tau_pj'], \
+                        dt=self.params['dt_rate'], eps=self.eps, initial_value=(z_init, self.ej_init[post_id], self.pj_init[post_id]))
                 my_traces_post[post_id] = (zj, ej, pj)
+                self.ej_init[pre_id] = ej[-1]
                 self.pj_init[pre_id] = pj[-1]
                 pj_string += '%d\t%.6e\n' % (post_id, pj[-1])
                 bias_string += '%d\t%.6e\n' % (post_id, np.log(pj[-1]))
@@ -593,8 +595,8 @@ if __name__ == '__main__':
     AT.selected_conns = my_selected_conns
                         
     AT.create_stimuli(random_order=True, test_stim=False)
-#    AT.train()
-#    AT.merge_weight_files(n_speeds * n_cycles * n_stim)
+    AT.train()
+    AT.merge_weight_files(n_speeds * n_cycles * n_stim)
 
 
 
