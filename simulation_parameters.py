@@ -31,8 +31,8 @@ class parameter_storage(object):
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 6, 6# resolution in velocity norm and direction
 
-#        self.params['N_RF'] = 84 # np.int(n_cells/N_V/N_theta)
-        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF'] = 84 # np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
         self.params['N_V'], self.params['N_theta'] = 1, 16# resolution in velocity norm and direction
@@ -138,7 +138,7 @@ class parameter_storage(object):
         """
         self.params['motion_params'] = (0.1, 0.5, 0.3, 0) # x0, y0, u0, v0.5
         self.params['v_max'] = 0.9  # [a.u.] maximal velocity in visual space for tuning_parameters (for each component), 1. means the whole visual field is traversed
-        self.params['blur_X'], self.params['blur_V'] = 0.1, 0.1
+        self.params['blur_X'], self.params['blur_V'] = 0.05, 0.05
         # the blur parameter represents the input selectivity:
         # high blur means many cells respond to the stimulus
         # low blur means high input selectivity, few cells respond

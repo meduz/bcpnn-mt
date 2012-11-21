@@ -47,28 +47,33 @@ weight_matrix = np.loadtxt(weight_matrix_fn)
 
 fig = pylab.figure()
 pylab.subplots_adjust(hspace=0.35)
-ax1 = fig.add_subplot(111)
-#ax2 = fig.add_subplot(312)
-#ax3 = fig.add_subplot(313)
+ax1 = fig.add_subplot(311)
+ax2 = fig.add_subplot(312)
+ax3 = fig.add_subplot(313)
 print 'Plotting ...'
-for i in xrange(n_cells):
-    for j in xrange(n_cells-i):
-        y = weight_matrix[i, j]
-        x1 = x_distance_matrix[i, j]
-        ax1.plot(x1, y, '.')
+#for i in xrange(n_cells):
+#src_cells = np.argsort(weight_matrix)[:-10]
+#src_cells = np.random.randint(0, n_cells, 50)
+for src in xrange(n_cells):
+    idx,  = weight_matrix[src, :].nonzero()
+    if (idx.size > 0):
+        for tgt in idx:
+#    for j in xrange(n_cells-i):
+            y = weight_matrix[src, tgt]
+#            if y != 0:
+            x1 = x_distance_matrix[src, tgt]
+            ax1.plot(x1, y, '.', c='k')
 
-        x2 = v_distance_matrix[i, j]
-        ax2.plot(x2, y, 'o')
+            x2 = v_distance_matrix[src, tgt]
+            ax2.plot(x2, y, '.', c='k')
 
-        x3 = tp_distance_matrix[i, j]
-        ax3.plot(x3, y, 'o')
+            x3 = tp_distance_matrix[src, tgt]
+            ax3.plot(x3, y, '.', c='k')
 
 ax1.set_ylabel('wij')
 ax1.set_xlabel('x-dist')
-#ax2.set_ylabel('wij')
-#ax2.set_xlabel('y-dist')
-#ax3.set_ylabel('wij')
-#ax3.set_xlabel('tuning prop-dist (4-dim)')
+ax2.set_xlabel('v-dist')
+ax3.set_xlabel('tuning prop-dist (4-dim)')
 
 output_fn = 'weights_vs_x_dist.png'
 #x_dist_min, x_dist_max, x_dist_mean, x_dist_std = x_distance_matrix.min(), x_distance_matrix.max(), x_distance_matrix.mean(), x_distance_matrix.std()
@@ -94,6 +99,7 @@ output_fn = 'weights_vs_x_dist.png'
 #ax.bar(bins_x[:-1], x_dist_hist, width=bins_x[1] - bins_x[0])
 #ax.set_xlabel('x_dist')
 #ax.set_ylabel('count')
-
+output_fn = 'weights_vs_dist.png'
+print 'output_fn', output_fn
 pylab.savefig(output_fn)
 #pylab.show()
