@@ -1,9 +1,9 @@
 import os
 import sys
 
-def avconv(input_fn, output_fn_movie, fps=.5):
+def avconv(input_fn, output_fn_movie, fps=0.5):
 #    command = "avconv -f image2 -r %f -i %s -b 72000 %s" % (fps, input_fn, output_fn_movie)
-    command = "avconv -f image2 -r %f -i %s %s" % (fps, input_fn, output_fn_movie)
+    command = "avconv -f image2 -r %f -i %s -b 72000 %s" % (fps, input_fn, output_fn_movie)
     os.system("rm %s" % output_fn_movie) # remove old one
     print command
     os.system(command)
@@ -20,3 +20,4 @@ if __name__ == '__main__':
     else:
         output_fn_movie= sys.argv[2]
 
+    avconv(input_fn, output_fn_movie, fps=4.)

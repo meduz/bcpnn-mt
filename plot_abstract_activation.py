@@ -44,7 +44,7 @@ def return_plot(subplot_code, iteration=None, fig=None):
         (r, g, b) = utils.convert_hsl_to_rgb(h, s, l)
         x, y, u, v = tp[i, :]
         ax.plot(x, y, 'o', c=(r,g,b), markersize=ms)
-        if l < .9:
+        if l < .7:
             ax.annotate('%d' % i, (x+0.005, y+0.005), fontsize=10)
 
     stim_color = 'k'
@@ -57,7 +57,7 @@ def return_plot(subplot_code, iteration=None, fig=None):
 
     ax.set_xlim((-.05, 1.05))
     ax.set_ylim((-.05, 1.05))
-    ax.set_title(input_fn)
+    ax.set_title('Abstract activtation iteration %d' % iteration)
     output_fn = params['figures_folder'] + 'abstract_activation_%d.png' % (iteration)
     print "Saving figure: ", output_fn
     pylab.savefig(output_fn)#, facecolor=bg_color)
@@ -74,5 +74,5 @@ if __name__ == '__main__':
 
     return_plot(111, iteration=iteration)
 
-#    pylab.show()
+    pylab.show()
 

@@ -263,7 +263,7 @@ def set_tuning_prop(params, mode='hexgrid', v_max=1.0):
     
         # wrapping up:
         index = 0
-        random_rotation = 2*np.pi*rnd.rand(params['N_RF_X']*params['N_RF_Y'])
+        random_rotation = 2*np.pi*rnd.rand(params['N_RF_X']*params['N_RF_Y']) * params['sigma_RF_direction']
         # todo do the same for v_rho?
         for i_RF in xrange(params['N_RF_X']*params['N_RF_Y']):
             for i_v_rho, rho in enumerate(v_rho):
@@ -539,7 +539,7 @@ def sort_gids_by_distance_to_stimulus(tp, mp):
     n_cells = tp[:, 0].size
     x_dist = np.zeros(n_cells) # stores minimal distance in space between stimulus and cells
 
-    n_steps = 100 # the of 
+    n_steps = 50 # the of 
     for i in xrange(n_cells):
         x_dist[i], spatial_dist = get_min_distance_to_stim(mp, tp[i, :], n_steps)
 

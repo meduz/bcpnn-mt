@@ -145,7 +145,6 @@ def compute_traces(si, tau_z=10, tau_e=100, tau_p=1000, dt=1., eps=1e-6, initial
 
 
 def compute_pij(zi, zj, pi, pj, tau_eij, tau_pij, get_traces=False, dt=1., initial_values=(1e-4, 1e-4, 0, np.log(1e-2))):
-
     n = zi.size
     eij = np.ones(n) * initial_values[0]
     pij = np.ones(n) * initial_values[1]

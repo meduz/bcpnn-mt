@@ -11,32 +11,38 @@ params = PS.load_params()
 tp = np.loadtxt(params['tuning_prop_means_fn'])
 input_params = np.loadtxt(params['parameters_folder'] + 'input_params.txt')
 
-#network_activity_fn = 'AndersWij/activity_test.dat'
-#output_folder_fig  = 'AndersWij/test_activity/'
-
-#network_activity_fn = 'AndersWij/activity_training.dat'
-#output_folder_fig  = 'AndersWij/training_activity/'
-
-network_activity_fn = 'AndersWij/activity_test_minus_training.dat'
-output_folder_fig  = 'AndersWij/test_minus_training_activity/'
+#network_activity_fn = 'AndersWij/activity_test_minus_training.dat'
+#output_folder_fig  = 'AndersWij/test_minus_training_activity/'
 
 #network_activity_fn = 'Abstract/ANNActivity/ann_activity_40iterations_no_rec.dat'
 #network_activity_fn = 'Abstract/ANNActivity/ann_activity_40iterations.dat'
 #output_folder_fig  = params['figures_folder']
 
+#network_activity_fn = 'Abstract/Parameters/all_inputs_scaled.dat'
+#output_folder_fig  = 'Abstract/Figures/'
+
+#network_activity_fn = 'Abstract/tmp/output_activity.dat'
+#output_folder_fig  = 'Abstract/tmp/'
+
+
+network_activity_fn = 'Abstract/Parameters/all_inputs_scaled.dat'
+output_folder_fig  = 'Abstract/Figures/'
+
 print 'Loading ', network_activity_fn
 network_activity = np.loadtxt(network_activity_fn)
-network_activity = np.exp(network_activity)
+#network_activity = np.exp(network_activity)
 
-scale = 3
+scale = 1
 #n_time_steps = d[:, 0].size
-n_time_steps_per_iteration = 300
+n_time_steps_per_iteration = 60
 n_cells = params['n_exc']
 
-n_iteration = 40
+n_iteration = 2
 
-o_max = 2000.0#n_time_steps_per_iteration
+o_max = 1.0#n_time_steps_per_iteration
 o_min = 0.0#network_activity.min()
+#o_max = 2000.0#n_time_steps_per_iteration
+#o_min = 0.0#network_activity.min()
 
 for iteration in xrange(n_iteration):
     fig = pylab.figure()
@@ -46,7 +52,6 @@ for iteration in xrange(n_iteration):
     m.set_array(np.arange(o_min, o_max, 0.01))
     fig.colorbar(m)
 
-    print 'plotting stim', iteration
     t1 = iteration * n_time_steps_per_iteration
     t2 = (iteration + 1) * n_time_steps_per_iteration
     mp = input_params[iteration, :]
@@ -63,7 +68,7 @@ for iteration in xrange(n_iteration):
 #        o_min = min(o_min, activity)
 #        print 'max activity cell %d' % cell, activity.max()
         rgba_colors.append(m.to_rgba(activity))
-    print 'max activity', summed_activities.max()
+    print 'plotting stim', iteration, 'max activity', summed_activities.max()
     rgba_colors.append('r')
     ax.quiver(data[:, 0], data[:, 1], data[:, 2], data[:, 3], \
               angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4)

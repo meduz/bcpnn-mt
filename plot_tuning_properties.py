@@ -31,7 +31,7 @@ pylab.subplots_adjust(right=.95)
 ax1 = fig.add_subplot(121)
 ax2 = fig.add_subplot(122)
 
-scale = 10. # scale of the quivers / arrows
+scale = 3. # scale of the quivers / arrows
 # set the colorscale for directions
 o_min = 0.
 o_max = 360.
@@ -60,7 +60,7 @@ for i in xrange(n_cells):
     ax2.plot(u, v, 'o', color='k', markersize=ms)#, edgecolors=None)
 
 q = ax1.quiver(d[:, 0], d[:, 1], d[:, 2], d[:, 3], \
-          angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4)
+          angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4, pivot='middle')
 ax1.set_xlabel('$x$', fontsize=16)
 ax1.set_ylabel('$y$', fontsize=16)
 ax1.set_title('Spatial receptive fields\n n_rf=%d, n_units=%d' % (n_rf, n_units))

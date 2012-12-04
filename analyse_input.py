@@ -159,7 +159,7 @@ pylab.text(text_pos_x, text_pos_y, label_text, bbox=dict(pad=5.0, ec="k", fc="no
 output_fig = 'Figures_BlurSweep/' + '%d.png' % (file_count)
 
 # only needed when a sweep is done
-output_fn = 'Figures_BlurSweep/nspikes_blur_sweep.dat'
+output_fn = 'Figures_BlurSweep/nspikes_blur_sweep_new_unscaled.dat'
 output_file = open(output_fn, 'a')
 output_string = '%.2e\t%.2e\t%.4e\t%.4e\t%.4e\t%.4e\t%.4e\t%d\n' % (params['blur_X'], params['blur_V'], all_spikes.sum(), all_spikes.mean(), all_spikes.std(), input_spikes_mean, input_spikes_std, input_spikes_max)
 #   0                       1               2               3                   4               5                   5                   6

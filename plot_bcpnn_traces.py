@@ -141,8 +141,8 @@ def plot_all(params, pre_id, post_id, iteration, fig=None, text=None, show=True,
     if text == None:
         text = 'iteration: %d\n' % (iteration)
         text += 'pre_id=%d  post_id=%d\n' % (pre_id, post_id)
-        text += 'tp_pre: ' + str(tp[pre_id, :])
-        text += '\ntp_post: ' + str(tp[post_id, :])
+#        text += 'tp_pre: ' + str(tp[pre_id, :])
+#        text += '\ntp_post: ' + str(tp[post_id, :])
         text += '\nstim: ' + str(params['motion_params'])
     ax.annotate(text, (.1, .1), fontsize=12)
 

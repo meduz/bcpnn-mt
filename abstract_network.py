@@ -32,7 +32,9 @@ class AbstractNetwork(object):
             self.wij = self.get_weight_matrix(iteration) # deprecated
             np.savetxt(weight_matrix_fn, self.wij)
         else:
+            print 'Loading weight matrix from:', weight_matrix_fn
             self.wij = np.loadtxt(weight_matrix_fn)
+            print 'Loading bias values from:', self.params['weights_folder'] + 'bias_array_%d.dat' % (iteration)
             self.bias = np.loadtxt(self.params['weights_folder'] + 'bias_array_%d.dat' % (iteration))
 
 
@@ -65,16 +67,24 @@ class AbstractNetwork(object):
         
         print '\t... and computing ...'
         for t in xrange(self.n_time_steps):
-            for cell in xrange(n_cells):
-                input_from_network = 0.
-                for hc in xrange(n_hc):
-                    idx_0 = hc * n_cells_per_hc
-                    idx_1 = (hc + 1) * n_cells_per_hc
-                    input_from_hc = np.dot(self.wij[idx_0:idx_1, cell], stimulus[t, idx_0:idx_1])
-                    if input_from_hc > 1.:
-                        input_from_hc = 1
-                    input_from_network += np.log(input_from_hc)
-                self.output_activity[t, cell] = input_from_network + self.bias[cell, 1]
+            for post_hc in xrange(n_hc):
+                output_from_hc = np.zeros(n_cells_per_hc)
+                for post_ in xrange(n_cells_per_hc):
+                    post_gid = post_hc * n_cells_per_hc + post_
+                    input_from_network = 0
+                    for pre_hc in xrange(n_hc):
+                        input_from_hc = 1e-3
+                        idx_0 = pre_hc * n_cells_per_hc
+                        idx_1 = (pre_hc + 1) * n_cells_per_hc
+                        # no exponentiation for pre-activity (=stimulus) needed here, since the stimulus has been created this way already
+                        input_from_hc += np.dot(self.wij[idx_0:idx_1, post_gid], stimulus[t, idx_0:idx_1])
+                        input_from_network += np.log(input_from_hc)
+                    output_from_hc[post_] = input_from_network + self.bias[post_gid, 1]
+                post_gid_1 = post_hc * n_cells_per_hc
+                post_gid_2 = (post_hc + 1) * n_cells_per_hc
+                self.output_activity[t, post_gid_1:post_gid_2] = np.exp(output_from_hc) / np.exp(output_from_hc).sum()
+
+
 
             # map activity in the range (0, 1)
 #            for cell in xrange(n_cells):
@@ -186,9 +196,9 @@ if __name__ == '__main__':
     output_activity_all_iterations = np.zeros((n_iterations * n_time_steps, params['n_exc']),dtype=np.double)
 
     ANN = AbstractNetwork(params)
+    ANN.set_weights(n_iterations-1)#, no_rec=True) # load weight matrix
     for iteration in xrange(n_iterations):
         ANN.set_iteration(iteration)
-        ANN.set_weights(n_iterations-1)#, no_rec=True) # load weight matrix
 #        ANN.set_weights(iteration) # load weight matrix
         ANN.calculate_dynamics() # load activity files 
         ANN.eval_prediction()

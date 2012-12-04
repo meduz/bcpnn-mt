@@ -19,8 +19,8 @@ n_iterations = 40
 
 cmd = 'cat '
 for i in xrange(n_iterations):
-    cmd += ' %sANNActivity/input_%d.dat' % (params['folder_name'], i)
-fn_out = '%sParameters/all_inputs_scaled.dat' % (params['folder_name'])
+    cmd += ' %sANNActivity/output_activity_%d.dat' % (params['folder_name'], i)
+fn_out = '%sParameters/all_output_activity.dat' % (params['folder_name'])
 cmd +=  '  > %s' % (fn_out)
 print cmd
 os.system(cmd)
@@ -28,10 +28,8 @@ os.system(cmd)
 d = np.loadtxt(fn_out)
 d_trans = d.transpose()
 
-fn_out = '%sParameters/all_inputs_scaled_transposed.dat' % (params['folder_name'])
+fn_out = '%sParameters/all_output_activity_transposed.dat' % (params['folder_name'])
 print 'Saving transposed input to:', fn_out
 np.savetxt(fn_out, d_trans)
-
-
 
 

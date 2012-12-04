@@ -31,17 +31,28 @@ class parameter_storage(object):
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 6, 6# resolution in velocity norm and direction
 
-        self.params['N_RF'] = 84 # np.int(n_cells/N_V/N_theta)
-#        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 1, 16# resolution in velocity norm and direction
+#        self.params['N_RF'] = 9# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#        self.params['N_V'], self.params['N_theta'] = 1, 1# resolution in velocity norm and direction
 
-#        print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
+#        self.params['N_RF'] = 84# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#        self.params['N_V'], self.params['N_theta'] = 1, 16# resolution in velocity norm and direction
 
+        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3.)))
+        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3.))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+        self.params['N_V'], self.params['N_theta'] = 1, 20# resolution in velocity norm and direction
+
+        print 'N_RF_X %d N_RF_Y %d' % (self.params['N_RF_X'], self.params['N_RF_Y'])
+        print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
+        self.params['abstract_input_scaling_factor'] = 10.
         self.params['log_scale'] = 2. # base of the logarithmic tiling of particle_grid; linear if equal to one
         self.params['sigma_RF_pos'] = .05 # some variability in the position of RFs
-        self.params['sigma_RF_speed'] = .15 # some variability in the position of RFs
+        self.params['sigma_RF_speed'] = .10 # some variability in the speed of RFs
+        self.params['sigma_RF_direction'] = .25 # some variability in the direction of RFs
 
         # ###################
         # NETWORK PARAMETERS
@@ -137,8 +148,8 @@ class parameter_storage(object):
         u0 (v0) : velocity in x-direction (y-direction)
         """
         self.params['motion_params'] = (0.1, 0.5, 0.3, 0) # x0, y0, u0, v0.5
-        self.params['v_max'] = 0.9  # [a.u.] maximal velocity in visual space for tuning_parameters (for each component), 1. means the whole visual field is traversed
-        self.params['blur_X'], self.params['blur_V'] = 0.05, 0.05
+        self.params['v_max'] = 0.3  # [a.u.] maximal velocity in visual space for tuning_parameters (for each component), 1. means the whole visual field is traversed
+        self.params['blur_X'], self.params['blur_V'] = 0.15, 0.15
         # the blur parameter represents the input selectivity:
         # high blur means many cells respond to the stimulus
         # low blur means high input selectivity, few cells respond
@@ -178,7 +189,7 @@ class parameter_storage(object):
 #        if self.params['selective_inhibition']:
 #            folder_name += 'selectiveInh_'
 #        if self.params['connect_exc_exc']:
-#            if self.params['initial_connectivity'] == 'precomputed_linear_transform':
+#       1    if self.params['initial_connectivity'] == 'precomputed_linear_transform':
 #                folder_name += 'LT_'
 #            elif self.params['initial_connectivity'] == 'precomputed_convergence_constrained':
 #                folder_name += 'CC_'
@@ -192,7 +203,7 @@ class parameter_storage(object):
 #        folder_name = 'LargeScaleModel_selectiveInh_LT_delayScale20_blurX1.50e-01_blurV3.50e-01_wsigmax3.00e-01_wsigmav3.00e-01/'
 #        folder_name = 'Abstract_larger/'
         folder_name = 'Abstract/'
-#        folder_name = 'Abstract_for_AndersCode/'
+#        folder_name = 'Abstract_for_AndersCode_new/'
 #        folder_name = 'AndersWij/'
 #        folder_name = 'InputAnalysis_SpikingModel_ScaledInput/'
 		
