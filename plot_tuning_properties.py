@@ -15,14 +15,14 @@ pylab.rcParams['lines.markeredgewidth'] = 0
 #fn = params['tuning_prop_means_fn']
 #d = np.loadtxt(fn)
 print 'Computing the tuning properties'
-d = utils.set_tuning_prop(params, mode='hexgrid', v_max=params['v_max'])        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+d = utils.set_tuning_prop(params, mode='hexgrid')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
 
 n_cells = d[:, 0].size
 n_rf = params['N_RF_X'] * params['N_RF_Y']
 n_units = params['N_RF_X'] * params['N_RF_Y'] * params['N_theta'] * params['N_V']
-ms = 3 # markersize for scatterplots
+ms = 5 # markersize for scatterplots
 
-fig = pylab.figure()
+fig = pylab.figure(figsize=(16, 8))
 pylab.subplots_adjust(hspace=.6)
 pylab.subplots_adjust(wspace=.15)
 pylab.subplots_adjust(left=.05)
@@ -31,7 +31,8 @@ pylab.subplots_adjust(right=.95)
 ax1 = fig.add_subplot(121)
 ax2 = fig.add_subplot(122)
 
-scale = 3. # scale of the quivers / arrows
+
+scale = 4. # scale of the quivers / arrows
 # set the colorscale for directions
 o_min = 0.
 o_max = 360.
@@ -49,23 +50,15 @@ for i in xrange(n_cells):
     thetas[i] = np.arctan2(v, u)
     angle = ((thetas[i] + np.pi) / (2 * np.pi)) * 360. # theta determines h, h must be [0, 360)
     rgba_colors.append(m.to_rgba(angle))
-#    h = ((thetas[i] + np.pi) / (2 * np.pi)) * 360. # theta determines h, h must be [0, 360)
-#    l = np.sqrt(u**2 + v**2) / np.sqrt(2 * params['v_max']**2) # lightness [0, 1]
-#    s = 1. # saturation
-#    assert (0 <= h and h < 360)
-#    assert (0 <= l and l <= 1)
-#    assert (0 <= s and s <= 1)
-#    (r, g, b) = utils.convert_hsl_to_rgb(h, s, l)
-#    rgba_colors.append((r, g, b, 1.0))
     ax2.plot(u, v, 'o', color='k', markersize=ms)#, edgecolors=None)
 
 q = ax1.quiver(d[:, 0], d[:, 1], d[:, 2], d[:, 3], \
-          angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4, pivot='middle')
+          angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4, pivot='tail')
 ax1.set_xlabel('$x$', fontsize=16)
 ax1.set_ylabel('$y$', fontsize=16)
 ax1.set_title('Spatial receptive fields\n n_rf=%d, n_units=%d' % (n_rf, n_units))
-ax1.set_xlim((-.05, 1.1))
-ax1.set_ylim((-.05, 1.1))
+ax1.set_xlim((-.05, 1.15))
+ax1.set_ylim((-.05, 1.15))
 fig.colorbar(m, ax=ax1)
 
 ax2.set_xlabel('$u$', fontsize=16)

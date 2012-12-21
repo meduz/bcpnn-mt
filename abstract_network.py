@@ -63,10 +63,16 @@ class AbstractNetwork(object):
             fn = fn_base + '%d.dat' % (cell)
             stimulus[:, cell] = np.loadtxt(fn)
 
+        # when computing the output estimates, the input from the network and the input from the stimulus are taken into account
+        # by weighting them
+        w_stim = 0.9
+        w_net = 1. - w_stim
             
-        
+        # initialize the output activity as being the response to the stimulus
+        self.output_activity[0, :] = stimulus[0, :]
         print '\t... and computing ...'
-        for t in xrange(self.n_time_steps):
+        for t in xrange(1, self.n_time_steps):
+            print 'iteration %d\tt: %d / %d' % (self.iteration, t, self.n_time_steps)
             for post_hc in xrange(n_hc):
                 output_from_hc = np.zeros(n_cells_per_hc)
                 for post_ in xrange(n_cells_per_hc):
@@ -76,13 +82,29 @@ class AbstractNetwork(object):
                         input_from_hc = 1e-3
                         idx_0 = pre_hc * n_cells_per_hc
                         idx_1 = (pre_hc + 1) * n_cells_per_hc
+                        input_from_hc += np.dot(self.wij[idx_0:idx_1, post_gid], self.output_activity[t-1, idx_0:idx_1])
+#                        print input_from_hc, 
+#                        s = np.dot(self.wij[idx_0:idx_1, post_gid], stimulus[t, idx_0:idx_1])
+#                        if s > 1:
+#                            input_from_hc = 1.
+#                        else:
+#                            input_from_hc = s
                         # no exponentiation for pre-activity (=stimulus) needed here, since the stimulus has been created this way already
-                        input_from_hc += np.dot(self.wij[idx_0:idx_1, post_gid], stimulus[t, idx_0:idx_1])
+#                        input_from_hc += np.dot(self.wij[idx_0:idx_1, post_gid], stimulus[t, idx_0:idx_1])
+#                        print 'debug input_from_hc', input_from_hc
                         input_from_network += np.log(input_from_hc)
-                    output_from_hc[post_] = input_from_network + self.bias[post_gid, 1]
+#                        input_from_network += input_from_hc
+                    output_from_hc[post_] = w_net * input_from_network + self.bias[post_gid, 1] + w_stim * stimulus[t, post_gid]
+#                print '\n'
                 post_gid_1 = post_hc * n_cells_per_hc
+#                print '\n'
                 post_gid_2 = (post_hc + 1) * n_cells_per_hc
-                self.output_activity[t, post_gid_1:post_gid_2] = np.exp(output_from_hc) / np.exp(output_from_hc).sum()
+                if np.exp(output_from_hc).sum() > 1.:
+                    self.output_activity[t, post_gid_1:post_gid_2] = np.exp(output_from_hc) / np.exp(output_from_hc).sum()
+                else:
+                    self.output_activity[t, post_gid_1:post_gid_2] = np.exp(output_from_hc)
+#                    self.output_activity[t, post_gid_1:post_gid_2] = output_from_hc
+#                self.output_activity[t, post_gid_1:post_gid_2] = output_from_hc
 
 
 
@@ -191,7 +213,7 @@ if __name__ == '__main__':
     PS = simulation_parameters.parameter_storage()
     params = PS.params
 
-    n_iterations = 40
+    n_iterations = 24
     n_time_steps = params['t_sim'] / params['dt_rate']
     output_activity_all_iterations = np.zeros((n_iterations * n_time_steps, params['n_exc']),dtype=np.double)
 

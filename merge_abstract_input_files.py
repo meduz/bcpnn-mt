@@ -4,7 +4,7 @@ import simulation_parameters
 PS = simulation_parameters.parameter_storage()
 params = PS.params
 n_cells = params['n_exc']
-n_iterations = 40
+n_iterations = params['n_theta'] * params['n_speeds'] * params['n_cycles'] * params['n_stim_per_direction']
 
 #n_time_steps = params['t_sim'] / params['dt_rate']
 #for iteration in xrange(n_iterations):

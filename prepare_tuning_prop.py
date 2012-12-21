@@ -27,7 +27,7 @@ PS.write_parameters_to_file()
 #    pc_id, n_proc, comm = 0, 1, None
 #    print "MPI not used"
 
-tuning_prop = utils.set_tuning_prop(params, mode='hexgrid', v_max=params['v_max'])        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+tuning_prop = utils.set_tuning_prop(params, mode='hexgrid')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
 print "Saving tuning_prop to file:", params['tuning_prop_means_fn']
 np.savetxt(params['tuning_prop_means_fn'], tuning_prop)
 

@@ -6,15 +6,17 @@ import os
 import sys
 import time
 import random
+import CreateStimuli
 
 class AbstractTrainer(object):
 
-    def __init__(self, params, n_speeds, n_cycles, n_stim, comm=None):
+    def __init__(self, params, comm=None):
         self.params = params
         self.comm = comm
-        self.n_stim = n_stim
-        self.n_cycles = n_cycles
-        self.n_speeds = n_speeds
+        self.n_speeds = params['n_speeds']
+        self.n_cycles = params['n_cycles']
+        self.n_directions = params['n_theta']
+        self.n_iterations_total = self.params['n_theta'] * self.params['n_speeds'] * self.params['n_cycles'] * self.params['n_stim_per_direction']
         self.selected_conns = None
         self.n_time_steps = self.params['t_sim'] / self.params['dt_rate']
 
@@ -38,14 +40,8 @@ class AbstractTrainer(object):
             comm.barrier()
 
         self.initial_value = 1e-2 # should be around 1 / n_units per HC, i.e. 1. / (params['N_theta'] * params['N_V']
-        tau_p = self.params['t_sim'] * self.n_stim# * self.n_cycles # tau_p should be in the order of t_stimulus * n_iterations * n_cycles
-        tau_pij = tau_p
-        self.tau_dict = {'tau_zi' : 50.,    'tau_zj' : 5., 
-                        'tau_ei' : 100.,   'tau_ej' : 100., 'tau_eij' : 100.,
-                        'tau_pi' : tau_p,  'tau_pj' : tau_p, 'tau_pij' : tau_pij,
-                        }
         self.eps = .1 * self.initial_value
-        self.normalize = True # normalize input within a 'hypercolumn'
+        self.normalize = True# normalize input within a 'hypercolumn'
 
         all_conns = []
         # distribute connections among processors
@@ -78,21 +74,75 @@ class AbstractTrainer(object):
                 print 'Pc_id %d gets %d - %d as seleceted connection' % (self.pc_id, c[0], c[1])
 
 
+    def create_stimuli(self, random_order=False, test_stim=False):
+
+        mp = np.zeros((self.n_iterations_total, 4))
+        n_iterations_per_cycle = self.params['n_theta'] * self.params['n_speeds'] * self.params['n_stim_per_direction']
+            
+        CS = CreateStimuli.CreateStimuli(self.params, random_order)
+        all_speeds, all_starting_pos, all_thetas = CS.get_motion_params(random_order)
+
+        i = 0
+        for cycle in xrange(self.params['n_cycles']):
+            for stim in xrange(n_iterations_per_cycle):
+                self.iteration = stim
+                print 'Generating input for iteration %d / %d' % (i, self.n_iterations_total)
+                x0, y0 = all_starting_pos[stim, :]
+                u0 = np.cos(all_thetas[stim]) * all_speeds[stim]
+                v0 = - np.sin(all_thetas[stim]) * all_speeds[stim]
+                mp[i, :] = x0, y0, u0, v0
+                i += 1
+        print 'Saving input params to:', self.params['parameters_folder'] + 'input_params.txt'
+        np.savetxt(self.params['parameters_folder'] + 'input_params.txt', mp)
+
+
+        stim = 0
+        for cycle in xrange(self.params['n_cycles']):
+            for i in xrange(n_iterations_per_cycle):
+                self.iteration = stim
+                print 'Generating input for iteration %d / %d' % (stim, self.n_iterations_total)
+                x0, y0 = all_starting_pos[i, :]
+                u0 = np.cos(all_thetas[i]) * all_speeds[i]
+                v0 = - np.sin(all_thetas[i]) * all_speeds[i]
+                self.params['motion_params'] = (x0, y0, u0, v0)
+                self.training_input_folder = "%sTrainingInput_%d/" % (self.params['folder_name'], stim)
+                print 'Writing input to %s' % (self.training_input_folder)
+                if not os.path.exists(self.training_input_folder) and self.pc_id == 0:
+                    mkdir = 'mkdir %s' % self.training_input_folder
+                    print mkdir
+                    os.system(mkdir)
+                if self.comm != None:
+                    self.comm.barrier()
+
+                if test_stim:
+                    self.create_input_vectors_blanking(t_blank=(0.4, 0.6), normalize=self.normalize)
+                else:
+                    self.create_input_vectors(normalize=self.normalize)
+                if self.comm != None:
+                    self.comm.barrier()
+                stim += 1
+
 
  
-    def create_stimuli(self, random_order=False, test_stim=False):
+    def create_stimuli_going_through_center(self, random_order=False, test_stim=False):
+        """
+        This function is deprecated and produces the wrong number of stimuli.
+        It doesn't take n_stim_per_direction into account.
+        """
+
+
 
         distance_from_center = 0.5
         center = (0.5, 0.5)
-        thetas = np.linspace(np.pi, 3*np.pi, n_stim, endpoint=False)
+        thetas = np.linspace(np.pi, 3*np.pi, self.n_directions, endpoint=False)
         v_default = np.sqrt(self.params['motion_params'][2]**2 + self.params['motion_params'][3]**2)
 
         seed = 0
         np.random.seed(seed)
         random.seed(seed)
 
-        sigma_theta = 2 * np.pi * 0.05
-        random_rotation = sigma_theta * (np.random.rand(self.n_cycles * self.n_stim * self.n_speeds) - .5 * np.ones(self.n_cycles * self.n_stim * self.n_speeds))
+        sigma_theta = self.params['sigma_theta_training']
+        random_rotation = sigma_theta * (np.random.rand(self.n_cycles * self.n_directions * self.n_speeds) - .5 * np.ones(self.n_cycles * self.n_directions * self.n_speeds))
         v_min, v_max = 0.3, 0.6
         speeds = np.linspace(v_min, v_max, self.n_speeds)
 
@@ -102,7 +152,7 @@ class AbstractTrainer(object):
         iteration = 0
         for speed_cycle in xrange(self.n_speeds):
             for cycle in xrange(self.n_cycles):
-                stimulus_order = range(self.n_stim)
+                stimulus_order = range(self.n_directions)
                 if random_order == True:
                     random.shuffle(stimulus_order)
 
@@ -137,6 +187,7 @@ class AbstractTrainer(object):
 
 
 
+
     def create_input_vectors(self, normalize=True):
         output_fn_base = self.training_input_folder + self.params['abstract_input_fn_base']
         n_cells = len(self.my_units)
@@ -146,11 +197,16 @@ class AbstractTrainer(object):
         for i_time, time_ in enumerate(time):
             if (i_time % 100 == 0):
                 print "t:", time_
-            L_input[:, i_time] = utils.get_input(self.tuning_prop[self.my_units, :], params, time_/params['t_stimulus'])
+            L_input[:, i_time] = utils.get_input(self.tuning_prop[self.my_units, :], params, time_/params['t_stimulus'], motion_params=self.params['motion_params'])
 
         for i_, unit in enumerate(self.my_units):
             output_fn = output_fn_base + str(unit) + '.dat'
             np.savetxt(output_fn, L_input[i_, :])
+
+        if pc_id == 0:
+            full_stim_input = '%sANNActivity/input_%d.dat' % (self.params['folder_name'], self.iteration)
+            print 'Saving input for stim %d to %s' % (self.iteration, full_stim_input)
+            np.savetxt(full_stim_input, L_input)
 
         if self.comm != None:
             self.comm.barrier()
@@ -178,7 +234,7 @@ class AbstractTrainer(object):
         for i_time, time_ in enumerate(time):
             if (i_time % 100 == 0):
                 print "t:", time_
-            L_input[:, i_time] = utils.get_input(self.tuning_prop[self.my_units, :], self.params, time_/self.params['t_stimulus'])
+            L_input[:, i_time] = utils.get_input(self.tuning_prop[self.my_units, :], self.params, time_/self.params['t_stimulus'], motion_params=self.params['motion_params'])
         for i in blank_idx:
             L_input[:, i] = 0.
         for i_, unit in enumerate(self.my_units):
@@ -214,16 +270,13 @@ class AbstractTrainer(object):
                     idx0 = hc * n_cells_per_hc
                     idx1 = (hc + 1) * n_cells_per_hc
                     s = L_input[t, idx0:idx1].sum()
-                    if s > 0:
-                        L_input[t, idx0:idx1] = np.exp(L_input[t, idx0:idx1]) / np.exp(L_input[t, idx0:idx1]).sum()
+                    if s > 1:
+#                        L_input[t, idx0:idx1] = np.exp(L_input[t, idx0:idx1]) / np.exp(L_input[t, idx0:idx1]).sum()
+                        L_input[t, idx0:idx1] /= L_input[t, idx0:idx1].sum()
 
-            for hc in xrange(n_hc):
-                idx0 = hc * n_cells_per_hc
-                idx1 = (hc + 1) * n_cells_per_hc
-                for i in xrange(n_cells_per_hc):
-                    cell = hc * n_cells_per_hc + i
-                    output_fn = fn_base + str(cell) + '.dat'
-                    np.savetxt(output_fn, L_input[:, cell])
+            for cell in xrange(n_cells):
+                output_fn = fn_base + str(cell) + '.dat'
+                np.savetxt(output_fn, L_input[:, cell])
 
             all_output_fn = params['activity_folder'] + 'input_%d.dat' % (self.iteration)
             print 'Normalized input is written to:', all_output_fn
@@ -249,43 +302,39 @@ class AbstractTrainer(object):
         self.bias_init = np.log(self.initial_value) * np.ones(params['n_exc'])
 
         comp_times = []
-        self.iteration = 0
-        for speed in xrange(self.n_speeds):
-            for cycle in xrange(self.n_cycles):
-                print '\nCYCLE %d\n' % (cycle)
-                for stim in xrange(self.n_stim):
-                    t0= time.time()
-                    # M A K E    D I R E C T O R Y 
-                    self.training_output_folder = '%sTrainingResults_%d/' % (self.params['folder_name'], self.iteration)
-                    self.training_input_folder = "%sTrainingInput_%d/" % (self.params['folder_name'], self.iteration)
-                    if not os.path.exists(self.training_output_folder) and self.pc_id == 0:
-                        mkdir = 'mkdir %s' % self.training_output_folder
-                        print mkdir
-                        os.system(mkdir)
-                    if self.comm != None:
-                        self.comm.barrier()
+        for iteration in xrange(self.n_iterations_total):
+            self.iteration = iteration
+            t0= time.time()
+            # M A K E    D I R E C T O R Y 
+            self.training_output_folder = '%sTrainingResults_%d/' % (self.params['folder_name'], self.iteration)
+            self.training_input_folder = "%sTrainingInput_%d/" % (self.params['folder_name'], self.iteration)
+            if not os.path.exists(self.training_output_folder) and self.pc_id == 0:
+                mkdir = 'mkdir %s' % self.training_output_folder
+                print mkdir
+                os.system(mkdir)
+            if self.comm != None:
+                self.comm.barrier()
 
-                    # C O M P U T E    
-                    self.compute_my_pijs()
+            # C O M P U T E    
+            self.compute_my_pijs()
 
-                    t_comp = time.time() - t0
-                    comp_times.append(t_comp)
-                    print 'Computation time for training %d: %d sec = %.1f min' % (self.iteration, t_comp, t_comp / 60.)
-                    if self.comm != None:
-                        self.comm.barrier()
-                    self.iteration += 1
+            t_comp = time.time() - t0
+            comp_times.append(t_comp)
+            print 'Computation time for training %d: %d sec = %.1f min' % (self.iteration, t_comp, t_comp / 60.)
+            if self.comm != None:
+                self.comm.barrier()
 
         total_time = 0.
         for t in comp_times:
             total_time += t
-        print 'Total computation time for %d training iterations: %d sec = %.1f min' % (self.n_stim * self.n_cycles, total_time, total_time/ 60.)
+        print 'Total computation time for %d training iterations: %d sec = %.1f min' % (self.n_iterations_total, total_time, total_time/ 60.)
 
     def compute_my_pijs(self):
 
         pre_traces_computed = np.zeros(params['n_exc'], dtype=np.bool)
         post_traces_computed = np.zeros(params['n_exc'], dtype=np.bool)
 
-        tau_dict = self.tau_dict
+        tau_dict = self.params['tau_dict']
         zi_traces = self.initial_value * np.ones((self.n_time_steps, self.pre_ids.size), dtype=np.double)
         zj_traces = self.initial_value * np.ones((self.n_time_steps, self.post_ids.size), dtype=np.double)
         ei_traces = self.initial_value * np.ones((self.n_time_steps, self.pre_ids.size), dtype=np.double)
@@ -428,6 +477,44 @@ class AbstractTrainer(object):
                 np.savetxt(self.params['weights_folder'] + 'bias_array_%d.dat' % (iteration), bias_array)
 
 
+    def merge_abstract_input_files(self):
+
+        if self.pc_id == 0:
+            print 'Merging abstract input files for stim:'
+            n_cells = self.params['n_exc']
+            cmd = 'cat '
+            for stim in xrange(self.n_iterations_total):
+                print stim, '\t'
+                if self.normalize == False:
+                    """
+                    put all the cellwise seperated abstract L_i into one file
+                    """
+                    L_i = np.zeros((self.n_time_steps, self.params['n_exc']))
+                    training_input_folder = "%sTrainingInput_%d/" % (self.params['folder_name'], stim)
+                    fn_base = training_input_folder + self.params['abstract_input_fn_base']
+                    for cell in xrange(self.params['n_exc']):
+                        fn = fn_base + str(cell) + '.dat'
+                        L_i[:, cell] = np.loadtxt(fn)
+                    output_fn = '%sANNActivity/input_%d.dat' % (self.params['folder_name'], stim)
+                    np.savetxt(output_fn, L_i)
+
+                cmd += ' %sANNActivity/input_%d.dat' % (self.params['folder_name'], stim)
+            fn_out = '%sParameters/all_inputs_scaled.dat' % (self.params['folder_name'])
+            cmd +=  '  > %s' % (fn_out)
+            print cmd
+            os.system(cmd)
+
+            d = np.loadtxt(fn_out)
+            d_trans = d.transpose()
+            fn_out = '%sParameters/all_inputs_scaled_transposed.dat' % (self.params['folder_name'])
+            print 'Saving transposed input to:', fn_out
+            np.savetxt(fn_out, d_trans)
+        if comm != None:
+            comm.barrier()
+
+
+
+
 
 
 if __name__ == '__main__':
@@ -453,22 +540,21 @@ if __name__ == '__main__':
     if comm != None:
         comm.barrier()
 
-    n_speeds = 1
-    n_cycles = 5
-    n_stim = 8
 
-    AT = AbstractTrainer(params, n_speeds, n_cycles, n_stim, comm)
-    cells_to_record = [117, 276, 245, 204, 426, 265, 107]
+    AT = AbstractTrainer(params, comm)
+    cells_to_record = [18, 258, 352, 223, 112, 22, 38, 178, 186, 216, 334, 183]
     selected_connections = []
     for src in cells_to_record:
         for tgt in cells_to_record:
             if src != tgt:
                 selected_connections.append((src, tgt))
     AT.set_selected_connections(selected_connections)
-                        
+#    AT.create_stimuli_going_through_center(random_order=True, test_stim=False)
     AT.create_stimuli(random_order=True, test_stim=False)
-    AT.train()
-    AT.merge_weight_files(n_speeds * n_cycles * n_stim)
+    AT.merge_abstract_input_files()
+#    AT.train()
+#    n_iterations_total = params['n_theta'] * params['n_speeds'] * params['n_cycles'] * params['n_stim_per_direction']
+#    AT.merge_weight_files(n_iterations_total)
 
 
 

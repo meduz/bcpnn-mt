@@ -4,6 +4,8 @@ import pylab
 import numpy as np
 import utils
 import sys
+import matplotlib
+from matplotlib import cm
 
 # load simulation parameters
 def return_plot(subplot_code, iteration=None, fig=None):
@@ -12,6 +14,9 @@ def return_plot(subplot_code, iteration=None, fig=None):
 
     fn = params['tuning_prop_means_fn']
     tp = np.loadtxt(fn)
+    motion_params_fn = params['parameters_folder'] + 'input_params.txt'
+    all_mp = np.loadtxt(motion_params_fn)
+    mp = all_mp[iteration, :]
 
     n_cells = tp[:, 0].size
     #n_cells = 10
@@ -30,28 +35,45 @@ def return_plot(subplot_code, iteration=None, fig=None):
         rate = np.loadtxt(input_fn)
         input_sum[i] = rate.sum()
 
+    idx = input_sum.argsort()
+    mac = idx[-10:]
+    print 'motion stimulus', mp
+    print 'most activated cells:'
+    for i in mac:
+        dist = tp[i, :] - mp
+        print i, tp[i, :], np.sqrt(np.dot(dist, dist))
     input_max = input_sum.max()
     if fig == None:
         fig = pylab.figure(facecolor=bg_color)
     ax = fig.add_subplot(subplot_code)
-    h = 240.
-    s = 1. # saturation
+#    h = 240.
+#    s = 1. # saturation
+
+    o_min = 0.
+    o_max = input_max
+    norm = matplotlib.mpl.colors.Normalize(vmin=o_min, vmax=o_max)
+    m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cm.binary)#PuBu)#jet)
+
     for i in xrange(n_cells):
-        l = 1. - 0.5 * input_sum[i] / input_max
-        assert (0 <= h and h < 360)
-        assert (0 <= l and l <= 1)
-        assert (0 <= s and s <= 1)
-        (r, g, b) = utils.convert_hsl_to_rgb(h, s, l)
+
+        if i in mac:
+            print 'debug', i, input_sum[i], input_max, input_sum[i] / input_max
+        c = m.to_rgba(input_sum[i])
+#        l = 1. - 0.5 * input_sum[i] / input_max
+#        assert (0 <= h and h < 360)
+#        assert (0 <= l and l <= 1)
+#        assert (0 <= s and s <= 1)
+#        (r, g, b) = utils.convert_hsl_to_rgb(h, s, l)
         x, y, u, v = tp[i, :]
-        ax.plot(x, y, 'o', c=(r,g,b), markersize=ms)
-        if l < .7:
+        ax.plot(x, y, 'o', c=c, markersize=ms)
+#        ax.plot(x, y, 'o', c=(r,g,b), markersize=ms)
+        
+#        if l < .7:
+        if i in mac:
             ax.annotate('%d' % i, (x+0.005, y+0.005), fontsize=10)
 
     stim_color = 'k'
-    motion_params_fn = params['parameters_folder'] + 'input_params.txt'
-    all_mp = np.loadtxt(motion_params_fn)
-    mp = all_mp[iteration, :]
-    ax.quiver(mp[0], mp[1], mp[2], mp[3], angles='xy', scale_units='xy', scale=1, color=stim_color, headwidth=4)
+    ax.quiver(mp[0], mp[1], mp[2], mp[3], angles='xy', scale_units='xy', scale=1, color=stim_color, headwidth=4, pivot='tail')
     ax.annotate('Stimulus', (mp[0]+.5*mp[2], mp[1]+0.1), fontsize=12, color=stim_color)
 
 
@@ -71,8 +93,9 @@ if __name__ == '__main__':
         iteration = int(sys.argv[1])
     else:
         iteration = None
-
     return_plot(111, iteration=iteration)
 
-    pylab.show()
+    if len(sys.argv) > 2:
+        pylab.show()
+
 

@@ -27,13 +27,13 @@ def return_plot(cell_gids=[], subplot_code=111, fig=None, input_fn_base=None, mo
     bg_color = 'w'
     pylab.rcParams['lines.markeredgewidth'] = 0
 
-    input_sum = np.zeros(n_cells)
-    for i, gid in enumerate(cell_gids):
-        input_fn = input_fn_base + str(gid) + '.dat'
-        rate = np.loadtxt(input_fn)
-        input_sum[i] = rate.sum()
+#    input_sum = np.zeros(n_cells)
+#    for i, gid in enumerate(cell_gids):
+#        input_fn = input_fn_base + str(gid) + '.dat'
+#        rate = np.loadtxt(input_fn)
+#        input_sum[i] = rate.sum()
+#    input_max = input_sum.max()
 
-    input_max = input_sum.max()
     if fig == None:
         fig = pylab.figure(facecolor=bg_color)
     ax = fig.add_subplot(subplot_code)
@@ -52,12 +52,12 @@ def return_plot(cell_gids=[], subplot_code=111, fig=None, input_fn_base=None, mo
 #        ax.plot(x, y, 'o', c=(r,g,b), markersize=ms)
 
         ax.plot(x, y, 'o', c=colors[i%len(colors)], markersize=ms)
-        ax.quiver(x, y, u, v, angles='xy', scale_units='xy', scale=1)#, headwidth=6)
+        ax.quiver(x, y, u, v, angles='xy', scale_units='xy', scale=1, width=0.02)#, headwidth=6)
 
 
     # plot stimulus
     stim_color = 'y'
-    ax.quiver(mp[0], mp[1], mp[2], mp[3], angles='xy', scale_units='xy', scale=1, color=stim_color, headwidth=6)
+    ax.quiver(mp[0], mp[1], mp[2], mp[3], angles='xy', scale_units='xy', scale=1, color=stim_color, headwidth=6, width=0.02)
     ax.annotate('Stimulus', (mp[0]+.5*mp[2], mp[1]+0.1), fontsize=12, color=stim_color)
 
     ax.set_xlim((0, 1))

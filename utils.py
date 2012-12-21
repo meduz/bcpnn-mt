@@ -103,7 +103,7 @@ def get_input(tuning_prop, params, t, motion_params=None, contrast=.9, motion='d
             tuning_prop[:, 1] : y-position
             tuning_prop[:, 2] : u-position (speed in x-direction)
             tuning_prop[:, 3] : v-position (speed in y-direction)
-        t: time in the period is between 0 (included) and 1. (excluded)
+        t: time in the period (not restricted to 0 .. 1)
         motion: type of motion (TODO: filename to movie, ... ???)
     """
     n_cells = tuning_prop[:, 0].size
@@ -207,7 +207,7 @@ def get_time_of_max_stim(tuning_prop, motion_params):
     return t_min
 
 
-def set_tuning_prop(params, mode='hexgrid', v_max=1.0):
+def set_tuning_prop(params, mode='hexgrid'):
     """
     Place n_exc excitatory cells in a 4-dimensional space by some mode (random, hexgrid, ...).
     The position of each cell represents its excitability to a given a 4-dim stimulus.
@@ -227,6 +227,8 @@ def set_tuning_prop(params, mode='hexgrid', v_max=1.0):
 
     rnd.seed(params['tuning_prop_seed'])
     tuning_prop = np.zeros((params['n_exc'], 4))
+    v_max = params['v_max_tp']
+    v_min = params['v_min_tp']
     if mode=='random':
         # place the columns on a grid with the following dimensions
         x_max = int(round(np.sqrt(params['n_cells'])))
@@ -243,9 +245,9 @@ def set_tuning_prop(params, mode='hexgrid', v_max=1.0):
     elif mode=='hexgrid':
 
         if params['log_scale']==1:
-            v_rho = np.linspace(v_max/params['N_V'], v_max, num=params['N_V'], endpoint=True)
+            v_rho = np.linspace(v_min, v_max, num=params['N_V'], endpoint=True)
         else:
-            v_rho = np.logspace(np.log(v_max/params['N_V'])/np.log(params['log_scale']),
+            v_rho = np.logspace(np.log(v_min)/np.log(params['log_scale']),
                             np.log(v_max)/np.log(params['log_scale']), num=params['N_V'],
                             endpoint=True, base=params['log_scale'])
         v_theta = np.linspace(0, 2*np.pi, params['N_theta'], endpoint=False)
@@ -264,6 +266,7 @@ def set_tuning_prop(params, mode='hexgrid', v_max=1.0):
         # wrapping up:
         index = 0
         random_rotation = 2*np.pi*rnd.rand(params['N_RF_X']*params['N_RF_Y']) * params['sigma_RF_direction']
+#        random_rotation = 2*np.pi*rnd.rand(params['N_RF_X']*params['N_RF_Y'])
         # todo do the same for v_rho?
         for i_RF in xrange(params['N_RF_X']*params['N_RF_Y']):
             for i_v_rho, rho in enumerate(v_rho):

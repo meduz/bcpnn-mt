@@ -66,8 +66,9 @@ for fn in sys.argv[1:]:
 #                print 'hc %d t %d %.20e' % (hc, t, s)
 
     ax.set_title(fn)
-    cax = ax.pcolormesh(data)#, edgecolor='k', linewidths='1')
-#    cax = ax.pcolormesh(data, cmap='bone')
+    cmap = 'jet'
+    cax = ax.pcolormesh(data, cmap=cmap)#, edgecolor='k', linewidths='1')
+#    cax = ax.pcolormesh(data, cmap='binary')
     #cax = ax.pcolormesh(data, cmap='RdBu')
 
     ax.set_ylim(0, data.shape[0])

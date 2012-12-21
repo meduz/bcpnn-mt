@@ -41,18 +41,27 @@ class parameter_storage(object):
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 1, 16# resolution in velocity norm and direction
 
-        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF'] = 60# np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3.)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3.))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 1, 20# resolution in velocity norm and direction
+        self.params['N_V'], self.params['N_theta'] = 1, 10# resolution in velocity norm and direction
+
+#        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3.)))
+#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3.))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#        self.params['N_V'], self.params['N_theta'] = 1, 4# resolution in velocity norm and direction
+
 
         print 'N_RF_X %d N_RF_Y %d' % (self.params['N_RF_X'], self.params['N_RF_Y'])
         print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
-        self.params['abstract_input_scaling_factor'] = 10.
+        self.params['abstract_input_scaling_factor'] = 1.
         self.params['log_scale'] = 2. # base of the logarithmic tiling of particle_grid; linear if equal to one
-        self.params['sigma_RF_pos'] = .05 # some variability in the position of RFs
-        self.params['sigma_RF_speed'] = .10 # some variability in the speed of RFs
-        self.params['sigma_RF_direction'] = .25 # some variability in the direction of RFs
+        self.params['sigma_RF_pos'] = .00 # some variability in the position of RFs
+        self.params['sigma_RF_speed'] = .00 # some variability in the speed of RFs
+        self.params['sigma_RF_direction'] = .0 # some variability in the direction of RFs
+
+        self.params['sigma_theta_training'] = 2 * np.pi * 0.00
+
 
         # ###################
         # NETWORK PARAMETERS
@@ -74,7 +83,7 @@ class parameter_storage(object):
         # CONNECTIVITY PARAMETERS
         # #######################
         self.params['connect_exc_exc'] = True# enable / disable exc - exc connections for test purpose only
-        self.params['selective_inhibition'] = True# if True: inh cells have tuning prop and receive input from exc according to those
+        self.params['selective_inhibition'] = False# if True: inh cells have tuning prop and receive input from exc according to those
         # there are three different ways to set up the connections:
         self.params['initial_connectivity'] = 'precomputed_linear_transform'
 #        self.params['initial_connectivity'] = 'precomputed_convergence_constrained'
@@ -130,9 +139,20 @@ class parameter_storage(object):
         self.params['t_stimulus'] = 100.            # [ms] time when stimulus ends, 
         self.params['tuning_prop_seed'] = 0         # seed for randomized tuning properties
         self.params['dt_sim'] = self.params['delay_range'][0] * 1 # [ms] time step for simulation
-        self.params['dt_rate'] = 5.0                # [ms] time step for the non-homogenous Poisson process 
+        self.params['dt_rate'] = .1                # [ms] time step for the non-homogenous Poisson process 
         # 5.0 for abstract learning, 0.1 when used as envelope for poisson procees
         self.params['n_gids_to_record'] = 20
+
+        # ###################
+        # BCPNN PARAMS 
+        # ###################
+#        tau_p = self.params['t_sim'] * 0.33 # * self.n_stim# * self.n_cycles # tau_p should be in the order of t_stimulus * n_iterations * n_cycles
+        tau_p = 2400 # * self.n_stim# * self.n_cycles # tau_p should be in the order of t_stimulus * n_iterations * n_cycles
+        tau_pij = tau_p
+        self.params['tau_dict'] = {'tau_zi' : 50.,    'tau_zj' : 5., 
+                        'tau_ei' : 100.,   'tau_ej' : 100., 'tau_eij' : 100.,
+                        'tau_pi' : tau_p,  'tau_pj' : tau_p, 'tau_pij' : tau_pij,
+                        }
 
         # ######
         # INPUT 
@@ -148,12 +168,23 @@ class parameter_storage(object):
         u0 (v0) : velocity in x-direction (y-direction)
         """
         self.params['motion_params'] = (0.1, 0.5, 0.3, 0) # x0, y0, u0, v0.5
-        self.params['v_max'] = 0.3  # [a.u.] maximal velocity in visual space for tuning_parameters (for each component), 1. means the whole visual field is traversed
-        self.params['blur_X'], self.params['blur_V'] = 0.15, 0.15
+        self.params['v_max_tp'] = 0.35  # [a.u.] maximal velocity in visual space for tuning_parameters (for each component), 1. means the whole visual field is traversed
+        self.params['v_min_tp'] = 0.25  # [a.u.] minimal velocity in visual space for training
+        self.params['v_max_training'] = 0.3
+        self.params['v_min_training'] = 0.3
+        self.params['blur_X'], self.params['blur_V'] = .10, .10
         # the blur parameter represents the input selectivity:
         # high blur means many cells respond to the stimulus
         # low blur means high input selectivity, few cells respond
         # the maximum number of spikes as response to the input alone is not much affected by the blur parameter
+
+        # ###################
+        # TRAINING PARAMETERS
+        # ###################
+        self.params['n_theta'] = 1 # number of different orientations to train with
+        self.params['n_speeds'] = 1     
+        self.params['n_cycles'] = 1
+        self.params['n_stim_per_direction'] = 3 # each direction is trained this many times
 
 
         # ######
@@ -168,16 +199,7 @@ class parameter_storage(object):
 #        self.params['w_inh_noise'] = 1e-8          # [uS] mean value for noise ---< columns
 #        self.params['f_inh_noise'] = 1e-8# [Hz]
 
-
         rnd.seed(self.params['seed'])
-
-
-        # ########################
-        # TRAINING PARAMETERS 
-        # ########################
-        self.params['n_training_theta'] = 8
-        self.params['n_training_v'] = 8
-        self.params['n_patterns'] = self.params['n_training_theta'] * self.params['n_training_v']
 
 
     def set_filenames(self):
@@ -201,8 +223,12 @@ class parameter_storage(object):
 #                        (self.params['delay_scale'], self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'])
 
 #        folder_name = 'LargeScaleModel_selectiveInh_LT_delayScale20_blurX1.50e-01_blurV3.50e-01_wsigmax3.00e-01_wsigmav3.00e-01/'
-#        folder_name = 'Abstract_larger/'
-        folder_name = 'Abstract/'
+#        folder_name = 'Deliverable/'
+#        folder_name = 'TuningCurves/'
+        folder_name = 'TuningCurvesSpiking/'
+#        folder_name = 'Abstract_blurx%.2f_v%.2f/' % (self.params['blur_X'], self.params['blur_V'])
+#        folder_name = 'Abstract_taupi%dms/' % (self.params['tau_dict']['tau_pi'])
+#        folder_name = 'Abstract_c++/'
 #        folder_name = 'Abstract_for_AndersCode_new/'
 #        folder_name = 'AndersWij/'
 #        folder_name = 'InputAnalysis_SpikingModel_ScaledInput/'
