@@ -11,7 +11,7 @@ import sys
 network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
 params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
-params['blur_X'], params['blur_V'] = float(sys.argv[1]), float(sys.argv[2])
+#params['blur_X'], params['blur_V'] = float(sys.argv[1]), float(sys.argv[2])
 folder = params['input_folder']
 fn_base = params['input_st_fn_base'].rsplit(folder)[1]
 n_cells = params['n_cells']

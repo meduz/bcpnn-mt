@@ -10,11 +10,12 @@ import simulation_parameters
 network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
 params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
-params['w_sigma_x'], params['w_sigma_v'] = float(sys.argv[1]), float(sys.argv[2])
-file_count = int(sys.argv[3])
+#params['w_sigma_x'], params['w_sigma_v'] = float(sys.argv[1]), float(sys.argv[2])
+#file_count = int(sys.argv[3])
 print 'w_sigma', params['w_sigma_x'], params['w_sigma_v']
 
-fn = params['conn_list_ee_conv_constr_fn_base'] + 'merged.dat'
+#fn = params['conn_list_ee_conv_constr_fn_base'] + 'merged.dat'
+fn = params['merged_conn_list_ee']
 
 conn_list = np.loadtxt(fn)
 w = conn_list[:, 2]
@@ -60,7 +61,8 @@ pylab.text(text_pos_x, text_pos_y, label_txt, bbox=dict(pad=5.0, ec="k", fc="non
 #print 'Saving to:', output_fig
 #pylab.savefig(output_fig)
 
-output_fig = 'Figures_WsigmaSweep_TransformedBound/%d.png' % (file_count)
+#output_fig = 'Figures_WsigmaSweep_TransformedBound/%d.png' % (file_count)
+output_fig = '%sconnection_hist.png' % (params['figures_folder'])
 print 'Saving to:', output_fig
 pylab.savefig(output_fig)
 #pylab.show()

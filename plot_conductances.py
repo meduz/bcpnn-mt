@@ -7,7 +7,7 @@ import NeuroTools.parameters as ntp
 import simulation_parameters
 import time
 
-def plot_conductances(params=None, data_fn=None, inh_spikes = None):
+def plot_conductances(params=None, comm=None, data_fn=None, inh_spikes = None):
 
     t_start = time.time()
     if params== None:
@@ -22,7 +22,7 @@ def plot_conductances(params=None, data_fn=None, inh_spikes = None):
 #    if inh_spikes == None:
 #        inh_spikes = params['inh_spiketimes_fn_merged'] + '%d.ras' % (sim_cnt)
 
-    plotter = P.PlotConductances(params, data_fn)
+    plotter = P.PlotConductances(params, comm, data_fn)
 
     if plotter.no_spikes:
         return
@@ -31,13 +31,13 @@ def plot_conductances(params=None, data_fn=None, inh_spikes = None):
 
     # fig 1
     # neuronal level
-#    plotter.create_fig()  # create an empty figure
-#    plotter.plot_rasterplot('exc', 1)               # 1 
-#    plotter.plot_rasterplot('inh', 2)               # 2 
-#    plotter.plot_group_spikes_vs_time(3)            # 3
-#    output_fn = output_fn_base + '_0.png'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn)
+    plotter.create_fig()  # create an empty figure
+    plotter.plot_rasterplot('exc', 1)               # 1 
+    plotter.plot_rasterplot('inh', 2)               # 2 
+    plotter.plot_group_spikes_vs_time(3)            # 3
+    output_fn = output_fn_base + '_0.png'
+    print 'Saving figure to:', output_fn
+    pylab.savefig(output_fn)
 
 #    output_fn = '%sgoodcell_connections_%s_wsigmaX_%.2f_wsigmaV%.2f_wthresh%.1e.png' % (params['figures_folder'], params['initial_connectivity'], \
 #            params['w_sigma_x'], params['w_sigma_v'], params['w_thresh_connection'])
@@ -54,6 +54,10 @@ def plot_conductances(params=None, data_fn=None, inh_spikes = None):
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
 
+
+    plotter.create_fig()  # create an empty figure
+    plotter.plot_input_cond()
+
     t_stop = time.time()
     t_run = t_stop - t_start
     print "PlotConductance duration: %d sec or %.1f min for %d cells (%d exc, %d inh)" % (t_run, (t_run)/60., \
@@ -62,5 +66,16 @@ def plot_conductances(params=None, data_fn=None, inh_spikes = None):
 #    pylab.show()
 
 if __name__ == '__main__':
-    plot_conductances(params=None)
+    try:
+        from mpi4py import MPI
+        USE_MPI = True
+        comm = MPI.COMM_WORLD
+        pc_id, n_proc = comm.rank, comm.size
+        print "USE_MPI:", USE_MPI, 'pc_id, n_proc:', pc_id, n_proc
+    except:
+        USE_MPI = False
+        pc_id, n_proc, comm = 0, 1, None
+        print "MPI not used"
+
+    plot_conductances(params=None, comm=comm)
 

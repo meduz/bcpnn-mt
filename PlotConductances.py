@@ -6,7 +6,7 @@ import simulation_parameters
 import utils
 
 class PlotConductances(object):
-    def __init__(self, params=None, data_fn=None, sim_cnt=0):
+    def __init__(self, params=None, comm=None, data_fn=None, sim_cnt=0):
 
         if params == None:
             self.network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
@@ -14,6 +14,7 @@ class PlotConductances(object):
         else:
             self.params = params
         self.no_spikes = False
+        self.comm = comm
 
         self.n_fig_x = 2
         self.n_fig_y = 2
@@ -76,6 +77,7 @@ class PlotConductances(object):
         try:
             d = np.loadtxt(fn)
         except:
+            print 'No spikes found in ', fn
             self.no_spikes = True
             return
 
@@ -95,7 +97,7 @@ class PlotConductances(object):
             x, y, u, v = self.tuning_prop[gid]
             thetas = np.arctan2(v, u)
             h = ((thetas + np.pi) / (2 * np.pi)) * 360. # theta determines h, h must be [0, 360)
-            l = np.sqrt(u**2 + v**2) / np.sqrt(2 * self.params['v_max']**2) # lightness [0, 1]
+            l = np.sqrt(u**2 + v**2) / np.sqrt(2 * self.params['v_max_tp']**2) # lightness [0, 1]
             s = 1. # saturation
             assert (0 <= h and h < 360)
             assert (0 <= l and l <= 1)
@@ -134,17 +136,20 @@ class PlotConductances(object):
 
     def plot_rasterplot(self, cell_type, fig_cnt=1):
         if cell_type == 'inh':
-            fn = self.params['inh_spiketimes_fn_base'] + '0.ras'
+            fn = self.params['inh_spiketimes_fn_merged'] + '0.ras'
             n_cells = self.params['n_inh']
         elif cell_type == 'exc':
             fn = self.params['exc_spiketimes_fn_merged'] + '0.ras'
             n_cells = self.params['n_exc']
+
         try:
             nspikes, spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
         except:
+            print 'Problem loading spiketimes from', fn
             spiketimes = []
 
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
+        print 'debug', n_cells
         for cell in xrange(n_cells):
             ax.plot(spiketimes[cell], cell * np.ones(nspikes[cell]), 'o', color='k', markersize=1)
             
@@ -256,7 +261,7 @@ class PlotConductances(object):
         # inh -> g
 
         if conn_list_fn == None:
-            if self.params['initial_connectivity'] == 'precomputed':
+            if not self.params['initial_connectivity'] == 'random':
                 conn_list_fn = self.params['merged_conn_list_ee']
             else: 
                 conn_list_fn = self.params['random_weight_list_fn'] + '0.dat'

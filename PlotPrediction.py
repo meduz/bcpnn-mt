@@ -40,7 +40,7 @@ class PlotPrediction(object):
         self.vx_tuning = self.tuning_prop[:, 2].copy()
         self.vx_tuning.sort()
         self.sorted_indices_vx = self.tuning_prop[:, 2].argsort()
-        self.vx_min, self.vx_max = -0.3, 0.8
+        self.vx_min, self.vx_max = self.params['v_min_tp'], self.params['v_max_tp']
         # maximal range of vx_speeds
 #        self.vx_min, self.vx_max = np.min(self.vx_tuning), np.max(self.vx_tuning)
         self.vx_grid = np.linspace(self.vx_min, self.vx_max, self.n_vx_bins, endpoint=True)
