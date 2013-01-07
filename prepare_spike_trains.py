@@ -5,7 +5,15 @@ import sys
 import simulation_parameters
 PS = simulation_parameters.parameter_storage()
 params = PS.load_params()                       # params stores cell numbers, etc as a dictionary
+# either:
 #params['blur_X'], params['blur_V'] = float(sys.argv[1]), float(sys.argv[2])
+# or:
+try: # try to get motion params from command line
+    params['motion_params'] = float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4])
+except: # take the standard ones
+    mp = params['motion_params']
+
+
 PS.set_filenames()
 PS.create_folders()
 PS.write_parameters_to_file()
@@ -36,6 +44,6 @@ except:
     exit(1)
 
 my_units = utils.distribute_n(params['n_exc'], n_proc, pc_id)
-input_spike_trains = utils.create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=my_units) # write to paths defined in the params dictionary
+utils.create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=my_units) # write to paths defined in the params dictionary
 if comm != None:
     comm.barrier()

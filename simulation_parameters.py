@@ -41,10 +41,10 @@ class parameter_storage(object):
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 1, 16# resolution in velocity norm and direction
 
-        self.params['N_RF'] = 60# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF'] = 20# np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3.)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3.))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 1, 10# resolution in velocity norm and direction
+        self.params['N_V'], self.params['N_theta'] = 1, 8# resolution in velocity norm and direction
 
 #        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3.)))
@@ -123,8 +123,8 @@ class parameter_storage(object):
         # CELL PARAMETERS   #
         # ###################
         # TODO: distribution of parameters (e.g. tau_m)
-        self.params['cell_params_exc'] = {'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':5.0, 'tau_syn_I':10.0, 'tau_m' : 10, 'v_reset' : -70}
-        self.params['cell_params_inh'] = {'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':5.0, 'tau_syn_I':10.0, 'tau_m' : 10, 'v_reset' : -70}
+        self.params['cell_params_exc'] = {'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':5.0, 'tau_syn_I':10.0, 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
+        self.params['cell_params_inh'] = {'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':5.0, 'tau_syn_I':10.0, 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
         self.params['tau_syn_exc'] = self.params['cell_params_exc']['tau_syn_E']
         self.params['tau_syn_inh'] = self.params['cell_params_inh']['tau_syn_I']
         # default parameters: /usr/local/lib/python2.6/dist-packages/pyNN/standardmodels/cells.py
@@ -301,6 +301,7 @@ class parameter_storage(object):
         self.params['x_distance_matrix_fn'] = '%sx_distance_matrix.dat' % (self.params['parameters_folder'])
         self.params['v_distance_matrix_fn'] = '%sv_distance_matrix.dat' % (self.params['parameters_folder'])
         self.params['tp_distance_matrix_fn'] = '%stp_distance_matrix.dat' % (self.params['parameters_folder'])
+        self.params['input_params_fn'] = '%sinput_params.txt' % (self.params['parameters_folder'])
 
         self.params['bias_values_fn_base'] = '%sbias_values_' % (self.params['bias_folder'])
 

@@ -1,5 +1,5 @@
 import pylab
-import numpy
+import numpy as np
 import sys
 
 if (len(sys.argv) < 2):
@@ -7,9 +7,10 @@ if (len(sys.argv) < 2):
 else:
     fn = sys.argv[1]
 
-data = pylab.loadtxt(fn)
+data = np.load(fn)
+#data = np.loadtxt(fn)
 if (data.ndim == 1):
-    x_axis = numpy.arange(data.size)
+    x_axis = np.arange(data.size)
     pylab.plot(x_axis, data)
 else:
     pylab.plot(data[:,0], data[:, 1], '-')

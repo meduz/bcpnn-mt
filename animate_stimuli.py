@@ -8,7 +8,6 @@ PS = simulation_parameters.parameter_storage()
 params = PS.load_params()                       # params stores cell numbers, etc as a dictionary
 
 
-
 n_frames_per_stim = 80
 n_theta = params['n_theta']
 n_speeds = params['n_speeds']
