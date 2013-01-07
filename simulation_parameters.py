@@ -21,30 +21,35 @@ class parameter_storage(object):
         # ###################
         # HEXGRID PARAMETERS
         # ###################
-        self.params['N_RF'] = 90# np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 10, 10# resolution in velocity norm and direction
-
-#        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
+        # Large-scale system
+#        self.params['N_RF'] = 90# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#        self.params['N_V'], self.params['N_theta'] = 6, 6# resolution in velocity norm and direction
+#        self.params['N_V'], self.params['N_theta'] = 10, 10# resolution in velocity norm and direction
 
+        # Medium-scale system
+        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+        self.params['N_V'], self.params['N_theta'] = 3, 6# resolution in velocity norm and direction
+
+        # Minimum sized system
 #        self.params['N_RF'] = 9# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 1, 1# resolution in velocity norm and direction
 
+        # Single-speed
 #        self.params['N_RF'] = 84# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 1, 16# resolution in velocity norm and direction
 
+        # Tuning-properties
         self.params['N_RF'] = 20# np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3.)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3.))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 1, 8# resolution in velocity norm and direction
+        self.params['N_V'], self.params['N_theta'] = 2, 8# resolution in velocity norm and direction
 
 #        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3.)))
@@ -56,9 +61,9 @@ class parameter_storage(object):
         print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
         self.params['abstract_input_scaling_factor'] = 1.
         self.params['log_scale'] = 2. # base of the logarithmic tiling of particle_grid; linear if equal to one
-        self.params['sigma_RF_pos'] = .05 # some variability in the position of RFs
+        self.params['sigma_RF_pos'] = .1 # some variability in the position of RFs
         self.params['sigma_RF_speed'] = .15 # some variability in the speed of RFs
-        self.params['sigma_RF_direction'] = .1 # some variability in the direction of RFs
+        self.params['sigma_RF_direction'] = .05 * 2 * np.pi # some variability in the direction of RFs
 
         self.params['sigma_theta_training'] = 2 * np.pi * 0.00
 
@@ -85,9 +90,9 @@ class parameter_storage(object):
         self.params['connect_exc_exc'] = True# enable / disable exc - exc connections for test purpose only
         self.params['selective_inhibition'] = False# if True: inh cells have tuning prop and receive input from exc according to those
         # there are three different ways to set up the connections:
-#        self.params['initial_connectivity'] = 'precomputed_linear_transform'
+        self.params['initial_connectivity'] = 'precomputed_linear_transform'
 #        self.params['initial_connectivity'] = 'precomputed_convergence_constrained'
-        self.params['initial_connectivity'] = 'random'
+#        self.params['initial_connectivity'] = 'random'
         self.params['p_ee'] = 0.01# fraction of network cells allowed to connect to each target cell, used in CreateConnections
         # when the initial connections are derived on the cell's tuning properties, these two values are used
         self.params['w_thresh_connection'] = 1e-5 # connections with a weight less then this value will be discarded
@@ -138,6 +143,7 @@ class parameter_storage(object):
         self.params['t_sim'] = 300.                 # [ms] total simulation time
         self.params['t_stimulus'] = 100.            # [ms] time when stimulus ends, 
         self.params['tuning_prop_seed'] = 0         # seed for randomized tuning properties
+        self.params['input_spikes_seed'] = 0
         self.params['dt_sim'] = self.params['delay_range'][0] * 1 # [ms] time step for simulation
         self.params['dt_rate'] = .1                # [ms] time step for the non-homogenous Poisson process 
         # 5.0 for abstract learning, 0.1 when used as envelope for poisson procees
@@ -167,9 +173,9 @@ class parameter_storage(object):
         x0 (y0) : start position on x-axis (y-axis)
         u0 (v0) : velocity in x-direction (y-direction)
         """
-        self.params['motion_params'] = (0.1, 0.5, 0.3, 0) # x0, y0, u0, v0.5
-        self.params['v_max_tp'] = 0.60  # [a.u.] maximal velocity in visual space for tuning_parameters (for each component), 1. means the whole visual field is traversed
-        self.params['v_min_tp'] = 0.05  # [a.u.] minimal velocity in visual space for training
+        self.params['motion_params'] = (0.1, 0.5, 0.2, 0) # x0, y0, u0, v0.5
+        self.params['v_max_tp'] = 0.50  # [a.u.] maximal velocity in visual space for tuning_parameters (for each component), 1. means the whole visual field is traversed
+        self.params['v_min_tp'] = 0.20  # [a.u.] minimal velocity in visual space for training
         self.params['v_max_training'] = 0.3
         self.params['v_min_training'] = 0.3
         self.params['blur_X'], self.params['blur_V'] = .10, .10
@@ -207,23 +213,24 @@ class parameter_storage(object):
         # FILENAMES and FOLDERS
         # ######################
         # the main folder with all simulation specific content
-        folder_name = 'LargeScaleModel_'
-        if self.params['selective_inhibition']:
-            folder_name += 'selectiveInh_'
-        if self.params['connect_exc_exc']:
-            if self.params['initial_connectivity'] == 'precomputed_linear_transform':
-                folder_name += 'LT_'
-            elif self.params['initial_connectivity'] == 'precomputed_convergence_constrained':
-                folder_name += 'CC_'
-            else:
-                folder_name += 'rndConn_'
-        else:
-            folder_name += 'noRec_'
-        folder_name += "delayScale%d_blurX%.2e_blurV%.2e_wsigmax%.2e_wsigmav%.2e/" % \
-                        (self.params['delay_scale'], self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'])
+
+#        folder_name = 'LargeScaleModel_'
+#        if self.params['selective_inhibition']:
+#            folder_name += 'selectiveInh_'
+#        if self.params['connect_exc_exc']:
+#            if self.params['initial_connectivity'] == 'precomputed_linear_transform':
+#                folder_name += 'LT_'
+#            elif self.params['initial_connectivity'] == 'precomputed_convergence_constrained':
+#                folder_name += 'CC_'
+#            else:
+#                folder_name += 'rndConn_'
+#        else:
+#            folder_name += 'noRec_'
+#        folder_name += "delayScale%d_blurX%.2e_blurV%.2e_wsigmax%.2e_wsigmav%.2e/" % \
+#                        (self.params['delay_scale'], self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'])
 
 #        folder_name = 'LargeScaleModel_selectiveInh_LT_delayScale20_blurX1.50e-01_blurV3.50e-01_wsigmax3.00e-01_wsigmav3.00e-01/'
-#        folder_name = 'Deliverable/'
+        folder_name = 'SpikingModel/'
 #        folder_name = 'TuningCurves/'
 #        folder_name = 'TuningCurvesSpiking/'
 #        folder_name = 'Abstract_blurx%.2f_v%.2f/' % (self.params['blur_X'], self.params['blur_V'])

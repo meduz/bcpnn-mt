@@ -40,7 +40,7 @@ def convert_spiketrain_to_trace(st, n):
 
 
 
-def create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=None):
+def create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=None, seed=None):
     """
     This function writes spike trains to a dedicated path specified in the params dict
     Spike trains are generated for each unit / minicolumn based on the function's arguments the following way:
@@ -59,6 +59,9 @@ def create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=No
 
     """
 
+    if seed == None:
+        seed = params['input_spikes_seed']
+    rnd.seed(seed)
     dt = params['dt_rate'] # [ms] time step for the non-homogenous Poisson process 
 #    time = np.arange(0, params['t_stimulus'], dt)
     time = np.arange(0, params['t_sim'], dt)

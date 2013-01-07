@@ -10,8 +10,8 @@ import simulation_parameters
 network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
 params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
-params['blur_X'], params['blur_V'] = float(sys.argv[1]), float(sys.argv[2])
-file_count = int(sys.argv[3])
+#params['blur_X'], params['blur_V'] = float(sys.argv[1]), float(sys.argv[2])
+#file_count = int(sys.argv[3])
 print 'Blur', params['blur_X'], params['blur_V']
 
 
@@ -153,10 +153,12 @@ pylab.text(text_pos_x, text_pos_y, label_text, bbox=dict(pad=5.0, ec="k", fc="no
 #output_fig = params['figures_folder'] + 'input_analysis.png'
 #print 'Output fig:', output_fig
 #output_fig = 'Figures_BlurSweep/' + 'fin%d_w%.1e_blurXV%.1e_%.1e.png' % (params['f_max_stim'], params['w_input_exc'], params['blur_X'], params['blur_V'])
-#print 'Saving to:', output_fig
-#pylab.savefig(output_fig)
-#output_fig = params['figures_folder'] + '%d.png' % (file_count)
-output_fig = 'Figures_BlurSweep/' + '%d.png' % (file_count)
+
+print 'Saving to:', output_fig
+pylab.savefig(output_fig)
+output_fig = params['figures_folder']
+
+#output_fig = 'Figures_BlurSweep/' + '%d.png' % (file_count)
 
 # only needed when a sweep is done
 output_fn = 'Figures_BlurSweep/nspikes_blur_sweep_new_unscaled.dat'

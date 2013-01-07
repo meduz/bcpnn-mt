@@ -38,10 +38,6 @@ time = np.arange(0, params['t_stimulus'], params['dt_rate'])
 #    L_input[:, i_time] = utils.get_input(tuning_prop, params, time_/params['t_sim'])
 #    L_input[:, i_time] *= params['f_max_stim']
 
-cells_closest_to_stim_pos, x_dist_to_stim = utils.sort_gids_by_distance_to_stimulus(tuning_prop, mp)
-print 'debug cells_closest_to_stim_pos', cells_closest_to_stim_pos
-
-
 # ===============
 #    S E T U P 
 # ===============
@@ -82,9 +78,11 @@ for tgt in xrange(params['n_exc']):
 # ==================
 #    R E C O R D 
 # ==================
-gids_to_record = cells_closest_to_stim_pos[:5]
-exc_pop_view = PopulationView(exc_pop, gids_to_record, label='good_exc_neurons')
-exc_pop_view.record_v()
+cells_closest_to_stim_pos, x_dist_to_stim = utils.sort_gids_by_distance_to_stimulus(tuning_prop, mp)
+#print 'debug cells_closest_to_stim_pos', cells_closest_to_stim_pos
+#gids_to_record = cells_closest_to_stim_pos[:5]
+#exc_pop_view = PopulationView(exc_pop, gids_to_record, label='good_exc_neurons')
+#exc_pop_view.record_v()
 exc_pop.record()
 
 # ==========
@@ -93,10 +91,10 @@ exc_pop.record()
 run(params['t_sim'])
 times['t_sim'] = timer.diff()
 
-fn_volt = params['exc_volt_fn_base'] + '%d.v' % sim_cnt
-print 'print_v to file: %s' % (fn_volt)
-exc_pop_view.print_v("%s" % (fn_volt), compatible_output=False)
-times['t_print_v'] = timer.diff()
+#fn_volt = params['exc_volt_fn_base'] + '%d.v' % sim_cnt
+#print 'print_v to file: %s' % (fn_volt)
+#exc_pop_view.print_v("%s" % (fn_volt), compatible_output=False)
+#times['t_print_v'] = timer.diff()
 
 fn_spikes = params['exc_spiketimes_fn_merged'] + '%d.ras' % sim_cnt
 print "Printing excitatory spikes", fn_spikes

@@ -10,8 +10,10 @@ params = PS.load_params()                       # params stores cell numbers, et
 # or:
 try: # try to get motion params from command line
     params['motion_params'] = float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4])
+    seed = int(sys.argv[5])
 except: # take the standard ones
     mp = params['motion_params']
+    seed = params['input_spikes_seed']
 
 
 PS.set_filenames()
@@ -44,6 +46,6 @@ except:
     exit(1)
 
 my_units = utils.distribute_n(params['n_exc'], n_proc, pc_id)
-utils.create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=my_units) # write to paths defined in the params dictionary
+utils.create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=my_units, seed=seed) # write to paths defined in the params dictionary
 if comm != None:
     comm.barrier()
