@@ -14,7 +14,6 @@ print 'n_cells=%d\tn_exc=%d\tn_inh=%d' % (params['n_cells'], params['n_exc'], pa
 PS.create_folders()
 PS.write_parameters_to_file()
 
-
 # not yet required 
 #try:
 #    from mpi4py import MPI

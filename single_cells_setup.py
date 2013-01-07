@@ -14,9 +14,9 @@ May 2006
 $Id: IF_cond_exp.py 917 2011-01-31 15:23:34Z apdavison $
 """
 
-import sys
 import numpy as np
 from pyNN.nest import *
+#from pyNN.brian import *
 import CreateConnections as CC
 import utils
 import simulation_parameters

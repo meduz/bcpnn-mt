@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import pylab
 import numpy as np
 import sys
@@ -41,6 +41,9 @@ if len(sys.argv) == 2:
     params = ps.params
     rate_fn = params['input_rate_fn_base'] + str(gid) + '.npy'
     spike_fn = params['input_st_fn_base'] + str(gid) + '.npy'
+    print 'Loading data from'
+    print rate_fn
+    print spike_fn
     params_loaded = True
 
 elif len(sys.argv) == 3:
@@ -62,7 +65,7 @@ spikes = np.load(spike_fn) # spikedata
 
 #spikes *= 10. # because rate(t) = L(t) was created with a stepsize of .1 ms
 
-n, bins = np.histogram(spikes, bins=20)
+n, bins = np.histogram(spikes, bins=20, range=(0, params['t_sim']))
 binsize = round(bins[1] - bins[0])
 print 'n, bins', n, 'total', np.sum(n), 'binsize:', binsize
 
@@ -82,26 +85,27 @@ for s in spikes:
 #ax.plot(spikes, 0.5 * np.ones(spikes.size), '|', markersize=1)
 print 'rate', rate
 
-rate = rate[::10] # ::10 because dt for rate creation was 0.1 ms
+n_steps = int(round(1. / params['dt_rate']))
+rate = rate[::n_steps] # ::10 because dt for rate creation was 0.1 ms
 ax.plot(np.arange(rate.size), rate, label='Cond_in = %.3e nS' % cond_in, lw=2, c='b')
 ax.set_xlabel('Time [ms]')
 ax.set_ylabel('Normalized motion energy')
-
-
 
 #ax.legend()
 ax = fig.add_subplot(212)
 ax.bar(bins[:-1], n, width= bins[1] - bins[0])
 ax.set_title('Binned input spike train, binsize=%.1f ms' % binsize)
 
+ax.set_xlim((0, params['t_sim']))
 ax.set_ylabel('Number of input spikes')
 ax.set_xlabel('Times [ms]')
 
 if params_loaded:
-    output_fn = params['figures_folder'] + 'input_%d.png' % (gid)
+    output_fn = params['figures_folder'] + 'input_%d.eps' % (gid)
+#    output_fn = params['figures_folder'] + 'input_%d.png' % (gid)
     print 'Saving to', output_fn
     pylab.savefig(output_fn)
 
 #output_fn = 'delme.dat'
 #np.savetxt(output_fn, data)
-#pylab.show()
+pylab.show()

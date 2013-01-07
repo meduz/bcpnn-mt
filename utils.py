@@ -60,7 +60,8 @@ def create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=No
     """
 
     dt = params['dt_rate'] # [ms] time step for the non-homogenous Poisson process 
-    time = np.arange(0, params['t_stimulus'], dt)
+#    time = np.arange(0, params['t_stimulus'], dt)
+    time = np.arange(0, params['t_sim'], dt)
 
     if (my_units == None):
         my_units = xrange(tp.shape[0])
@@ -72,7 +73,7 @@ def create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=No
     for i_time, time_ in enumerate(time):
         if (i_time % 100 == 0):
             print "t:", time_
-        L_input[:, i_time] = get_input(tuning_prop[my_units, :], params, time_/params['t_sim'])
+        L_input[:, i_time] = get_input(tuning_prop[my_units, :], params, time_/params['t_stimulus'])
         L_input[:, i_time] *= params['f_max_stim']
 
     for i_, unit in enumerate(my_units):
@@ -266,8 +267,7 @@ def set_tuning_prop(params, mode='hexgrid'):
         # wrapping up:
         index = 0
         random_rotation = 2*np.pi*rnd.rand(params['N_RF_X']*params['N_RF_Y']) * params['sigma_RF_direction']
-#        random_rotation = 2*np.pi*rnd.rand(params['N_RF_X']*params['N_RF_Y'])
-        # todo do the same for v_rho?
+            # todo do the same for v_rho?
         for i_RF in xrange(params['N_RF_X']*params['N_RF_Y']):
             for i_v_rho, rho in enumerate(v_rho):
                 for i_theta, theta in enumerate(v_theta):

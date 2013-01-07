@@ -45,7 +45,7 @@ for fn in fns:
     ax.set_title(fn)
 #    ax.set_xlim((0, 1000))
     print 'xlim:', ax.get_xlim()
-#    ax.set_ylim((0, data[:, 1].max()))
+    ax.set_ylim((data[:, 1].min()-1, data[:, 1].max()+1))
 
 pylab.show()
 
