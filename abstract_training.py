@@ -41,7 +41,7 @@ class AbstractTrainer(object):
 
         self.initial_value = 1e-2 # should be around 1 / n_units per HC, i.e. 1. / (params['N_theta'] * params['N_V']
         self.eps = .1 * self.initial_value
-        self.normalize = True# normalize input within a 'hypercolumn'
+        self.normalize = False# normalize input within a 'hypercolumn'
 
         all_conns = []
         # distribute connections among processors
@@ -542,15 +542,16 @@ if __name__ == '__main__':
 
 
     AT = AbstractTrainer(params, comm)
-    cells_to_record = [18, 258, 352, 223, 112, 22, 38, 178, 186, 216, 334, 183]
+#    cells_to_record = [18, 258, 352, 223, 112, 22, 38, 178, 186, 216, 334, 183]
+    cells_to_record = []
     selected_connections = []
     for src in cells_to_record:
         for tgt in cells_to_record:
             if src != tgt:
                 selected_connections.append((src, tgt))
     AT.set_selected_connections(selected_connections)
-#    AT.create_stimuli_going_through_center(random_order=True, test_stim=False)
-    AT.create_stimuli(random_order=True, test_stim=False)
+#    AT.create_stimuli_going_through_center(random_order=False, test_stim=False)
+    AT.create_stimuli(random_order=False, test_stim=False)
     AT.merge_abstract_input_files()
 #    AT.train()
 #    n_iterations_total = params['n_theta'] * params['n_speeds'] * params['n_cycles'] * params['n_stim_per_direction']

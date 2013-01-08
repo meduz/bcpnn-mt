@@ -78,8 +78,8 @@ def animate_trace(i):
 #anim_dot = animation.FuncAnimation(fig, animate_dot, init_func=init_dot,
 #                               frames=300, interval=20, blit=True)
 
-anim_trace = animation.FuncAnimation(fig, animate_trace, init_func=init_rect,
-                               frames=n_frames_total, interval=10, blit=True)
+#anim_trace = animation.FuncAnimation(fig, animate_trace, init_func=init_rect,
+#                               frames=n_frames_total, interval=10, blit=True)
 
 # save the animation as an mp4.  This requires ffmpeg or mencoder to be
 # installed.  The extra_args ensure that the x264 codec is used, so that
@@ -91,51 +91,50 @@ anim_trace = animation.FuncAnimation(fig, animate_trace, init_func=init_rect,
 
 #init_rect()
 
-#n_stim_total = params['n_theta'] * params['n_speeds'] * params['n_cycles'] * params['n_stim_per_direction']
-#stim_start = 0
-#stim_stop = 16
-#scale = 1
-#xpos_list = []
-#ypos_list = []
-#vx_list = []
-#vy_list = []
-#c_list = []
-#for stim_id in xrange(n_stim_total):
-#    theta = all_thetas[stim_id]
-#    v = 1.0 * all_speeds[stim_id]
-#    vx, vy = v * np.cos(theta), - v * np.sin(theta)
-#    x0, y0 = all_starting_pos[stim_id, :]
-#    print 'debug stim_id %d' % stim_id, x0, y0, v, vx, vy
-#    x_pos = x0 + vx
-#    y_pos = y0 + vy
-#    xpos_list.append(x0)
-#    ypos_list.append(y0)
-#    vx_list.append(vx)
-#    vy_list.append(vy)
-#    color_idx = stim_id / n_stim_per_direction
-#    c_list.append(color_list[color_idx % (len(color_list))])
-
+n_stim_total = params['n_theta'] * params['n_speeds'] * params['n_cycles'] * params['n_stim_per_direction']
+stim_start = 0
+stim_stop = 16
+scale = 1
+xpos_list = []
+ypos_list = []
+vx_list = []
+vy_list = []
+c_list = []
+for stim_id in xrange(n_stim_total):
+    theta = all_thetas[stim_id]
+    v = 1.0 * all_speeds[stim_id]
+    vx, vy = v * np.cos(theta), - v * np.sin(theta)
+    x0, y0 = all_starting_pos[stim_id, :]
+    print 'debug stim_id %d' % stim_id, x0, y0, v, vx, vy
+    x_pos = x0 + vx
+    y_pos = y0 + vy
+    xpos_list.append(x0)
+    ypos_list.append(y0)
+    vx_list.append(vx)
+    vy_list.append(vy)
+    color_idx = stim_id / n_stim_per_direction
+    c_list.append(color_list[color_idx % (len(color_list))])
 #    c = color_list[color_idx % len(color_list)]
 #    ax.quiver(x0, y0, x_pos, y_pos, \
 #          angles='xy', scale_units='xy', scale=scale, color=c, headwidth=4, pivot='head')
 
-#ax.quiver(xpos_list, ypos_list, vx_list, vy_list, \
-#      angles='xy', scale_units='xy', scale=scale, color=c_list, headwidth=4, pivot='tail')
+ax.quiver(xpos_list, ypos_list, vx_list, vy_list, \
+      angles='xy', scale_units='xy', scale=scale, color=c_list, headwidth=4, pivot='tail')
 
-#for stim_id in xrange(n_stim_total):
-#    theta = all_thetas[stim_id]
-#    v = 3.0 * all_speeds[stim_id]
-#    vx, vy = v * np.cos(theta), - v * np.sin(theta)
-#    x0, y0 = all_starting_pos[stim_id, :]
-#    print 'debug stim_id %d' % stim_id, x0, y0, v, vx, vy
-#    x_pos = x0 + vx
-#    y_pos = y0 + vy
-#    color_idx = stim_id / n_stim_per_direction
-#    c = color_list[color_idx % (len(color_list))]
-#    ax.plot([x0, x_pos], [y0, y_pos], c=c, ls=':', lw=3)
+for stim_id in xrange(n_stim_total):
+    theta = all_thetas[stim_id]
+    v = 3.0 * all_speeds[stim_id]
+    vx, vy = v * np.cos(theta), - v * np.sin(theta)
+    x0, y0 = all_starting_pos[stim_id, :]
+    print 'debug stim_id %d' % stim_id, x0, y0, v, vx, vy
+    x_pos = x0 + vx
+    y_pos = y0 + vy
+    color_idx = stim_id / n_stim_per_direction
+    c = color_list[color_idx % (len(color_list))]
+    ax.plot([x0, x_pos], [y0, y_pos], c=c, ls=':', lw=3)
 
-#ax.set_xlabel('x')
-#ax.set_ylabel('y')
-#ax.set_title('Training stimuli')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+ax.set_title('Training stimuli')
 pylab.show()
 

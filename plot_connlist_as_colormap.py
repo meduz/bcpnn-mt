@@ -30,7 +30,6 @@ if (len(sys.argv) < 2):
 else:
     fn = sys.argv[1]
 
-n_cells = params['n_exc']
 tuning_prop = np.loadtxt(params['tuning_prop_means_fn'])
 conn_list = np.loadtxt(fn)
 
@@ -46,9 +45,9 @@ conn_list = np.loadtxt(fn)
 
 
 
-
-print 'debug', fn
-w, delays = utils.convert_connlist_to_matrix(fn, n_cells)
+conn_list_fn = params['merged_conn_list_ee']
+print 'debug', conn_list_fn
+w, delays = utils.convert_connlist_to_matrix(conn_list_fn, params['n_exc'])
 #connmat_fn = params['connections_folder'] + 'conn_mat_wsigmaxv_%.1f_%.1f.dat' % (params['w_sigma_x'], params['w_sigma_v'])
 #print 'Saving connection matrix to', connmat_fn
 #np.savetxt(connmat_fn, w)
