@@ -29,10 +29,10 @@ class parameter_storage(object):
 #        self.params['N_V'], self.params['N_theta'] = 10, 10# resolution in velocity norm and direction
 
         # Medium-scale system
-        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF'] = 70# np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 3, 4# resolution in velocity norm and direction
+        self.params['N_V'], self.params['N_theta'] = 3, 8# resolution in velocity norm and direction
 
         # Minimum sized system
 #        self.params['N_RF'] = 9# np.int(n_cells/N_V/N_theta)
@@ -63,9 +63,9 @@ class parameter_storage(object):
         print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
         self.params['abstract_input_scaling_factor'] = 1.
         self.params['log_scale'] = 2. # bas4 of the logarithmic tiling of particle_grid; linear if equal to one
-        self.params['sigma_RF_pos'] = .10 # some variability in the position of RFs
-        self.params['sigma_RF_speed'] = .15 # some variability in the speed of RFs
-        self.params['sigma_RF_direction'] = .10 * 2 * np.pi # some variability in the direction of RFs
+        self.params['sigma_RF_pos'] = .0 # some variability in the position of RFs
+        self.params['sigma_RF_speed'] = .0 # some variability in the speed of RFs
+        self.params['sigma_RF_direction'] = .0 * 2 * np.pi # some variability in the direction of RFs
         self.params['sigma_theta_training'] = 2 * np.pi * 0.00
 
 
@@ -76,14 +76,18 @@ class parameter_storage(object):
 #        self.params['n_exc_per_mc' ] = 1024 # number of excitatory cells per minicolumn
         self.params['n_exc_per_mc'] = self.params['N_RF_X'] * self.params['N_RF_Y'] * self.params['N_V'] * self.params['N_theta'] # number of excitatory cells per minicolumn
         self.params['n_exc'] = self.params['n_mc'] * self.params['n_exc_per_mc']
-        self.params['fraction_inh_cells'] = 0.25 # fraction of inhibitory cells in the network
-        self.params['N_RF_INH'] = int(round(self.params['n_exc'] * self.params['fraction_inh_cells']))
+        self.params['fraction_inh_cells'] = 0.20 # fraction of inhibitory cells in the network, only approximately!
+        self.params['N_theta_inh'] = self.params['N_theta']
+        self.params['N_V_inh'] = 2
+        self.params['N_RF_INH'] = int(round(self.params['fraction_inh_cells'] * self.params['N_RF'] * float(self.params['N_V'] * self.params['N_theta']) / (self.params['N_V_inh'] * self.params['N_theta_inh'])))
         self.params['N_RF_X_INH'] = np.int(np.sqrt(self.params['N_RF_INH']*np.sqrt(3)))
         self.params['N_RF_Y_INH'] = np.int(np.sqrt(self.params['N_RF_INH']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['n_inh' ] = self.params['N_RF_X_INH'] * self.params['N_RF_Y_INH']
+
+        self.params['n_inh' ] = self.params['N_RF_X_INH'] * self.params['N_RF_Y_INH'] * self.params['N_theta_inh'] * self.params['N_V_inh']
 #        self.params['n_inh' ] = int(round(self.params['n_exc'] * self.params['fraction_inh_cells']))
         self.params['n_cells'] = self.params['n_mc'] * self.params['n_exc_per_mc'] + self.params['n_inh']
-        print 'n_cells: %d\tn_exc: %d\tn_inh: %d' % (self.params['n_cells'], self.params['n_exc'], self.params['n_inh'])
+        print 'n_cells: %d\tn_exc: %d\tn_inh: %d\nn_inh/n_exc = %.3f\tn_cells/n_inh = %.3f' % (self.params['n_cells'], self.params['n_exc'], self.params['n_inh'], \
+                self.params['n_inh'] / float(self.params['n_exc']), self.params['n_inh'] / float(self.params['n_cells']))
 
         # #######################
         # CONNECTIVITY PARAMETERS
@@ -104,7 +108,7 @@ class parameter_storage(object):
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
-        self.params['w_tgt_in'] = 0.22 # [uS]
+        self.params['w_tgt_in'] = 0.25 # [uS]
         self.params['w_min'] = 5e-4             # When probabilities are transformed to weights, they are scaled so that the map into this range
         self.params['w_max'] = 4e-3
         self.params['n_src_cells_per_neuron'] = round(self.params['p_ee'] * self.params['n_exc'])
@@ -307,9 +311,11 @@ class parameter_storage(object):
         self.params['rasterplot_inh_fig'] = '%srasterplot_inh.png' % (self.params['figures_folder'])
 
         # tuning properties and other cell parameter files
-        self.params['tuning_prop_means_fn'] = '%stuning_prop_means.prm' % (self.params['parameters_folder'])
+        self.params['tuning_prop_means_fn'] = '%stuning_prop_means.prm' % (self.params['parameters_folder']) # for excitatory cells
+        self.params['tuning_prop_inh_fn'] = '%stuning_prop_inh.prm' % (self.params['parameters_folder']) # for inhibitory cells
         self.params['tuning_prop_sigmas_fn'] = '%stuning_prop_sigmas.prm' % (self.params['parameters_folder'])
-        self.params['tuning_prop_fig_fn'] = '%stuning_properties.png' % (self.params['figures_folder'])
+        self.params['tuning_prop_fig_exc_fn'] = '%stuning_properties_exc.png' % (self.params['figures_folder'])
+        self.params['tuning_prop_fig_inh_fn'] = '%stuning_properties_inh.png' % (self.params['figures_folder'])
         self.params['inh_cell_pos_fn'] = '%sinh_cell_positions.dat' % (self.params['parameters_folder'])
         self.params['gids_to_record_fn'] = '%sgids_to_record.dat' % (self.params['parameters_folder'])
         self.params['predicted_positions_fn'] = '%spredicted_positions.dat' % (self.params['parameters_folder'])
