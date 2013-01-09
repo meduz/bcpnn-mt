@@ -86,8 +86,8 @@ for column in xrange(params['n_mc']):
 #     C O N N E C T    E X C - E X C  #
 # # # # # # # # # # # # # # # # # # # #
 # during the learning process load the updated connection matrix
-#pop_conn_mat = np.load(params['conn_mat_ee_fn_base']) + str(sim_cnt) + '.npy'
-pop_conn_mat = np.load(params['conn_mat_mc_mc_init'])
+pop_conn_mat = np.load(params['conn_mat_ee_fn_base']) + str(sim_cnt) + '.npy'
+#pop_conn_mat = np.load(params['conn_mat_mc_mc_init'])
 exc_exc_prj = []
 for src in xrange(pop_conn_mat[:, 0].size):
     for tgt in xrange(pop_conn_mat[:, 0].size):

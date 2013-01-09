@@ -302,6 +302,8 @@ class PlotPrediction(object):
         for cell in xrange(int(len(spiketimes))):
             ax.plot(spiketimes[cell], cell * np.ones(nspikes[cell]), 'o', color='k', markersize=1)
             
+        ylim = ax.get_ylim()
+        ax.set_ylim((ylim[0] - 1, ylim[1] + 1))
         ax.set_xlim(0, self.params['t_sim'])
         ax.set_title('Rasterplot of %s neurons' % cell_type)
         ax.set_xlabel('Time [ms]')

@@ -4,6 +4,7 @@ import numpy as np
 import utils
 import pylab
 import matplotlib 
+import sys
 from matplotlib import cm
 
 
@@ -52,19 +53,21 @@ def get_cond_matrix(nspikes, w):
     return cond_matrix
 
 
-#input_cond = calculate_input_cond()
-#os.system("python merge_connlist_ee.py")
-#conn_list_fn = params['merged_conn_list_ee']
-#print 'debug', conn_list_fn
-#w, delays = utils.convert_connlist_to_matrix(conn_list_fn, params['n_exc'])
-#cond_matrix = get_cond_matrix(nspikes, w)
 
-#np.savetxt(params['tmp_folder'] + 'input_cond.dat', input_cond)
-#np.savetxt(params['tmp_folder'] + 'cond_matrix.dat', cond_matrix)
+# compute everything
+input_cond = calculate_input_cond()
+os.system("python merge_connlist_ee.py")
+conn_list_fn = params['merged_conn_list_ee']
+print 'debug', conn_list_fn
+w, delays = utils.convert_connlist_to_matrix(conn_list_fn, params['n_exc'])
+cond_matrix = get_cond_matrix(nspikes, w)
+np.savetxt(params['tmp_folder'] + 'input_cond.dat', input_cond)
+np.savetxt(params['tmp_folder'] + 'cond_matrix.dat', cond_matrix)
 
+# or load the computed cond_matrix etc (for replotting)
+#input_cond = np.loadtxt(params['tmp_folder'] + 'input_cond.dat')
+#cond_matrix = np.loadtxt(params['tmp_folder'] + 'cond_matrix.dat')
 
-input_cond = np.loadtxt(params['tmp_folder'] + 'input_cond.dat')
-cond_matrix = np.loadtxt(params['tmp_folder'] + 'cond_matrix.dat')
 summed_network_cond = np.zeros(params['n_exc'])
 for tgt in xrange(params['n_exc']):
     summed_network_cond[tgt] = cond_matrix[:, tgt].sum()
@@ -83,6 +86,9 @@ m3.set_array(np.arange(0, input_cond.max(), 0.01))
 h = 10
 fig = pylab.figure(figsize = (np.sqrt(2) * h, h))
 ax1 = fig.add_subplot(311)
+ax1.set_title('Conductance matrix exc-exc')
+ax1.set_ylabel('Source cell indices')
+ax1.set_xlabel('Target cell indices')
 
 cax1 = ax1.pcolormesh(cond_matrix, cmap=cmap)
 ax1.set_xlim((0, cond_matrix.shape[0]))
@@ -150,4 +156,13 @@ cbar2.ax.set_yticklabels(['%.1f' % i for i in bar2_ticks])
 bar3_ticks = [i for i in np.linspace(input_cond.min(), input_cond.max()-0.01, 4)]
 cbar3 = fig.colorbar(m3, ax=ax3, ticks=bar3_ticks)
 cbar3.ax.set_yticklabels(['%.1f' % i for i in bar3_ticks])
-pylab.show()
+
+output_fig = params['figures_folder'] + 'conductance_matrix.png'
+print 'output_fig:', output_fig
+pylab.savefig(output_fig)
+
+try:
+    if int(sys.argv[1]) == 1:
+        pylab.show()
+except:
+    pass
