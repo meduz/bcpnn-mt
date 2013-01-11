@@ -1,11 +1,12 @@
 echo 'Starting at' `date`
-python prepare_tuning_prop.py
-python prepare_selective_inhibition.py
-mpirun -np 8 python prepare_spike_trains.py
-echo 'Preparation stopped at' `date`
+#python prepare_tuning_prop.py
+#python prepare_selective_inhibition.py
+#mpirun -np 8 python prepare_spike_trains.py
+#echo 'Preparation stopped at' `date`
 #mpirun -np 8 python prepare_connections.py
 mpirun -np 8 python NetworkSimModuleNoColumns.py
 #python NetworkSimModuleNoColumns.py
+python merge_connlist_ee.py
 python analyse_simple.py
 python analyse_input.py
 #python plot_connlist_as_colormap.py

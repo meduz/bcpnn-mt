@@ -41,7 +41,7 @@ class PlotCellResponsesPlusProperties(object):
 
     def get_weights(self):
         conn_list_fn = self.params['conn_list_ee_fn_base'] + '0.dat'
-        self.conn_mat, self.delays = utils.convert_connlist_to_matrix(conn_list_fn, self.params['n_exc'])
+        self.conn_mat, self.delays = utils.convert_connlist_to_matrix(conn_list_fn, self.params['n_exc'], self.params['n_exc'])
         self.w_in_sum = np.zeros(self.params['n_exc'])
         n_cells = self.params['n_exc']
         for i in xrange(n_cells):

@@ -9,14 +9,14 @@ from scipy.spatial import distance
 import copy
 
 
-def convert_connlist_to_matrix(fn, n_cells):
+def convert_connlist_to_matrix(fn, n_src, n_tgt):
     """
     Convert the connlist which is in format (src, tgt, weight, delay) to a weight matrix.
     """
     conn_list = np.loadtxt(fn)
-    m = np.zeros((n_cells, n_cells))
-    delays = np.zeros((n_cells, n_cells))
-    print 'utils.convert_connlist_to_matrix(%s, %d) conn_list size: %d' % (fn, n_cells, conn_list[:, 0].size)
+    m = np.zeros((n_src, n_tgt))
+    delays = np.zeros((n_src, n_tgt))
+    print 'utils.convert_connlist_to_matrix(%s, %d, %d) conn_list size: %d' % (fn, n_src, n_tgt, conn_list[:, 0].size)
     for i in xrange(conn_list[:,0].size):
         src = conn_list[i, 0]
         tgt = conn_list[i, 1]
@@ -64,8 +64,9 @@ def create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=No
     rnd.seed(seed)
     dt = params['dt_rate'] # [ms] time step for the non-homogenous Poisson process 
 
-    time = np.arange(0, params['t_stimulus'], dt)
-#    time = np.arange(0, params['t_sim'], dt)
+#    time = np.arange(0, params['t_stimulus'], dt)
+    time = np.arange(0, params['t_sim'], dt)
+    blank_idx = np.arange(1./dt * params['t_stimulus'], 1. / dt * (params['t_stimulus'] + params['t_blank']))
 
     if (my_units == None):
         my_units = xrange(tp.shape[0])
@@ -79,6 +80,10 @@ def create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=No
             print "t:", time_
         L_input[:, i_time] = get_input(tuning_prop[my_units, :], params, time_/params['t_stimulus'])
         L_input[:, i_time] *= params['f_max_stim']
+
+    for i_time in blank_idx:
+        L_input[:, i_time] = 0.
+
 
     for i_, unit in enumerate(my_units):
         rate_of_t = np.array(L_input[i_, :]) 
@@ -734,6 +739,8 @@ def linear_transformation(x, y_min, y_max):
     """
     x_min = np.min(x)
     x_max = np.max(x)
+    if x_min == x_max:
+        x_max = x_min * 1.0001
 #    print 'debug linear transformation x_min, x_max', x_min, x_max
     m = 1. / (x_min * (x_max - x_min)) * (y_min * x_max - y_min * x_min - y_min * x_max + y_max * x_min)
 #    if (x_max / x_min) == np.inf:

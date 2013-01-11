@@ -59,7 +59,7 @@ input_cond = calculate_input_cond()
 os.system("python merge_connlist_ee.py")
 conn_list_fn = params['merged_conn_list_ee']
 print 'debug', conn_list_fn
-w, delays = utils.convert_connlist_to_matrix(conn_list_fn, params['n_exc'])
+w, delays = utils.convert_connlist_to_matrix(conn_list_fn, params['n_exc'], params['n_exc'])
 cond_matrix = get_cond_matrix(nspikes, w)
 np.savetxt(params['tmp_folder'] + 'input_cond.dat', input_cond)
 np.savetxt(params['tmp_folder'] + 'cond_matrix.dat', cond_matrix)

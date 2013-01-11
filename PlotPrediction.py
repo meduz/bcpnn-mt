@@ -20,7 +20,7 @@ class PlotPrediction(object):
 
         # define parameters
         self.n_cells = self.params['n_exc']
-        self.time_binsize = 20 # [ms]
+        self.time_binsize = 50 # [ms]
         self.n_bins = int((self.params['t_sim'] / self.time_binsize) )
         self.time_bins = [self.time_binsize * i for i in xrange(self.n_bins)]
         self.t_axis = np.arange(0, self.n_bins * self.time_binsize, self.time_binsize)
@@ -354,15 +354,13 @@ class PlotPrediction(object):
         ax.plot(self.t_axis, self.vdiff_non_linear, ls=':')
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$|v_{diff}|$')
-        ax.set_xlim(0, self.params['t_sim'])
         ny = self.t_axis.size
-        n_ticks = 5
+        n_ticks = 8
         t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
         t_labels= ['%d' % i for i in t_ticks]
         ax.set_xticks(t_ticks)
         ax.set_xticklabels(t_labels)
-
-
+        ax.set_xlim((0, self.params['t_sim']))
     
 
     def plot_nspikes_binned(self):
@@ -398,7 +396,6 @@ class PlotPrediction(object):
         self.cax = ax.pcolormesh(self.vx_confidence_binned)
         ax.set_ylim((0, self.vx_confidence_binned[:, 0].size))
 #        ax.set_xlim((0, self.vx_confidence_binned[0, :].size))
-        ax.set_xlim(0, self.params['t_sim'])
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$v_x$')
         ax.set_xticks(range(self.n_bins)[::2])
@@ -411,6 +408,7 @@ class PlotPrediction(object):
         ax.set_yticklabels(ylabels)
         ax.set_xticks(range(self.n_bins)[::2])
         ax.set_xticklabels(['%d' %i for i in self.time_bins[::2]])
+        ax.set_xlim(0, self.params['t_sim'])
         pylab.colorbar(self.cax)
 
 
@@ -421,7 +419,6 @@ class PlotPrediction(object):
         self.cax = ax.pcolormesh(self.vy_confidence_binned)
         ax.set_ylim((0, self.vy_confidence_binned[:, 0].size))
 #        ax.set_xlim((0, self.vy_confidence_binned[0, :].size))
-        ax.set_xlim(0, self.params['t_sim'])
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$v_y$')
         ax.set_xticks(range(self.n_bins)[::2])
@@ -434,6 +431,7 @@ class PlotPrediction(object):
         ax.set_yticklabels(ylabels)
         ax.set_xticks(range(self.n_bins)[::2])
         ax.set_xticklabels(['%d' %i for i in self.time_bins[::2]])
+        ax.set_xlim(0, self.params['t_sim'])
         pylab.colorbar(self.cax)
 
 
@@ -451,6 +449,7 @@ class PlotPrediction(object):
         t_labels= ['%d' % i for i in t_ticks]
         ax.set_xticks(t_ticks)
         ax.set_xticklabels(t_labels)
+        ax.set_xlim((0, self.params['t_sim']))
 
     def plot_vy_estimates(self, fig_cnt=1):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
@@ -466,6 +465,7 @@ class PlotPrediction(object):
         t_labels= ['%d' % i for i in t_ticks]
         ax.set_xticks(t_ticks)
         ax.set_xticklabels(t_labels)
+        ax.set_xlim((0, self.params['t_sim']))
 
     def plot_theta_estimates(self, fig_cnt=1):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
@@ -481,6 +481,7 @@ class PlotPrediction(object):
         t_labels= ['%d' % i for i in t_ticks]
         ax.set_xticks(t_ticks)
         ax.set_xticklabels(t_labels)
+        ax.set_xlim((0, self.params['t_sim']))
 
 
     def plot_fullrun_estimates_vx(self, fig_cnt=1):

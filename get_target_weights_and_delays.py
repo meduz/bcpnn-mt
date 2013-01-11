@@ -12,7 +12,7 @@ print "Motion parameters", mp
 
 conn_list_fn = params['conn_list_ee_fn_base'] + '0.dat'
 print "Loading connectivity data from ", conn_list_fn
-conn_mat, delays = utils.convert_connlist_to_matrix(conn_list_fn, params['n_exc'])
+conn_mat, delays = utils.convert_connlist_to_matrix(conn_list_fn, params['n_exc'], params['n_exc'])
 
 gids = np.loadtxt('Testing/Parameters/gids_to_record.dat')
 n_good = int(params['n_exc'] * 0.05)

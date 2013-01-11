@@ -14,7 +14,7 @@ sigma_x, sigma_v = params['w_sigma_x'], params['w_sigma_v'] # small sigma values
 print 'utils.sort_gids_by_distance_to_stimulus...'
 indices, distances = utils.sort_gids_by_distance_to_stimulus(tp , mp) # cells in indices should have the highest response to the stimulus
 print 'utils.convert_connlist_to_matrix...'
-conn_mat, delays = utils.convert_connlist_to_matrix(params['conn_list_ee_fn_base'] + '0.dat', params['n_exc'])
+conn_mat, delays = utils.convert_connlist_to_matrix(params['conn_list_ee_fn_base'] + '0.dat', params['n_exc'], params['n_exc'])
 #n = 50
 n = int(params['n_exc'] * .05) # fraction of 'interesting' cells
 

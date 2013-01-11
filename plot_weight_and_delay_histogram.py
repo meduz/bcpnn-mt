@@ -40,7 +40,7 @@ d_mean, d_std = delays.mean(), delays.std()
 n_weights = weights.size
 n_possible = params['n_exc']**2
 
-n_bins = 30
+n_bins = 40
 n_w, bins_w = np.histogram(weights, bins=n_bins, normed=True)
 #n_w = n_w / float(n_w.sum())
 
@@ -93,6 +93,7 @@ ax1.plot(bins_w[:-1], eval_exp_dist(bins_w[:-1], opt_params), 'r--', label='Fit:
 #ax1.plot(bins_w[:-1], eval_exp_dist(bins_w[:-1], opt_params[0]), 'r--', label='Fit: $(%.1e) * exp(-w / (%.1e))$' % (opt_w0, opt_wtau))
 ax1.set_xlabel('Weights')
 ax1.set_ylabel('Count')
+ax1.set_xlim((weights.min()-.5*bin_width, weights.max()))
 title = 'Weight profile $\sigma_{X(V)} = %.1f (%.1f)$' % (params['w_sigma_x'], params['w_sigma_v'])
 ax1.set_title(fn)
 ax1.legend()
@@ -103,6 +104,8 @@ ax2.bar(bins_d[:-1]-.5*bin_width, n_d, width=bin_width, label='$\delta_{mean} = 
 ax2.plot(bins_d[:-1], eval_delay_dist(bins_d[:-1], (opt_d0, opt_d1)), 'r--', label='Fit: $\delta \cdot exp(-\delta / (%.1e))$' % (opt_d0))
 ax2.set_xlabel('Delays')
 ax2.set_ylabel('Count')
+ax2.set_xlim((0. - .5 * bin_width, delays.max()))
+#ax2.set_xlim((delays.min()-.5*bin_width, delays.max()))
 ax2.legend()
 
 print "Saving to:", output_fn
