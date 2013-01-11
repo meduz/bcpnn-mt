@@ -25,6 +25,7 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
         return
 
     plotter.compute_v_estimates()
+    plotter.compute_position_estimates()
     plotter.compute_theta_estimates()
 
     # fig 1
@@ -33,16 +34,21 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
             params['w_sigma_x'], params['w_sigma_v'], params['w_thresh_connection'])
 
     plotter.create_fig()  # create an empty figure
+    plotter.n_fig_x = 2
+    plotter.n_fig_y = 3
     plotter.plot_rasterplot('exc', 1)               # 1 
     plotter.plot_rasterplot('inh', 2)               # 2 
     plotter.plot_vx_grid_vs_time(3)              # 3 
     plotter.plot_vy_grid_vs_time(4)              # 4 
+    plotter.plot_x_grid_vs_time(5)
+    plotter.plot_y_grid_vs_time(6)
     output_fn = output_fn_base + '_0.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
 
     # poplation level, short time-scale
-    # fig 3
+    plotter.n_fig_x = 2
+    plotter.n_fig_y = 2
     plotter.create_fig()
     plotter.plot_vx_estimates(1)                 # 1
     plotter.plot_vy_estimates(2)                 # 2

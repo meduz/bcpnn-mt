@@ -112,6 +112,17 @@ class NetworkModel(object):
 
         self.times['t_create'] = self.timer.diff()
 
+    def connect(self):
+        self.connect_input_to_exc()
+        self.connect_ee()
+        self.connect_ei()
+        self.connect_ie()
+        self.connect_ii()
+        self.connect_noise()
+        self.times['t_connect'] = self.timer.diff()
+
+
+
     def connect_input_to_exc(self):
         """
             # # # # # # # # # # # # # # # # # # # # # # 
@@ -132,103 +143,11 @@ class NetworkModel(object):
             connect(ssa, self.exc_pop[tgt], self.params['w_input_exc'], synapse_type='excitatory')
 
 
-    def connect_ee_linear_transform(self):
-        """
-            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-            #     C O N N E C T    E X C - E X C    L I N E A R    W E I G H T   T R A N S F O R M A T I O N    #
-            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        """
-        sigma_x, sigma_v = self.params['w_sigma_x'], self.params['w_sigma_v']
-        (delay_min, delay_max) = self.params['delay_range']
-        if self.debug_connectivity:
-            conn_list_fn = self.params['conn_list_ee_fn_base'] + '%d.dat' % (self.pc_id)
-            conn_file = open(conn_list_fn, 'w')
-            output = ''
-        if self.pc_id == 0:
-            print 'Computing connections ...'
-        p_max_local, p_min_local = 0., 0.
-        local_weights = [np.zeros(self.params['n_src_cells_per_neuron']) for i in xrange(len(self.local_idx_exc))]
-        local_sources = [[] for i in xrange(len(self.local_idx_exc))]
-        for i_, tgt in enumerate(self.local_idx_exc):
-            p = np.zeros(self.params['n_exc'])
-            latency = np.zeros(self.params['n_exc'])
-            for src in xrange(self.params['n_exc']):
-                if (src != tgt):
-                    p[src], latency[src] = CC.get_p_conn(self.tuning_prop_exc[src, :], self.tuning_prop_exc[tgt, :], sigma_x, sigma_v) #                            print 'debug pc_id src tgt ', self.pc_id, src, tgt#, int(ID) < self.params['n_exc']
-            sorted_indices = np.argsort(p)
-            sources = sorted_indices[-self.params['n_src_cells_per_neuron']:] 
-            p_max_local = max(p_max_local, max(p[sources]))
-#                p_min_local = min(p_min_local, min(p[sources]))
-            local_weights[i_] = p[sources]
-            local_sources[i_] = sources
-
-        if self.comm != None:
-            # self.communicate the local p to all other nodes
-            # in order to make a proper scaling
-            rcvbuf = None # not used
-            all_p_max = self.comm.allgather(p_max_local, rcvbuf)
-#                all_p_min = self.comm.allgather(p_min_local, rcvbuf)
-            p_max_global = max(all_p_max)
-#                p_min_global = min(all_p_min)
-            w_max = self.params['w_max'] * p_max_local / p_max_global
-            w_min = self.params['w_min']
-#                w_min = self.params['w_min'] * p_min_local / p_min_global
-        else:
-            w_max = self.params['w_max']
-            w_min = self.params['w_min']
-
-        for i_, tgt in enumerate(self.local_idx_exc):
-            w = utils.linear_transformation(local_weights[i_], w_min, w_max)
-            sources = local_sources[i_]
-            for i in xrange(len(sources)):
-#                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
-                delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
-                connect(self.exc_pop[sources[i]], self.exc_pop[tgt], w[i], delay=delay, synapse_type='excitatory')
-                if self.debug_connectivity:
-                    output += '%d\t%d\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay) 
-
-        if self.debug_connectivity:
-            if self.pc_id == 0:
-                print 'DEBUG writing to file:', conn_list_fn
-            conn_file.write(output)
-            conn_file.close()
-
-
-    def connect_ee_convergence_constrained(self):
-        """
-            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-            #     C O N N E C T    E X C - E X C    L I N E A R    C O N V E R G E N C E   C O N S T R A I N E D    #
-            # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-        """
-        sigma_x, sigma_v = self.params['w_sigma_x'], self.params['w_sigma_v']
-        (delay_min, delay_max) = self.params['delay_range']
-        if self.debug_connectivity:
-            conn_list_fn = self.params['conn_list_ee_fn_base'] + '%d.dat' % (self.pc_id)
-            conn_file = open(conn_list_fn, 'w')
-            output = ''
-        for i_, tgt in enumerate(self.local_idx_exc):
-            p = np.zeros(self.params['n_exc'])
-            latency = np.zeros(self.params['n_exc'])
-            for src in xrange(self.params['n_exc']):
-                if (src != tgt):
-                    p[src], latency[src] = CC.get_p_conn(self.tuning_prop_exc[src, :], self.tuning_prop_exc[tgt, :], sigma_x, sigma_v) #                            print 'debug pc_id src tgt ', self.pc_id, src, tgt#, int(ID) < self.params['n_exc']
-            sorted_indices = np.argsort(p)
-            sources = sorted_indices[-self.params['n_src_cells_per_neuron']:] 
-            w = self.params['w_tgt_in'] / p[sources].sum() * p[sources]
-            for i in xrange(len(sources)):
-#                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
-                delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
-                connect(self.exc_pop[sources[i]], self.exc_pop[tgt], w[i], delay=delay, synapse_type='excitatory')
-                if self.debug_connectivity:
-                    output += '%d\t%d\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay) #                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], latency[sources[i]], p[sources[i]])
-        if self.debug_connectivity:
-            if self.pc_id == 0:
-                print 'DEBUG writing to file:', conn_list_fn
-            conn_file.write(output)
-            conn_file.close()
-
-
     def connect_anisotropic(self, conn_type):
+        """
+        """
+        if self.pc_id == 0:
+            print 'Connect anisotropic %s' % conn_type
         (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells) = self.resolve_src_tgt(conn_type)
 
         if self.debug_connectivity:
@@ -242,11 +161,18 @@ class NetworkModel(object):
             p = np.zeros(n_src)
             latency = np.zeros(n_src)
             for src in xrange(n_src):
-                if (src != tgt):
+                if conn_type[0] == conn_type[1]: # no self-connection
+                    if (src != tgt):
+                        p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v']) #                            print 'debug pc_id src tgt ', self.pc_id, src, tgt#, int(ID) < self.params['n_exc']
+                else: # different populations --> same indices mean different cells, no check for src != tgt
                     p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v']) #                            print 'debug pc_id src tgt ', self.pc_id, src, tgt#, int(ID) < self.params['n_exc']
+
             sorted_indices = np.argsort(p)
-            sources = sorted_indices[-n_src_cells_per_neuron:] 
-            w = self.params['w_tgt_per_tgt_%s' % conn_type] / p[sources].sum() * p[sources]
+            if conn_type[0] == 'e':
+                sources = sorted_indices[-n_src_cells_per_neuron:] 
+            else:
+                sources = sorted_indices[:n_src_cells_per_neuron] 
+            w = (self.params['w_tgt_in_per_cell_%s' % conn_type] / p[sources].sum()) * p[sources]
             for i in xrange(len(sources)):
 #                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
                 delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
@@ -287,7 +213,7 @@ class NetworkModel(object):
             tp_tgt = self.tuning_prop_inh
             p_max = self.params['p_ee_local']
 #            p_max = self.params['p_ei']
-            w_= self.params['w_ie']
+            w_= self.params['w_ei_mean']
             w_tgt_in = params['w_tgt_in']
 
         elif conn_type == 'ie':
@@ -298,7 +224,7 @@ class NetworkModel(object):
             tp_tgt = self.tuning_prop_exc
             p_max = self.params['p_ee_local']
 #            p_max = self.params['p_ie']
-            w_= self.params['w_ie']
+            w_= self.params['w_ie_mean']
             w_tgt_in = params['w_tgt_in']
 
         elif conn_type == 'ii':
@@ -309,7 +235,7 @@ class NetworkModel(object):
             tp_tgt = self.tuning_prop_inh
             p_max = self.params['p_ee_local']
 #            p_max = self.params['p_ii']
-            w_= self.params['w_ii']
+            w_= self.params['w_ii_mean']
             w_tgt_in = params['w_tgt_in']
 
         return (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells)
@@ -451,8 +377,7 @@ class NetworkModel(object):
             for src in xrange(n_src):
                 if (src != tgt):
 #                    d_ij = np.sqrt((tp_src[src, 0] - tp_tgt[tgt, 0])**2 + (tp_src[src, 1] - tp_tgt[tgt, 1])**2)
-                    dx, dy = utils.torus_distance(tp_src[src, 0], tp_tgt[tgt, 0]), utils.torus_distance(tp_src[src, 1], tp_tgt[tgt, 1])
-                    d_ij = np.sqrt(dx**2 + dy**2)
+                    d_ij = utils.torus_distance2D(tp_src[src, 0], tp_tgt[tgt, 0], tp_src[src, 1], tp_tgt[tgt, 1])
                     p_ij = p_max * np.exp(-d_ij / (2 * params['w_sigma_x']**2))
 #                    print 'p_ij', p_ij, np.exp(-d_ij / (2 * params['w_sigma_x']**2))
                     if np.random.rand() <= p_ij:
@@ -493,12 +418,9 @@ class NetworkModel(object):
             print 'Connecting cells exc - exc ...'
 
         if params['connect_exc_exc']:
-            if self.params['initial_connectivity'] == 'precomputed_linear_transform':
-                self.connect_ee_linear_transform()
-
-            elif self.params['initial_connectivity'] == 'precomputed_convergence_constrained':
-#                self.connect_ee_convergence_constrained()
+            if self.params['initial_connectivity'] == 'anisotropic':
                 self.connect_anisotropic('ee')
+#                self.connect_ee_convergence_constrained()
 
             elif self.params['initial_connectivity'] == 'isotropic':
                 self.connect_isotropic(conn_type='ee')
@@ -517,41 +439,37 @@ class NetworkModel(object):
         #    connector_ei = FastFixedProbabilityConnector(self.params['p_exc_inh_global'], weights=self.params['w_exc_inh_global'], delays=self.delay_dist)
         #    connector_ei = FromFileConnector(self.params['conn_list_ei_fn'])
         """
-        if self.params['initial_connectivity'] == 'precomputed_linear_transform':
-            self.connect_ee_linear_transform()
-
-        elif self.params['initial_connectivity'] == 'precomputed_convergence_constrained':
+        if self.params['initial_connectivity'] == 'anisotropic':
             self.connect_anisotropic('ei')
-#            self.connect_ee_convergence_constrained()
 
         elif self.params['initial_connectivity'] == 'isotropic':
             self.connect_isotropic(conn_type='ei')
         else:
             self.connect_ei_random()
 
-        if self.params['selective_inhibition']:
-            conn_list_fn = self.params['conn_list_ei_fn_base'] + '%d.dat' % (self.pc_id)
-            conn_file = open(conn_list_fn, 'w')
-            output = ''
+#        if self.params['selective_inhibition']:
+#            conn_list_fn = self.params['conn_list_ei_fn_base'] + '%d.dat' % (self.pc_id)
+#            conn_file = open(conn_list_fn, 'w')
+#            output = ''
 
-            if self.pc_id == 0:
-                print "Connecting exc - inh with selective inhibition" 
-            exc_inh_adj = np.loadtxt(self.params['exc_inh_adjacency_list_fn'])
-            for inh in self.local_idx_inh:
-                exc_srcs = exc_inh_adj[inh, :]
-                for exc in exc_srcs:
-                    connect(self.exc_pop[int(exc)], self.inh_pop[int(inh)], self.params['w_ei_mean'], delay=params['standard_delay'], synapse_type='excitatory')
-                    output += '%d\t%d\t%.2e\t%.2e\n' % (exc, inh, self.params['w_ei_mean'], params['standard_delay']) 
-            if self.pc_id == 0:
-                print 'Writing E -> I connections to file:', conn_list_fn
-            conn_file.write(output)
-            conn_file.close()
-        else:
-            if self.pc_id == 0:
-                print "Connecting exc - inh non-selective inhibition" 
-            connector_ei = FastFixedProbabilityConnector(self.params['p_ei'], weights=self.w_ei_dist, delays=self.delay_dist)
-            exc_inh_prj = Projection(self.exc_pop, self.inh_pop, connector_ei, target='excitatory')
-            exc_inh_prj.saveConnections(self.params['merged_conn_list_ei'])
+#            if self.pc_id == 0:
+#                print "Connecting exc - inh with selective inhibition" 
+#            exc_inh_adj = np.loadtxt(self.params['exc_inh_adjacency_list_fn'])
+#            for inh in self.local_idx_inh:
+#                exc_srcs = exc_inh_adj[inh, :]
+#                for exc in exc_srcs:
+#                    connect(self.exc_pop[int(exc)], self.inh_pop[int(inh)], self.params['w_ei_mean'], delay=params['standard_delay'], synapse_type='excitatory')
+#                    output += '%d\t%d\t%.2e\t%.2e\n' % (exc, inh, self.params['w_ei_mean'], params['standard_delay']) 
+#            if self.pc_id == 0:
+#                print 'Writing E -> I connections to file:', conn_list_fn
+#            conn_file.write(output)
+#            conn_file.close()
+#        else:
+#            if self.pc_id == 0:
+#                print "Connecting exc - inh non-selective inhibition" 
+#            connector_ei = FastFixedProbabilityConnector(self.params['p_ei'], weights=self.w_ei_dist, delays=self.delay_dist)
+#            exc_inh_prj = Projection(self.exc_pop, self.inh_pop, connector_ei, target='excitatory')
+#            exc_inh_prj.saveConnections(self.params['merged_conn_list_ei'])
 
     def connect_ie(self):
         """
@@ -561,46 +479,69 @@ class NetworkModel(object):
         #    connector_ie = FastFixedProbabilityConnector(self.params['p_inh_exc_global'], weights=self.params['w_inh_exc_global'], delays=self.delay_dist)
         #    connector_ie = FromFileConnector(self.params['conn_list_ie_fn'])
         """
-        if self.params['selective_inhibition']:
-            conn_list_fn = self.params['conn_list_ie_fn_base'] + '%d.dat' % (self.pc_id)
-            conn_file = open(conn_list_fn, 'w')
-            output = ''
-            if self.pc_id == 0:
-                print "Connecting inh - exc with selective inhibition"
-            inh_pos = np.loadtxt(self.params['inh_cell_pos_fn'])
-            n_ie = int(round(self.params['p_ie'] * self.params['n_inh']))
-            for exc in self.local_idx_exc:
-                x_e, y_e = self.tuning_prop_exc[exc, 0], self.tuning_prop_exc[exc, 1]
-                dist_ie = np.zeros(self.params['n_inh'])
-                for inh in xrange(self.params['n_inh']):
-                    x_i, y_i = inh_pos[inh, 0], inh_pos[inh, 1]
-                    dx, dy = utils.torus_distance(x_e, x_i), utils.torus_distance(y_e, y_i)
-                    dist_ie[inh] = np.sqrt(dx**2 + dy**2)
-                idx = np.argsort(dist_ie)
-                inh_src = idx[:n_ie]
-                for i in xrange(n_ie):
-                    connect(self.inh_pop[int(inh_src[i])], self.exc_pop[int(exc)], self.params['w_ie_mean'], delay=params['standard_delay'], synapse_type='inhibitory')
-                    output += '%d\t%d\t%.2e\t%.2e\n' % (inh_src[i], exc, self.params['w_ie_mean'], params['standard_delay']) 
-            if self.pc_id == 0:
-                print 'Writing I -> E connections to file:', conn_list_fn
-            conn_file.write(output)
-            conn_file.close()
-
+        if self.params['initial_connectivity'] == 'anisotropic':
+            self.connect_anisotropic('ie')
+        elif self.params['initial_connectivity'] == 'isotropic':
+            self.connect_isotropic(conn_type='ie')
         else:
-            if self.pc_id == 0:
-                print "Connecting inh - exc ..."
-            connector_ie = FastFixedProbabilityConnector(self.params['p_ie'], weights=self.w_ie_dist, delays=self.delay_dist)
-            inh_exc_prj = Projection(self.inh_pop, self.exc_pop, connector_ie, target='inhibitory')
-            inh_exc_prj.saveConnections(self.params['merged_conn_list_ie'])
+            self.connect_ie_random()
+
+#        if self.params['selective_inhibition']:
+#            conn_list_fn = self.params['conn_list_ie_fn_base'] + '%d.dat' % (self.pc_id)
+#            conn_file = open(conn_list_fn, 'w')
+#            output = ''
+#            if self.pc_id == 0:
+#                print "Connecting inh - exc with selective inhibition"
+#            inh_pos = np.loadtxt(self.params['inh_cell_pos_fn'])
+#            n_ie = int(round(self.params['p_ie'] * self.params['n_inh']))
+#            for exc in self.local_idx_exc:
+#                x_e, y_e = self.tuning_prop_exc[exc, 0], self.tuning_prop_exc[exc, 1]
+#                dist_ie = np.zeros(self.params['n_inh'])
+#                for inh in xrange(self.params['n_inh']):
+#                    x_i, y_i = inh_pos[inh, 0], inh_pos[inh, 1]
+#                    d_ij = utils.torus_distance2D(x_e, x_i, y_e, y_i)
+#                    dist_ie[inh] = d_ij
+#                idx = np.argsort(dist_ie)
+#                inh_src = idx[:n_ie]
+#                for i in xrange(n_ie):
+#                    connect(self.inh_pop[int(inh_src[i])], self.exc_pop[int(exc)], self.params['w_ie_mean'], delay=params['standard_delay'], synapse_type='inhibitory')
+#                    output += '%d\t%d\t%.2e\t%.2e\n' % (inh_src[i], exc, self.params['w_ie_mean'], params['standard_delay']) 
+#            if self.pc_id == 0:
+#                print 'Writing I -> E connections to file:', conn_list_fn
+#            conn_file.write(output)
+#            conn_file.close()
+
+#        else:
+#            if self.pc_id == 0:
+#                print "Connecting inh - exc ..."
+#            connector_ie = FastFixedProbabilityConnector(self.params['p_ie'], weights=self.w_ie_dist, delays=self.delay_dist)
+#            inh_exc_prj = Projection(self.inh_pop, self.exc_pop, connector_ie, target='inhibitory')
+#            inh_exc_prj.saveConnections(self.params['merged_conn_list_ie'])
 
 
     def connect_ii(self):
         """
             # # # # # # # # # # # # # # # # # # # #
+            #     C O N N E C T    I N H - E X C  #
+            # # # # # # # # # # # # # # # # # # # #
+        #    connector_ii = FastFixedProbabilityConnector(self.params['p_inh_exc_global'], weights=self.params['w_inh_exc_global'], delays=self.delay_dist)
+        #    connector_ii = FromFileConnector(self.params['conn_list_ii_fn'])
+        """
+        if self.params['initial_connectivity'] == 'anisotropic':
+            self.connect_anisotropic('ii')
+        elif self.params['initial_connectivity'] == 'isotropic':
+            self.connect_isotropic(conn_type='ii')
+        else:
+            self.connect_ii_random()
+
+
+    def connect_ii_random(self):
+        """
+            # # # # # # # # # # # # # # # # # # # #
             #     C O N N E C T    I N H - I N H  #
             # # # # # # # # # # # # # # # # # # # #
-        """
         #    connector_ii = FromFileConnector(self.params['conn_list_ii_fn'])
+        """
         if self.pc_id == 0:
             print "Connecting inh - inh ..."
         connector_ii = FastFixedProbabilityConnector(self.params['p_ii'], weights=self.w_ii_dist, delays=self.delay_dist)
@@ -644,28 +585,6 @@ class NetworkModel(object):
 
 
 
-    def connect(self):
-#        self.connect_input_to_exc()
-        self.connect_ee()
-        self.connect_ei()
-#        self.connect_ie()
-#        self.connect_ii()
-#        self.connect_noise()
-        self.times['t_connect'] = self.timer.diff()
-        # # # # # # # # # # # # # # # # # # # # # # # # # #
-        #     C O N N E C T    B I A S   T O   C E L L S  # 
-        # # # # # # # # # # # # # # # # # # # # # # # # # # 
-        #    print "Setting bias currents ... "
-        #    bias_currents = []
-        #    bias_values = np.loadtxt(self.params['bias_values_fn_base'] + str(sim_cnt) + '.dat')
-        #    for cell in xrange(self.params['n_exc']):
-        #        i_amp = bias_values[cell]
-        #        dcsource = DCSource({'amplitude' : i_amp})
-        #        dcsource.inject_into([self.exc_pop[cell]])
-        #        bias_currents.append(dcsource)
-        #        bias_currents.append(DCSource({'amplitude':i_amp, 'start':0, 'stop':self.params['t_sim']}))
-        #        bias_currents[-1].inject_into([self.exc_pop[cell]])
-
 
 
     def run_sim(self, sim_cnt): # this function expects a parameter dictionary
@@ -677,7 +596,6 @@ class NetworkModel(object):
     #    inh_exc_prj.saveConnections(self.params['conn_list_ie_fn'])
     #    inh_inh_prj.saveConnections(self.params['conn_list_ii_fn'])
     #    self.times['t_save_conns'] = self.timer.diff()
-
 
         # # # # # # # # # # # #
         #     R E C O R D     #
@@ -768,5 +686,5 @@ if __name__ == '__main__':
     NM.setup()
     NM.create()
     NM.connect()
-#    NM.run_sim(sim_cnt)
-#    NM.print_results()
+    NM.run_sim(sim_cnt)
+    NM.print_results()

@@ -18,13 +18,15 @@ class PlotPrediction(object):
         self.n_fig_x = 2
         self.n_fig_y = 2
 
+        self.tau_prediction = self.params['tau_prediction']
         # define parameters
         self.n_cells = self.params['n_exc']
         self.time_binsize = 50 # [ms]
         self.n_bins = int((self.params['t_sim'] / self.time_binsize) )
         self.time_bins = [self.time_binsize * i for i in xrange(self.n_bins)]
         self.t_axis = np.arange(0, self.n_bins * self.time_binsize, self.time_binsize)
-        self.n_vx_bins, self.n_vy_bins = 30, 30
+        self.n_vx_bins, self.n_vy_bins = 30, 30     # colormap grid dimensions for predicted direction
+        self.n_x_bins, self.n_y_bins = 30, 30       # colormap grid dimensions for predicted position
 
         # create data structures
         self.nspikes = np.zeros(self.n_cells)                                   # summed activity
@@ -46,6 +48,7 @@ class PlotPrediction(object):
         self.vx_grid = np.linspace(self.vx_min, self.vx_max, self.n_vx_bins, endpoint=True)
         #self.vx_grid = np.linspace(np.min(self.vx_tuning), np.max(self.vx_tuning), self.n_vx_bins, endpoint=True)
 
+
         # vy
         self.vy_tuning = self.tuning_prop[:, 3].copy()
         self.vy_tuning.sort()
@@ -53,6 +56,21 @@ class PlotPrediction(object):
         self.vy_min, self.vy_max = -0.5, 0.5
 #        self.vy_min, self.vy_max = np.min(self.vy_tuning), np.max(self.vy_tuning)
         self.vy_grid = np.linspace(self.vy_min, self.vy_max, self.n_vy_bins, endpoint=True)
+
+        # x-grid
+        self.x_tuning = self.tuning_prop[:, 0].copy()
+        self.x_tuning.sort()
+        self.sorted_indices_x = self.tuning_prop[:, 0].argsort()
+        self.x_min, self.x_max = -.1, .1
+        self.x_grid = np.linspace(self.x_min, self.x_max, self.n_x_bins, endpoint=True)
+
+        # y-grid
+        self.y_tuning = self.tuning_prop[:, 1].copy()
+        self.y_tuning.sort()
+        self.sorted_indices_x = self.tuning_prop[:, 1].argsort()
+        self.y_min, self.y_max = -.1, .1
+        self.y_grid = np.linspace(self.y_min, self.y_max, self.n_y_bins, endpoint=True)
+
 
         self.load_spiketimes(data_fn)
         if self.no_spikes:
@@ -121,27 +139,33 @@ class PlotPrediction(object):
         nspikes_exp = np.exp(nspikes_shifted)
         self.nspikes_normalized_nonlinear = nspikes_exp / nspikes_exp.sum()
 
-    def bin_speed_estimates(self, v_edges, index=2):
+    def bin_estimates(self, grid_edges, index=2):
         """
         Bring the speed estimates from the neuronal level to broader representation in a grid:
         index = index in tuning_parameters for the parameter (vx=2, vy=3)
+
                     ^
         vx_binned   |
                     |
                     +------>
                     time_bins
 
-
         """
         
-        output_data = np.zeros((len(v_edges), self.n_bins))
+        output_data = np.zeros((len(grid_edges), self.n_bins))
         for gid in xrange(self.n_cells):
-            n_spikes_binned = self.nspikes_binned
-            v = self.tuning_prop[gid, index] # cell properties
-            y_pos_grid = utils.get_grid_pos_1d(v, v_edges)
+            xyuv_predicted = self.tuning_prop[gid, index] # cell tuning properties
+            if (index == 0):
+                xyuv_predicted += self.tau_prediction * self.tuning_prop[gid, 2]
+            elif (index == 1):
+                xyuv_predicted += self.tau_prediction * self.tuning_prop[gid, 3]
+            y_pos_grid = utils.get_grid_pos_1d(xyuv_predicted, grid_edges)
             output_data[y_pos_grid, :] += self.nspikes_binned_normalized[gid, :]
-        return output_data, v_edges
+        return output_data, grid_edges
 
+
+    def compute_position_estimates(self):
+        pass
 
     def compute_v_estimates(self):
         """
@@ -315,7 +339,7 @@ class PlotPrediction(object):
         xlabel = 'Time [ms]'
         ylabel = '$v_x$'
         title = '$v_x$ binned vs time'
-        vx_grid, v_edges = self.bin_speed_estimates(self.vx_grid, index=2)
+        vx_grid, v_edges = self.bin_estimates(self.vx_grid, index=2)
         self.plot_grid_vs_time(vx_grid, title, xlabel, ylabel, v_edges, fig_cnt)
 
 
@@ -324,8 +348,26 @@ class PlotPrediction(object):
         xlabel = 'Time [ms]'
         ylabel = '$v_y$'
         title = '$v_y$ binned vs time'
-        vy_grid, v_edges = self.bin_speed_estimates(self.vy_grid, index=3)
+        vy_grid, v_edges = self.bin_estimates(self.vy_grid, index=3)
         self.plot_grid_vs_time(vy_grid, title, xlabel, ylabel, v_edges, fig_cnt)
+
+
+    def plot_x_grid_vs_time(self, fig_cnt=1):
+        print 'plot_x_grid_vs_time ...'
+        xlabel = 'Time [ms]'
+        ylabel = '$x_{predcted}$'
+        title = '$x_{predicted}$ binned vs time'
+        x_grid, x_edges = self.bin_estimates(self.x_grid, index=0)
+        self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt)
+
+
+    def plot_y_grid_vs_time(self, fig_cnt=1):
+        print 'plot_y_grid_vs_time ...'
+        xlabel = 'Time [ms]'
+        ylabel = '$y_{predcted}$'
+        title = '$y_{predicted}$ binned vs time'
+        y_grid, y_edges = self.bin_estimates(self.y_grid, index=0)
+        self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt)
 
 
     def plot_grid_vs_time(self, data, title='', xlabel='', ylabel='', yticks=[], fig_cnt=1):

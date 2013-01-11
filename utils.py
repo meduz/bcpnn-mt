@@ -242,16 +242,22 @@ def set_tuning_prop(params, mode='hexgrid', cell_type='exc'):
         n_v = params['N_V']
         n_rf_x = params['N_RF_X']
         n_rf_y = params['N_RF_Y']
+        v_max = params['v_max_tp']
+        v_min = params['v_min_tp']
     else:
         n_cells = params['n_inh']
         n_theta = params['N_theta_inh']
         n_v = params['N_V_INH']
         n_rf_x = params['N_RF_X_INH']
         n_rf_y = params['N_RF_Y_INH']
+        if n_v == 1:
+            v_min = params['v_min_tp'] + .5 * (params['v_max_tp'] - params['v_min_tp'])
+            v_max = v_min
+        else:
+            v_max = params['v_max_tp']
+            v_min = params['v_min_tp']
 
     tuning_prop = np.zeros((n_cells, 4))
-    v_max = params['v_max_tp']
-    v_min = params['v_min_tp']
     if mode=='random':
         # place the columns on a grid with the following dimensions
         x_max = int(round(np.sqrt(n_cells)))
@@ -595,6 +601,14 @@ def get_min_distance_to_stim(mp, tp_cell, params):
 def torus_distance(x0, x1):
     return x0 - x1
 
+
+def torus_distance(x0, x1):
+    return min(abs(x0 - x1), 1. - abs(x0 - x1))
+
+def torus_distance2D(x1, x2, y1, y2):
+    return np.sqrt(min(abs(x1 - x2), 1. - abs(x1 - x2))**2 + min(abs(y1 - y2), 1. - abs(y1-y2))**2)
+    # if not on a torus:
+#    return np.sqrt( (x1 - x2)**2 + (y1 - y2)**2)
 
 #def torus_distance(x0, x1):
 #    x_lim =  1

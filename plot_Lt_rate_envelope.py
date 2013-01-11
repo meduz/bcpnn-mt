@@ -20,9 +20,10 @@ for fn in sys.argv[1:]:
     x_axis = np.arange(data.size) * .1
     dist = np.zeros(data.size)
     for i in xrange(data.size):
-        dx = utils.torus_distance(mp[0] + x_axis[i] / params['t_sim'] * mp[2], tp[gid, 0])
-        dy = utils.torus_distance(mp[1] + x_axis[i] / params['t_sim'] * mp[3], tp[gid, 1])
-        dist[i] = np.sqrt(dx**2 + dy**2)
+        x_stim = mp[0] + x_axis[i] / params['t_sim'] * mp[2]
+        y_stim = mp[1] + x_axis[i] / params['t_sim'] * mp[3]
+        d_ij = utils.torus_distance2D(x_stim, tp[gid, 0], y_stim, tp[gid, 1])
+        dist[i] = d_ij
 
     t_min = np.argmin(dist)
     print gid, t_min, data[t_min], np.min(dist), 'mp:', mp, 'tp:', tp[gid, :]

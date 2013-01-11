@@ -29,7 +29,7 @@ if cell_type == 'exc':
     n_units = params['N_RF_X'] * params['N_RF_Y'] * params['N_theta'] * params['N_V']
 else:
     n_rf = params['N_RF_X_INH'] * params['N_RF_Y_INH']
-    n_units = params['N_RF_X_INH'] * params['N_RF_Y_INH'] * params['N_theta'] * params['N_V']
+    n_units = params['N_RF_X_INH'] * params['N_RF_Y_INH'] * params['N_theta_inh'] * params['N_V_INH']
 
 ms = 5 # markersize for scatterplots
 

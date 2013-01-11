@@ -29,10 +29,10 @@ class parameter_storage(object):
 #        self.params['N_V'], self.params['N_theta'] = 10, 10# resolution in velocity norm and direction
 
         # Medium-scale system
-        self.params['N_RF'] = 80# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 3, 6# resolution in velocity norm and direction
+        self.params['N_V'], self.params['N_theta'] = 4, 6# resolution in velocity norm and direction
 
         # Minimum sized system
 #        self.params['N_RF'] = 9# np.int(n_cells/N_V/N_theta)
@@ -78,7 +78,7 @@ class parameter_storage(object):
         self.params['n_exc'] = self.params['n_mc'] * self.params['n_exc_per_mc']
         self.params['fraction_inh_cells'] = 0.20 # fraction of inhibitory cells in the network, only approximately!
         self.params['N_theta_inh'] = self.params['N_theta']
-        self.params['N_V_INH'] = 2
+        self.params['N_V_INH'] = 1
         self.params['N_RF_INH'] = int(round(self.params['fraction_inh_cells'] * self.params['N_RF'] * float(self.params['N_V'] * self.params['N_theta']) / (self.params['N_V_INH'] * self.params['N_theta_inh'])))
         self.params['N_RF_X_INH'] = np.int(np.sqrt(self.params['N_RF_INH']*np.sqrt(3)))
         self.params['N_RF_Y_INH'] = np.int(np.sqrt(self.params['N_RF_INH']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
@@ -86,8 +86,10 @@ class parameter_storage(object):
         self.params['n_inh' ] = self.params['N_RF_X_INH'] * self.params['N_RF_Y_INH'] * self.params['N_theta_inh'] * self.params['N_V_INH']
 #        self.params['n_inh' ] = int(round(self.params['n_exc'] * self.params['fraction_inh_cells']))
         self.params['n_cells'] = self.params['n_mc'] * self.params['n_exc_per_mc'] + self.params['n_inh']
-        print 'n_cells: %d\tn_exc: %d\tn_inh: %d\nn_inh/n_exc = %.3f\tn_cells/n_inh = %.3f' % (self.params['n_cells'], self.params['n_exc'], self.params['n_inh'], \
+        print 'n_cells: %d\tn_exc: %d\tn_inh: %d\nn_inh / n_exc = %.3f\tn_inh / n_cells = %.3f' % (self.params['n_cells'], self.params['n_exc'], self.params['n_inh'], \
                 self.params['n_inh'] / float(self.params['n_exc']), self.params['n_inh'] / float(self.params['n_cells']))
+
+        self.params['tau_prediction'] = 1.        # when reading out the network prediction, each cell predicts the stimulus to be at position: x_pred = x_i + tau_prediction * v_i
 
         # #######################
         # CONNECTIVITY PARAMETERS
@@ -95,8 +97,7 @@ class parameter_storage(object):
         self.params['connect_exc_exc'] = True# enable / disable exc - exc connections for test purpose only
         self.params['selective_inhibition'] = False# if True: inh cells have tuning prop and receive input from exc according to those
         # there are three different ways to set up the connections:
-#        self.params['initial_connectivity'] = 'precomputed_linear_transform'
-        self.params['initial_connectivity'] = 'precomputed_convergence_constrained'
+        self.params['initial_connectivity'] = 'anisotropic'
 #        self.params['initial_connectivity'] = 'isotropic'
 #        self.params['initial_connectivity'] = 'random'
         self.params['p_ee'] = 0.03# fraction of network cells allowed to connect to each target cell, used in CreateConnections
@@ -106,17 +107,17 @@ class parameter_storage(object):
         self.params['w_thresh_connection'] = 1e-5 # connections with a weight less then this value will be discarded
         self.params['delay_scale'] = 20.        # delays are computed based on the expected latency of the stimulus to reach to cells multiplied with this factor
         self.params['delay_range'] = (0.1, 200.)
-        self.params['w_sigma_x'] = 0.20          # width of connectivity profile for pre-computed weights
-        self.params['w_sigma_v'] = 0.20         # small w_sigma: tuning_properties get stronger weight when deciding on connection
+        self.params['w_sigma_x'] = 0.40          # width of connectivity profile for pre-computed weights
+        self.params['w_sigma_v'] = 0.40         # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_per_tgt_ee'] = 0.20 # [uS] 
-        self.params['w_tgt_per_tgt_ei'] = 0.20 # [uS]
-        self.params['w_tgt_per_tgt_ie'] = 0.20 # [uS]
-        self.params['w_tgt_per_tgt_ii'] = 0.05 # [uS]
+        self.params['w_tgt_in_per_cell_ee'] = 0.25 # [uS] 
+        self.params['w_tgt_in_per_cell_ei'] = 0.20 # [uS]
+        self.params['w_tgt_in_per_cell_ie'] = 0.20 # [uS]
+        self.params['w_tgt_in_per_cell_ii'] = 0.05 # [uS]
 
         self.params['w_tgt_in'] = 0.20 # [uS]
         self.params['w_min'] = 5e-4             # When probabilities are transformed to weights, they are scaled so that the map into this range
@@ -135,7 +136,7 @@ class parameter_storage(object):
         self.params['w_ie_sigma'] = 0.001          
 
         # inh - inh
-        self.params['p_ii'] = self.params['p_ee']
+        self.params['p_ii'] = 0.05
         self.params['w_ii_mean'] = 0.003
         self.params['w_ii_sigma'] = 0.001          
 
@@ -158,9 +159,9 @@ class parameter_storage(object):
         # SIMULATION PARAMETERS 
         # ###################### 
         self.params['seed'] = 12345
-        self.params['t_sim'] = 150.                 # [ms] total simulation time
-        self.params['t_stimulus'] = 100.            # [ms] time when stimulus ends, i.e. before the stimulus disappears
-        self.params['t_blank'] = 50.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
+        self.params['t_sim'] = 600.                 # [ms] total simulation time
+        self.params['t_stimulus'] = 200.            # [ms] time when stimulus ends, i.e. before the stimulus disappears
+        self.params['t_blank'] = 200.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
         self.params['tuning_prop_seed'] = 0         # seed for randomized tuning properties
         self.params['input_spikes_seed'] = 0
         self.params['dt_sim'] = self.params['delay_range'][0] * 1 # [ms] time step for simulation
@@ -242,9 +243,7 @@ class parameter_storage(object):
         if self.params['selective_inhibition']:
             folder_name += 'selectiveInh_'
         if self.params['connect_exc_exc']:
-            if self.params['initial_connectivity'] == 'precomputed_linear_transform':
-                folder_name += 'LT_'
-            elif self.params['initial_connectivity'] == 'precomputed_convergence_constrained':
+            if self.params['initial_connectivity'] == 'precomputed_convergence_constrained':
                 folder_name += 'CC_'
             elif self.params['initial_connectivity'] == 'isotropic':
                 folder_name += 'isotropic_'
