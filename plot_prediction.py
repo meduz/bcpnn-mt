@@ -30,7 +30,7 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
     # fig 1
     # neuronal level
-    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_pthresh%.1e' % (params['prediction_fig_fn_base'], params['initial_connectivity'], \
+    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_pthresh%.1e' % (params['prediction_fig_fn_base'], params['connectivity'], \
             params['w_sigma_x'], params['w_sigma_v'], params['w_thresh_connection'])
 
     plotter.create_fig()  # create an empty figure

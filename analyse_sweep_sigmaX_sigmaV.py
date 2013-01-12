@@ -27,8 +27,8 @@ w_input_exc = 2e-3
 for sigma_v in sigma_v_range:
     for sigma_x in sigma_x_range:
         # -----   pre-computed connectivity 
-#        new_params = {  'initial_connectivity' : 'precomputed', 'w_sigma_x' : sigma_x, 'w_sigma_v' : sigma_v}
-        new_params = {  'initial_connectivity' : 'precomputed', 'w_sigma_x' : sigma_x, 'w_sigma_v' : sigma_v, 'w_input_exc' : w_input_exc}
+#        new_params = {  'connectivity' : 'precomputed', 'w_sigma_x' : sigma_x, 'w_sigma_v' : sigma_v}
+        new_params = {  'connectivity' : 'precomputed', 'w_sigma_x' : sigma_x, 'w_sigma_v' : sigma_v, 'w_input_exc' : w_input_exc}
         simStarter.update_values(new_params)
 
         # analysis 1
@@ -36,8 +36,8 @@ for sigma_v in sigma_v_range:
 
         # copy files from the previous folder needed for the next simulation
 
-#        new_params = { 'initial_connectivity' : 'random'}
-        new_params = {  'initial_connectivity' : 'random',  'w_input_exc' : w_input_exc}
+#        new_params = { 'connectivity' : 'random'}
+        new_params = {  'connectivity' : 'random',  'w_input_exc' : w_input_exc}
         simStarter.update_values(new_params)
         plot_prediction.plot_prediction(simStarter.params)
         i_ += 1

@@ -242,6 +242,7 @@ if __name__ == '__main__':
     except:
 #        cell_id = int(.5 * params['n_exc'])
         gid = np.random.randint(0, params['n_exc'], 1)[0]
+        print 'plotting GID', gid
         
     os.system("python merge_connlists.py")
 

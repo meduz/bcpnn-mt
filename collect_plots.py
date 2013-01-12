@@ -23,13 +23,13 @@ def get_parameter_file(arg, dirname, fnames):
 #        try:
         P = ntp.ParameterSet(param_path)
         src_fn = P[source_filename] + '0.png'
-        tgt_fn = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_0.png' % (P[source_filename], P['initial_connectivity'], P['w_sigma_x'], P['w_sigma_v'])
+        tgt_fn = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_0.png' % (P[source_filename], P['connectivity'], P['w_sigma_x'], P['w_sigma_v'])
         print src_fn, tgt_fn
         os.system('cp %s %s' % (src_fn, tgt_fn))
         os.system('cp %s %s' % (tgt_fn, tmp_folder))
 
         src_fn = P[source_filename] + '1.png'
-        tgt_fn = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_1.png' % (P[source_filename], P['initial_connectivity'], P['w_sigma_x'], P['w_sigma_v'])
+        tgt_fn = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_1.png' % (P[source_filename], P['connectivity'], P['w_sigma_x'], P['w_sigma_v'])
         print src_fn, tgt_fn
         os.system('cp %s %s' % (src_fn, tgt_fn))
         os.system('cp %s %s' % (tgt_fn, tmp_folder))

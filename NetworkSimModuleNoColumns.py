@@ -4,7 +4,7 @@ Simple network with a Poisson spike source projecting to populations of of IF_co
 
 import time
 import numpy as np
-import random as rnd
+import numpy.random as nprnd
 import sys
 import NeuroTools.parameters as ntp
 import os
@@ -30,8 +30,11 @@ class NetworkModel(object):
 
         self.params = params
         self.debug_connectivity = True
-        self.tuning_prop_exc = np.loadtxt(self.params['tuning_prop_means_fn'])
-        self.tuning_prop_inh = np.loadtxt(self.params['tuning_prop_inh_fn'])
+
+        self.tuning_prop_exc = utils.set_tuning_prop(params, mode='hexgrid', cell_type='exc')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+        self.tuning_prop_inh= utils.set_tuning_prop(params, mode='hexgrid', cell_type='inh')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+#        self.tuning_prop_exc = np.loadtxt(self.params['tuning_prop_means_fn'])
+#        self.tuning_prop_inh = np.loadtxt(self.params['tuning_prop_inh_fn'])
 
     def setup(self):
 #        try:
@@ -123,7 +126,7 @@ class NetworkModel(object):
 
 
 
-    def connect_input_to_exc(self):
+    def connect_input_to_exc(self, load_files=False):
         """
             # # # # # # # # # # # # # # # # # # # # # # 
             #     C O N N E C T    I N P U T - E X C  #
@@ -132,15 +135,49 @@ class NetworkModel(object):
 
         if self.pc_id == 0:
             print "Loading and connecting input spiketrains..."
-        for tgt in self.local_idx_exc:
-            try:
-                fn = self.params['input_st_fn_base'] + str(tgt) + '.npy'
-                spike_times = np.load(fn)
-            except: # this cell does not get any input
-                print "Missing file: ", fn
-                spike_times = []
-            ssa = create(SpikeSourceArray, {'spike_times': spike_times})
-            connect(ssa, self.exc_pop[tgt], self.params['w_input_exc'], synapse_type='excitatory')
+        if load_files:
+            for tgt in self.local_idx_exc:
+                try:
+                    fn = self.params['input_st_fn_base'] + str(tgt) + '.npy'
+                    spike_times = np.load(fn)
+                except: # this cell does not get any input
+                    print "Missing file: ", fn
+                    spike_times = []
+                ssa = create(SpikeSourceArray, {'spike_times': spike_times})
+                connect(ssa, self.exc_pop[tgt], self.params['w_input_exc'], synapse_type='excitatory')
+
+        else:
+            nprnd.seed(self.params['input_spikes_seed'])
+            dt = self.params['dt_rate'] # [ms] time step for the non-homogenous Poisson process 
+            time = np.arange(0, self.params['t_sim'], dt)
+            blank_idx = np.arange(1./dt * self.params['t_stimulus'], 1. / dt * (self.params['t_stimulus'] + self.params['t_blank']))
+
+            my_units = self.local_idx_exc
+            n_cells = len(my_units)
+            L_input = np.zeros((n_cells, time.shape[0]))
+            for i_time, time_ in enumerate(time):
+                if (i_time % 100 == 0):
+                    print "t:", time_
+                L_input[:, i_time] = utils.get_input(self.tuning_prop_exc[my_units, :], self.params, time_/self.params['t_stimulus'])
+                L_input[:, i_time] *= self.params['f_max_stim']
+
+            for i_time in blank_idx:
+                L_input[:, i_time] = 0.
+
+
+            for i_, unit in enumerate(my_units):
+                rate_of_t = np.array(L_input[i_, :]) 
+#                output_fn = self.params['input_rate_fn_base'] + str(unit) + '.npy'
+#                np.save(output_fn, rate_of_t)
+                # each cell will get its own spike train stored in the following file + cell gid
+                n_steps = rate_of_t.size
+                spike_times= []
+                for i in xrange(n_steps):
+                    r = nprnd.rand()
+                    if (r <= ((rate_of_t[i]/1000.) * dt)): # rate is given in Hz -> 1/1000.
+                        spike_times.append(i * dt) 
+                ssa = create(SpikeSourceArray, {'spike_times': spike_times})
+                connect(ssa, self.exc_pop[unit], self.params['w_input_exc'], synapse_type='excitatory')
 
 
     def connect_anisotropic(self, conn_type):
@@ -148,7 +185,7 @@ class NetworkModel(object):
         """
         if self.pc_id == 0:
             print 'Connect anisotropic %s' % conn_type
-        (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells) = self.resolve_src_tgt(conn_type)
+        (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells, syn_type) = self.resolve_src_tgt(conn_type)
 
         if self.debug_connectivity:
             conn_list_fn = self.params['conn_list_%s_fn_base' % conn_type] + '%d.dat' % (self.pc_id)
@@ -176,7 +213,7 @@ class NetworkModel(object):
             for i in xrange(len(sources)):
 #                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
                 delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
-#                connect(self.exc_pop[sources[i]], self.exc_pop[tgt], w[i], delay=delay, synapse_type='excitatory')
+                connect(src_pop[sources[i]], tgt_pop[tgt], w[i], delay=delay, synapse_type=syn_type)
                 if self.debug_connectivity:
                     output += '%d\t%d\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay) #                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], latency[sources[i]], p[sources[i]])
 
@@ -196,49 +233,37 @@ class NetworkModel(object):
 
         if conn_type == 'ee':
             n_src, n_tgt = self.params['n_exc'], self.params['n_exc']
-            tgt_pop, src_pop = self.exc_pop, self.exc_pop
+            src_pop, tgt_pop = self.exc_pop, self.exc_pop
             tgt_cells = self.local_idx_exc
             tp_src = self.tuning_prop_exc
             tp_tgt = self.tuning_prop_exc
-#            p_max = self.params['p_ee']
-            p_max = self.params['p_ee_local']
-            w_= self.params['w_max']
-            w_tgt_in = params['w_tgt_in']
+            syn_type = 'excitatory'
 
         elif conn_type == 'ei':
             n_src, n_tgt = self.params['n_exc'], self.params['n_inh']
-            tgt_pop, src_pop = self.exc_pop, self.inh_pop
+            src_pop, tgt_pop = self.exc_pop, self.inh_pop
             tgt_cells = self.local_idx_inh
             tp_src = self.tuning_prop_exc
             tp_tgt = self.tuning_prop_inh
-            p_max = self.params['p_ee_local']
-#            p_max = self.params['p_ei']
-            w_= self.params['w_ei_mean']
-            w_tgt_in = params['w_tgt_in']
+            syn_type = 'excitatory'
 
         elif conn_type == 'ie':
             n_src, n_tgt = self.params['n_inh'], self.params['n_exc']
-            tgt_pop, src_pop = self.inh_pop, self.exc_pop
+            src_pop, tgt_pop = self.inh_pop, self.exc_pop
             tgt_cells = self.local_idx_exc
             tp_src = self.tuning_prop_inh
             tp_tgt = self.tuning_prop_exc
-            p_max = self.params['p_ee_local']
-#            p_max = self.params['p_ie']
-            w_= self.params['w_ie_mean']
-            w_tgt_in = params['w_tgt_in']
+            syn_type = 'inhibitory'
 
         elif conn_type == 'ii':
             n_src, n_tgt = self.params['n_inh'], self.params['n_inh']
-            tgt_pop, src_pop = self.inh_pop, self.inh_pop
+            src_pop, tgt_pop = self.inh_pop, self.inh_pop
             tgt_cells = self.local_idx_inh
             tp_src = self.tuning_prop_inh
             tp_tgt = self.tuning_prop_inh
-            p_max = self.params['p_ee_local']
-#            p_max = self.params['p_ii']
-            w_= self.params['w_ii_mean']
-            w_tgt_in = params['w_tgt_in']
+            syn_type = 'inhibitory'
 
-        return (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells)
+        return (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells, syn_type)
 
 
 
@@ -265,7 +290,7 @@ class NetworkModel(object):
             for src in xrange(self.params['n_exc']):
                 if (src != tgt):
                     p[src], latency[src] = CC.get_p_conn(self.tuning_prop_exc[src, :], self.tuning_prop_exc[tgt, :], sigma_x, sigma_v) #                            print 'debug pc_id src tgt ', self.pc_id, src, tgt#, int(ID) < self.params['n_exc']
-            sources = rnd.sample(xrange(self.params['n_exc']), int(self.params['n_src_cells_per_neuron']))
+            sources = random.sample(xrange(self.params['n_exc']), int(self.params['n_src_cells_per_neuron']))
             idx = p[sources] > 0
             non_zero_idx = np.nonzero(idx)[0]
             p_ = p[sources][non_zero_idx]
@@ -319,45 +344,26 @@ class NetworkModel(object):
         if self.pc_id == 0:
             print 'Drawing isotropic connections'
 
+        (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells, syn_type) = self.resolve_src_tgt(conn_type)
         if conn_type == 'ee':
-            n_src, n_tgt = self.params['n_exc'], self.params['n_exc']
-            tgt_pop, src_pop = self.exc_pop, self.exc_pop
-            tgt_cells = self.local_idx_exc
-            tp_src = self.tuning_prop_exc
-            tp_tgt = self.tuning_prop_exc
 #            p_max = self.params['p_ee']
             p_max = self.params['p_ee_local']
             w_= self.params['w_max']
             w_tgt_in = params['w_tgt_in']
 
         elif conn_type == 'ei':
-            n_src, n_tgt = self.params['n_exc'], self.params['n_inh']
-            tgt_pop, src_pop = self.exc_pop, self.inh_pop
-            tgt_cells = self.local_idx_inh
-            tp_src = self.tuning_prop_exc
-            tp_tgt = self.tuning_prop_inh
             p_max = self.params['p_ee_local']
 #            p_max = self.params['p_ei']
             w_= self.params['w_ie']
             w_tgt_in = params['w_tgt_in']
 
         elif conn_type == 'ie':
-            n_src, n_tgt = self.params['n_inh'], self.params['n_exc']
-            tgt_pop, src_pop = self.inh_pop, self.exc_pop
-            tgt_cells = self.local_idx_exc
-            tp_src = self.tuning_prop_inh
-            tp_tgt = self.tuning_prop_exc
             p_max = self.params['p_ee_local']
 #            p_max = self.params['p_ie']
             w_= self.params['w_ie']
             w_tgt_in = params['w_tgt_in']
 
         elif conn_type == 'ii':
-            n_src, n_tgt = self.params['n_inh'], self.params['n_inh']
-            tgt_pop, src_pop = self.inh_pop, self.inh_pop
-            tgt_cells = self.local_idx_inh
-            tp_src = self.tuning_prop_inh
-            tp_tgt = self.tuning_prop_inh
             p_max = self.params['p_ee_local']
 #            p_max = self.params['p_ii']
             w_= self.params['w_ii']
@@ -386,7 +392,7 @@ class NetworkModel(object):
             srcs = w.nonzero()[0]
             weights = w[srcs]
             for src in srcs:
-#                connect(src_pop[int(src)], tgt_pop[int(tgt)], w[src], delay=params['standard_delay'], synapse_type='excitatory')
+                connect(src_pop[int(src)], tgt_pop[int(tgt)], w[src], delay=params['standard_delay'], synapse_type=syn_type)
                 output += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, w[src], params['standard_delay']) 
                     
         if self.debug_connectivity:
@@ -418,11 +424,11 @@ class NetworkModel(object):
             print 'Connecting cells exc - exc ...'
 
         if params['connect_exc_exc']:
-            if self.params['initial_connectivity'] == 'anisotropic':
+            if self.params['connectivity'] == 'anisotropic':
                 self.connect_anisotropic('ee')
 #                self.connect_ee_convergence_constrained()
 
-            elif self.params['initial_connectivity'] == 'isotropic':
+            elif self.params['connectivity'] == 'isotropic':
                 self.connect_isotropic(conn_type='ee')
 
             else:
@@ -439,10 +445,10 @@ class NetworkModel(object):
         #    connector_ei = FastFixedProbabilityConnector(self.params['p_exc_inh_global'], weights=self.params['w_exc_inh_global'], delays=self.delay_dist)
         #    connector_ei = FromFileConnector(self.params['conn_list_ei_fn'])
         """
-        if self.params['initial_connectivity'] == 'anisotropic':
+        if self.params['connectivity'] == 'anisotropic':
             self.connect_anisotropic('ei')
 
-        elif self.params['initial_connectivity'] == 'isotropic':
+        elif self.params['connectivity'] == 'isotropic':
             self.connect_isotropic(conn_type='ei')
         else:
             self.connect_ei_random()
@@ -451,7 +457,6 @@ class NetworkModel(object):
 #            conn_list_fn = self.params['conn_list_ei_fn_base'] + '%d.dat' % (self.pc_id)
 #            conn_file = open(conn_list_fn, 'w')
 #            output = ''
-
 #            if self.pc_id == 0:
 #                print "Connecting exc - inh with selective inhibition" 
 #            exc_inh_adj = np.loadtxt(self.params['exc_inh_adjacency_list_fn'])
@@ -479,9 +484,9 @@ class NetworkModel(object):
         #    connector_ie = FastFixedProbabilityConnector(self.params['p_inh_exc_global'], weights=self.params['w_inh_exc_global'], delays=self.delay_dist)
         #    connector_ie = FromFileConnector(self.params['conn_list_ie_fn'])
         """
-        if self.params['initial_connectivity'] == 'anisotropic':
+        if self.params['connectivity'] == 'anisotropic':
             self.connect_anisotropic('ie')
-        elif self.params['initial_connectivity'] == 'isotropic':
+        elif self.params['connectivity'] == 'isotropic':
             self.connect_isotropic(conn_type='ie')
         else:
             self.connect_ie_random()
@@ -527,9 +532,9 @@ class NetworkModel(object):
         #    connector_ii = FastFixedProbabilityConnector(self.params['p_inh_exc_global'], weights=self.params['w_inh_exc_global'], delays=self.delay_dist)
         #    connector_ii = FromFileConnector(self.params['conn_list_ii_fn'])
         """
-        if self.params['initial_connectivity'] == 'anisotropic':
+        if self.params['connectivity'] == 'anisotropic':
             self.connect_anisotropic('ii')
-        elif self.params['initial_connectivity'] == 'isotropic':
+        elif self.params['connectivity'] == 'isotropic':
             self.connect_isotropic(conn_type='ii')
         else:
             self.connect_ii_random()

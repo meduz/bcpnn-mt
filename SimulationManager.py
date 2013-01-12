@@ -74,12 +74,12 @@ class SimulationManager(PObject):
 
     def prepare_connections(self, input_fn=None):
 
-        if self.params['initial_connectivity'] == 'precomputed':
+        if self.params['connectivity'] == 'precomputed':
             print "Proc %d computes initial weights ... " % self.pc_id
             tuning_prop = np.loadtxt(self.params['tuning_prop_means_fn'])
             CC.compute_weights_from_tuning_prop(tuning_prop, self.params, self.comm)
 
-        elif self.pc_id == 0 and self.params['initial_connectivity'] == 'random':
+        elif self.pc_id == 0 and self.params['connectivity'] == 'random':
             print "Proc %d shuffles pre-computed weights ... " % self.pc_id
             output_fn = self.params['random_weight_list_fn'] + '0.dat'
             CC.compute_random_weight_list(input_fn, output_fn, self.params)
@@ -94,7 +94,7 @@ class SimulationManager(PObject):
 
         if (self.pc_id == 0):
             print "Simulation run %d: %d cells (%d exc, %d inh)" % (self.sim_cnt+1, self.params['n_cells'], self.params['n_exc'], self.params['n_inh'])
-            simulation.run_sim(self.params, self.sim_cnt, self.params['initial_connectivity'], connect_exc_exc)
+            simulation.run_sim(self.params, self.sim_cnt, self.params['connectivity'], connect_exc_exc)
 
         else: 
             print "Pc %d waiting for proc 0 to finish simulation" % self.pc_id

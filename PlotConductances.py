@@ -261,7 +261,7 @@ class PlotConductances(object):
         # inh -> g
 
         if conn_list_fn == None:
-            if not self.params['initial_connectivity'] == 'random':
+            if not self.params['connectivity'] == 'random':
                 conn_list_fn = self.params['merged_conn_list_ee']
             else: 
                 conn_list_fn = self.params['random_weight_list_fn'] + '0.dat'

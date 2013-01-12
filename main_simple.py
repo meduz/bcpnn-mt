@@ -51,7 +51,7 @@ if (prepare_spike_trains):
         comm.barrier()
 
 if (prepare_connections and params['connect_exc_exc']):
-    if params['initial_connectivity'] == 'precomputed':
+    if params['connectivity'] == 'precomputed':
         CC.compute_weights_from_tuning_prop(tuning_prop, params, comm)
         # optional
         if pc_id == 0:
@@ -80,7 +80,7 @@ if analyse and pc_id == 0:
 #sim_cnt = 0
 #if (pc_id == 0):
 #    print "Simulation run: %d cells (%d exc, %d inh)" % (params['n_cells'], params['n_exc'], params['n_inh'])
-#    simulation.run_sim(params, sim_cnt, params['initial_connectivity'], params['connect_exc_exc'])
+#    simulation.run_sim(params, sim_cnt, params['connectivity'], params['connect_exc_exc'])
 
 #if comm != None:
 #    comm.Barrier()

@@ -37,11 +37,11 @@ simStarter = SimulationManager.SimulationManager(PS, comm)
 
 i_ = 0
 #for p_thresh in p_thresh_range:
-#    new_params = {  'initial_connectivity' : 'precomputed', 'p_thresh_connection' : p_thresh}
+#    new_params = {  'connectivity' : 'precomputed', 'p_thresh_connection' : p_thresh}
 
 for p_to_w in p_to_w_range:
     # -----   pre-computed connectivity 
-    new_params = {  'initial_connectivity' : 'precomputed', 'p_to_w_scaling' : p_to_w}
+    new_params = {  'connectivity' : 'precomputed', 'p_to_w_scaling' : p_to_w}
     simStarter.update_values(new_params)
 
     simStarter.create_folders()
@@ -72,7 +72,7 @@ for p_to_w in p_to_w_range:
     src3 = simStarter.params['parameters_folder']
     connections_fn = simStarter.params['conn_list_ee_fn_base'] + '0.dat'
 
-    new_params = { 'initial_connectivity' : 'random'}
+    new_params = { 'connectivity' : 'random'}
     simStarter.update_values(new_params)
     tgt1 = simStarter.params['folder_name']
     if pc_id == 0:

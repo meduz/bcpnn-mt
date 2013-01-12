@@ -28,7 +28,7 @@ except:
 t_start = time.time()
 print "USE_MPI:", USE_MPI
 
-new_params = {  'initial_connectivity' : 'precomputed', 'w_sigma_x' : sigma_x_start, 'w_sigma_v' : sigma_v_start}
+new_params = {  'connectivity' : 'precomputed', 'w_sigma_x' : sigma_x_start, 'w_sigma_v' : sigma_v_start}
 SP = simulation_parameters.parameter_storage()
 SP.update_values(new_params)
 sweep_independent_folders = []
@@ -50,7 +50,7 @@ os.system(create_input)
 for sigma_v in sigma_v_range:
     for sigma_x in sigma_x_range:
         # for precomputed connectivity
-        new_params = {'initial_connectivity' : 'precomputed', 'w_sigma_x' : sigma_x, 'w_sigma_v' : sigma_v}
+        new_params = {'connectivity' : 'precomputed', 'w_sigma_x' : sigma_x, 'w_sigma_v' : sigma_v}
         SP.update_values(new_params)
         main_folder = SP.params['folder_name']
         SP.create_folders()
@@ -60,7 +60,7 @@ for sigma_v in sigma_v_range:
         SP.write_parameters_to_file()
 
         # for random connectivity
-        new_params = { 'initial_connectivity' : 'random'}
+        new_params = { 'connectivity' : 'random'}
         SP.update_values(new_params)
         main_folder = SP.params['folder_name']
         SP.create_folders()
@@ -73,7 +73,7 @@ for sigma_v in sigma_v_range:
 i_ = 0
 for sigma_v in sigma_v_range:
     for sigma_x in sigma_x_range:
-        new_params = {'initial_connectivity' : 'precomputed', 'w_sigma_x' : sigma_x, 'w_sigma_v' : sigma_v}
+        new_params = {'connectivity' : 'precomputed', 'w_sigma_x' : sigma_x, 'w_sigma_v' : sigma_v}
         SP.update_values(new_params)
         print "Precompute connections for sigma_v", i_, sigma_v, ' sigma_x ', sigma_x
         tuning_prop = np.loadtxt(SP.params['tuning_prop_means_fn'])
@@ -93,7 +93,7 @@ for sigma_v in sigma_v_range:
             comm.barrier()
 
         precomputed_weights = SP.params['conn_list_ee_fn_base'] + '0.dat'
-        new_params = { 'initial_connectivity' : 'random'}
+        new_params = { 'connectivity' : 'random'}
         SP.update_values(new_params)
         random_weights = SP.params['random_weight_list_fn'] + '0.dat'
         print "Randomize connections for sigma_v", i_, sigma_v, ' sigma_x ', sigma_x
@@ -115,7 +115,7 @@ for sigma_v in sigma_v_range:
 i_ = 0
 for sigma_v in sigma_v_range:
     for sigma_x in sigma_x_range:
-        new_params = {'initial_connectivity' : 'precomputed', 'w_sigma_x' : sigma_x, 'w_sigma_v' : sigma_v}
+        new_params = {'connectivity' : 'precomputed', 'w_sigma_x' : sigma_x, 'w_sigma_v' : sigma_v}
         SP.update_values(new_params)
         param_file = SP.params['params_fn']
         if USE_MPI:
@@ -126,7 +126,7 @@ for sigma_v in sigma_v_range:
 
         if comm != None:
             comm.barrier()
-        new_params = { 'initial_connectivity' : 'random'}
+        new_params = { 'connectivity' : 'random'}
         SP.update_values(new_params)
         param_file = SP.params['params_fn']
         if USE_MPI:

@@ -38,7 +38,7 @@ class ConductanceCalculator(object):
 
         self.load_nspikes()
 
-        if self.params['initial_connectivity'] == 'precomputed':
+        if self.params['connectivity'] == 'precomputed':
             conn_fn = self.params['conn_list_ee_fn_base'] + '0.dat'
         else:
             conn_fn = self.params['random_weight_list_fn'] + '0.dat'

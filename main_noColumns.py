@@ -49,12 +49,12 @@ if (do_prepare):
     # prepare stimulus
     Prep.prepare_sim(comm)
 
-if pc_id == 0 and params['initial_connectivity'] == 'precomputed':
+if pc_id == 0 and params['connectivity'] == 'precomputed':
     print "Proc %d computes initial weights ... " % pc_id
     tuning_prop = np.loadtxt(params['tuning_prop_means_fn'])
     CC.compute_weights_from_tuning_prop(tuning_prop, params)
 
-elif pc_id == 0 and params['initial_connectivity'] == 'random':
+elif pc_id == 0 and params['connectivity'] == 'random':
     print "Proc %d shuffles pre-computed weights ... " % pc_id
     input_fn = 'NoColumns_winit_precomputed_wsigmaX1.0e-01_motionblur2.5e-01_pthresh1.0e-02_ptow1.0e-02/Connections/conn_list_ee_0.dat'
     output_fn = params['random_weight_list_fn'] + '0.dat'
@@ -77,7 +77,7 @@ for sim_cnt in xrange(n_sim):
     
     if (pc_id == 0):
         print "Simulation run: %d / %d. %d cells (%d exc, %d inh)" % (sim_cnt+1, n_sim, params['n_cells'], params['n_exc'], params['n_inh'])
-        simulation.run_sim(params, sim_cnt, params['initial_connectivity'])
+        simulation.run_sim(params, sim_cnt, params['connectivity'])
     else: 
         print "Pc %d waiting for proc 0 to finish simulation" % pc_id
 

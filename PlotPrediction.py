@@ -21,12 +21,12 @@ class PlotPrediction(object):
         self.tau_prediction = self.params['tau_prediction']
         # define parameters
         self.n_cells = self.params['n_exc']
-        self.time_binsize = 50 # [ms]
+        self.time_binsize = 20 # [ms]
         self.n_bins = int((self.params['t_sim'] / self.time_binsize) )
         self.time_bins = [self.time_binsize * i for i in xrange(self.n_bins)]
         self.t_axis = np.arange(0, self.n_bins * self.time_binsize, self.time_binsize)
         self.n_vx_bins, self.n_vy_bins = 30, 30     # colormap grid dimensions for predicted direction
-        self.n_x_bins, self.n_y_bins = 30, 30       # colormap grid dimensions for predicted position
+        self.n_x_bins, self.n_y_bins = 50, 50       # colormap grid dimensions for predicted position
 
         # create data structures
         self.nspikes = np.zeros(self.n_cells)                                   # summed activity
@@ -61,14 +61,14 @@ class PlotPrediction(object):
         self.x_tuning = self.tuning_prop[:, 0].copy()
         self.x_tuning.sort()
         self.sorted_indices_x = self.tuning_prop[:, 0].argsort()
-        self.x_min, self.x_max = -.1, .1
+        self.x_min, self.x_max = -1.1, 1.1
         self.x_grid = np.linspace(self.x_min, self.x_max, self.n_x_bins, endpoint=True)
 
         # y-grid
         self.y_tuning = self.tuning_prop[:, 1].copy()
         self.y_tuning.sort()
         self.sorted_indices_x = self.tuning_prop[:, 1].argsort()
-        self.y_min, self.y_max = -.1, .1
+        self.y_min, self.y_max = -1.1, 1.1
         self.y_grid = np.linspace(self.y_min, self.y_max, self.n_y_bins, endpoint=True)
 
 
@@ -307,10 +307,10 @@ class PlotPrediction(object):
     def create_fig(self):
         print "plotting ...."
         self.fig = pylab.figure()
-        pylab.subplots_adjust(hspace=0.35)
+        pylab.subplots_adjust(hspace=0.4)
         pylab.subplots_adjust(wspace=0.35)
 
-    def plot_rasterplot(self, cell_type, fig_cnt=1):
+    def plot_rasterplot(self, cell_type, fig_cnt=1, show_blank=True):
         if cell_type == 'inh':
             fn = self.params['inh_spiketimes_fn_merged'] + '0.ras'
             n_cells = self.params['n_inh']
@@ -333,6 +333,8 @@ class PlotPrediction(object):
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('Neuron GID')
 
+        if show_blank:
+            self.plot_blank(ax)
 
     def plot_vx_grid_vs_time(self, fig_cnt=1):
         print 'plot_vx_grid_vs_time ... '
@@ -370,25 +372,29 @@ class PlotPrediction(object):
         self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt)
 
 
-    def plot_grid_vs_time(self, data, title='', xlabel='', ylabel='', yticks=[], fig_cnt=1):
+    def plot_grid_vs_time(self, data, title='', xlabel='', ylabel='', yticks=[], fig_cnt=1, show_blank=True):
+        """
+        Plots a colormap / grid versus time
+        """
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title(title)
         cax = ax.pcolormesh(data)
+
         ax.set_ylim((0, data[:, 0].size))
         ax.set_xlim((0, data[0, :].size))
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 
-        y_ticks = range(len(yticks))[::2]
+        y_ticks = range(len(yticks))[::5]
         ax.set_yticks(y_ticks)
-        ax.set_yticklabels(['%.2f' %i for i in yticks[::2]])
+        ax.set_yticklabels(['%.2f' %i for i in yticks[::5]])
 
         ax.set_xticks(range(self.n_bins)[::4])
         ax.set_xticklabels(['%d' %i for i in self.time_bins[::4]])
         pylab.colorbar(cax)
 
 
-    def plot_vdiff(self, fig_cnt=1):
+    def plot_vdiff(self, fig_cnt=1, show_blank=True):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title('Prediction error: $|v_{diff}| = |v_{stim}-v_{predicted}|$')#, fontsize=self.plot_params['title_fs'])
         ax.plot(self.t_axis, self.vdiff_avg, ls='-')
@@ -403,6 +409,8 @@ class PlotPrediction(object):
         ax.set_xticks(t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
+        if show_blank:
+            self.plot_blank(ax)
     
 
     def plot_nspikes_binned(self):
@@ -477,7 +485,7 @@ class PlotPrediction(object):
         pylab.colorbar(self.cax)
 
 
-    def plot_vx_estimates(self, fig_cnt=1):
+    def plot_vx_estimates(self, fig_cnt=1, show_blank=True):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title('$v_{x}$-predictions: avg, moving_avg, nonlinear')
         ax.plot(self.t_axis, self.vx_avg, ls='-')
@@ -492,8 +500,11 @@ class PlotPrediction(object):
         ax.set_xticks(t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
+        if show_blank:
+            self.plot_blank(ax)
 
-    def plot_vy_estimates(self, fig_cnt=1):
+
+    def plot_vy_estimates(self, fig_cnt=1, show_blank=True):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title('$v_{y}$-predictions: avg, moving_avg, nonlinear')
         ax.plot(self.t_axis, self.vy_avg, ls='-')
@@ -508,8 +519,10 @@ class PlotPrediction(object):
         ax.set_xticks(t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
+        if show_blank:
+            self.plot_blank(ax)
 
-    def plot_theta_estimates(self, fig_cnt=1):
+    def plot_theta_estimates(self, fig_cnt=1, show_blank=True):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title('$\Theta$-predictions: avg, moving_avg, nonlinear')
         ax.plot(self.t_axis, self.theta_avg, ls='-')
@@ -524,6 +537,8 @@ class PlotPrediction(object):
         ax.set_xticks(t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
+        if show_blank:
+            self.plot_blank(ax)
 
 
     def plot_fullrun_estimates_vx(self, fig_cnt=1):
@@ -533,7 +548,7 @@ class PlotPrediction(object):
         vx_nonlinear = (np.sum(self.vx_grid * self.vx_marginalized_binned_nonlinear), self.get_uncertainty(self.vx_marginalized_binned_nonlinear, self.vx_grid))
         ax.bar(self.vx_grid, self.vx_marginalized_binned, width=bin_width, label='Linear votes: $v_x=%.2f \pm %.2f$' % (vx_linear[0], vx_linear[1]))
         ax.bar(self.vx_grid+bin_width, self.vx_marginalized_binned_nonlinear, width=bin_width, facecolor='g', label='Non-linear votes: $v_x=%.2f \pm %.2f$' % (vx_nonlinear[0], vx_nonlinear[1]))
-        ax.set_title('Estimates based on full run activity with %s connectivity\nblue: linear marginalization over all positions, green: non-linear voting' % self.params['initial_connectivity'])
+        ax.set_title('Estimates based on full run activity with %s connectivity\nblue: linear marginalization over all positions, green: non-linear voting' % self.params['connectivity'])
         ax.set_xlabel('$v_x$')
         ax.set_ylabel('Confidence')
         ax.legend()
@@ -642,8 +657,14 @@ class PlotPrediction(object):
 #        pylab.axis([l-0.1*dx, r+0.1*dx, b-0.1*dy, t+0.1*dy])
 #        pylab.show()
 
-    def make_infotextbox(self):
-        pass
+    def plot_blank(self, ax):
+        ylim = ax.get_ylim()
+        print 'debug vy estimates', 'ylim', ylim
+        ax.plot((self.params['t_stimulus'], self.params['t_stimulus']), (ylim[0], ylim[1]), ls='--', c='k', lw=1)
+        ax.plot((self.params['t_stimulus'] + self.params['t_blank'], self.params['t_stimulus'] + self.params['t_blank']), (ylim[0], ylim[1]), ls='--', c='k', lw=1)
+        ax.set_ylim(ylim)
+
+
 
 #thetas = np.zeros(n_cells)
 #for gid in xrange(n_cells):

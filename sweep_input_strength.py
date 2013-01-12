@@ -39,7 +39,7 @@ for f_max_stim in f_max_stim_range:
     for w_input_exc in w_input_exc_range:
 
         # -----   pre-computed connectivity 
-        new_params = {  'initial_connectivity' : 'precomputed', 'w_input_exc':w_input_exc, 'f_max_stim':f_max_stim}
+        new_params = {  'connectivity' : 'precomputed', 'w_input_exc':w_input_exc, 'f_max_stim':f_max_stim}
         simStarter.update_values(new_params)
 
         print "Prepare for w_sigma_v", simStarter.params['w_sigma_v']
@@ -67,7 +67,7 @@ for f_max_stim in f_max_stim_range:
         src3 = simStarter.params['parameters_folder']
         connections_fn = simStarter.params['conn_list_ee_fn_base'] + '0.dat'
 
-        new_params = { 'initial_connectivity' : 'random', 'w_input_exc':w_input_exc, 'f_max_stim':f_max_stim}
+        new_params = { 'connectivity' : 'random', 'w_input_exc':w_input_exc, 'f_max_stim':f_max_stim}
         simStarter.update_values(new_params)
         tgt1 = simStarter.params['folder_name']
         if pc_id == 0:
