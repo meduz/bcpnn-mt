@@ -157,8 +157,11 @@ class PlotPrediction(object):
             xyuv_predicted = self.tuning_prop[gid, index] # cell tuning properties
             if (index == 0):
                 xyuv_predicted += self.tau_prediction * self.tuning_prop[gid, 2]
+                xyuv_predicted = xyuv_predicted % 1.
+
             elif (index == 1):
                 xyuv_predicted += self.tau_prediction * self.tuning_prop[gid, 3]
+                xyuv_predicted = xyuv_predicted % 1.
             y_pos_grid = utils.get_grid_pos_1d(xyuv_predicted, grid_edges)
             output_data[y_pos_grid, :] += self.nspikes_binned_normalized[gid, :]
         return output_data, grid_edges
@@ -340,7 +343,8 @@ class PlotPrediction(object):
         print 'plot_vx_grid_vs_time ... '
         xlabel = 'Time [ms]'
         ylabel = '$v_x$'
-        title = '$v_x$ binned vs time'
+#        title = '$v_x$ binned vs time'
+        title = ''
         vx_grid, v_edges = self.bin_estimates(self.vx_grid, index=2)
         self.plot_grid_vs_time(vx_grid, title, xlabel, ylabel, v_edges, fig_cnt)
 
@@ -349,7 +353,7 @@ class PlotPrediction(object):
         print 'plot_vy_grid_vs_time ...'
         xlabel = 'Time [ms]'
         ylabel = '$v_y$'
-        title = '$v_y$ binned vs time'
+        title = ''#$v_y$ binned vs time'
         vy_grid, v_edges = self.bin_estimates(self.vy_grid, index=3)
         self.plot_grid_vs_time(vy_grid, title, xlabel, ylabel, v_edges, fig_cnt)
 
@@ -358,7 +362,7 @@ class PlotPrediction(object):
         print 'plot_x_grid_vs_time ...'
         xlabel = 'Time [ms]'
         ylabel = '$x_{predcted}$'
-        title = '$x_{predicted}$ binned vs time'
+        title = ''#$x_{predicted}$ binned vs time'
         x_grid, x_edges = self.bin_estimates(self.x_grid, index=0)
         self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt)
 
@@ -367,7 +371,7 @@ class PlotPrediction(object):
         print 'plot_y_grid_vs_time ...'
         xlabel = 'Time [ms]'
         ylabel = '$y_{predcted}$'
-        title = '$y_{predicted}$ binned vs time'
+        title = ''#$y_{predicted}$ binned vs time'
         y_grid, y_edges = self.bin_estimates(self.y_grid, index=0)
         self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt)
 

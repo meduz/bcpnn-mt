@@ -31,22 +31,26 @@ class NetworkModel(object):
         self.params = params
         self.debug_connectivity = True
 
-        self.tuning_prop_exc = utils.set_tuning_prop(params, mode='hexgrid', cell_type='exc')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
-        self.tuning_prop_inh= utils.set_tuning_prop(params, mode='hexgrid', cell_type='inh')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
 #        self.tuning_prop_exc = np.loadtxt(self.params['tuning_prop_means_fn'])
 #        self.tuning_prop_inh = np.loadtxt(self.params['tuning_prop_inh_fn'])
 
     def setup(self):
-#        try:
-        from mpi4py import MPI
-        USE_MPI = True
-        self.comm = MPI.COMM_WORLD
-        self.pc_id, self.n_proc = self.comm.rank, self.comm.size
-        print "USE_MPI:", USE_MPI, 'pc_id, n_proc:', self.pc_id, self.n_proc
-#        except:
-#            USE_MPI = False
-#            self.pc_id, self.n_proc, self.comm = 0, 1, None
-#            print "MPI not used"
+        self.tuning_prop_exc = utils.set_tuning_prop(params, mode='hexgrid', cell_type='exc')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+        self.tuning_prop_inh= utils.set_tuning_prop(params, mode='hexgrid', cell_type='inh')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+        print "Saving tuning_prop to file:", params['tuning_prop_means_fn']
+        np.savetxt(params['tuning_prop_means_fn'], self.tuning_prop_exc)
+        print "Saving tuning_prop to file:", params['tuning_prop_inh_fn']
+        np.savetxt(params['tuning_prop_inh_fn'], self.tuning_prop_inh)
+        try:
+            from mpi4py import MPI
+            USE_MPI = True
+            self.comm = MPI.COMM_WORLD
+            self.pc_id, self.n_proc = self.comm.rank, self.comm.size
+            print "USE_MPI:", USE_MPI, 'pc_id, n_proc:', self.pc_id, self.n_proc
+        except:
+            USE_MPI = False
+            self.pc_id, self.n_proc, self.comm = 0, 1, None
+            print "MPI not used"
 
         from pyNN.utility import Timer
         self.timer = Timer()
@@ -116,7 +120,7 @@ class NetworkModel(object):
         self.times['t_create'] = self.timer.diff()
 
     def connect(self):
-        self.connect_input_to_exc()
+        self.connect_input_to_exc(save_output=True)
         self.connect_ee()
         self.connect_ei()
         self.connect_ie()
@@ -126,7 +130,7 @@ class NetworkModel(object):
 
 
 
-    def connect_input_to_exc(self, load_files=False):
+    def connect_input_to_exc(self, load_files=False, save_output=False):
         """
             # # # # # # # # # # # # # # # # # # # # # # 
             #     C O N N E C T    I N P U T - E X C  #
@@ -167,8 +171,6 @@ class NetworkModel(object):
 
             for i_, unit in enumerate(my_units):
                 rate_of_t = np.array(L_input[i_, :]) 
-#                output_fn = self.params['input_rate_fn_base'] + str(unit) + '.npy'
-#                np.save(output_fn, rate_of_t)
                 # each cell will get its own spike train stored in the following file + cell gid
                 n_steps = rate_of_t.size
                 spike_times= []
@@ -178,6 +180,11 @@ class NetworkModel(object):
                         spike_times.append(i * dt) 
                 ssa = create(SpikeSourceArray, {'spike_times': spike_times})
                 connect(ssa, self.exc_pop[unit], self.params['w_input_exc'], synapse_type='excitatory')
+                if save_output:
+                    output_fn = self.params['input_rate_fn_base'] + str(unit) + '.npy'
+                    np.save(output_fn, rate_of_t)
+                    output_fn = params['input_st_fn_base'] + str(unit) + '.npy'
+                    np.save(output_fn, np.array(spike_times))
 
 
     def connect_anisotropic(self, conn_type):

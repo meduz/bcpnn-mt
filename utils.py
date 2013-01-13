@@ -25,6 +25,16 @@ def convert_connlist_to_matrix(fn, n_src, n_tgt):
     return m, delays
 
 
+def extract_trace(d, gid):
+    """
+    d : voltage trace from a saved with compatible_output=False
+    gid : cell_gid
+    """
+    mask = gid * np.ones(d[:, 0].size)
+    indices = mask == d[:, 0]
+    time_axis, volt = d[indices, 1], d[indices, 2]
+    return time_axis, volt
+
 def convert_spiketrain_to_trace(st, n):
     """
     st: spike train in the format [time, id]
@@ -38,7 +48,19 @@ def convert_spiketrain_to_trace(st, n):
     return trace
 
 
+def low_pass_filter(trace, tau=10, initial_value=0.001, dt=1., spike_height=1.):
+    """
+    trace can be e.g. a spike train trace, i.e. all elements are 0 except spike times = 1,
+    """
 
+    eps = 0.0001
+    n = len(trace)
+    zi = np.ones(n) * initial_value
+    for i in xrange(1, n):
+        # pre-synaptic trace zi follows trace 
+        dzi = dt * (trace[i] * spike_height - zi[i-1] + eps) / tau
+        zi[i] = zi[i-1] + dzi
+    return zi
 
 def create_spike_trains_for_motion(tuning_prop, params, contrast=.9, my_units=None, seed=None):
     """
@@ -210,11 +232,30 @@ def get_time_of_max_stim(tuning_prop, motion_params):
     to the RF.
     t_min = (mu_x * u0 + mu_y * v0 - v0 * y0 + u0 * x0) / (v0**2 + u0**2)
     """
-    mu_x = tuning_prop[0] #+ np.sign(rnd.uniform(-1, 1)) * sigma_x
-    mu_y = tuning_prop[1] #+ np.sign(rnd.uniform(-1, 1)) * sigma_y
-    x0, y0, u0, v0 = motion_params
-    t_min = (mu_x * u0 + mu_y * v0 - v0 * y0 + u0 * x0) / (u0**2 + v0**2)
+    x_i, y_i, u_i, v_i = tuning_prop
+    x_stim, y_stim, u_stim, v_stim = motion_params
+    t_min = (u_stim * x_i - u_stim * x_stim + v_stim * y_i - v_stim * y_stim) / (u_stim**2 + v_stim**2)
     return t_min
+
+
+def get_time_of_max_response(spikes, range=None, n_binsizes=1):
+    """
+    For n_binsizes the average max response will be computed.
+    Average max response is the mean of those bins that have the maximum number of spikes in it.
+    """
+    binsizes = np.linspace(5, 50, n_binsizes)
+    t_max_depending_on_binsize = np.zeros((n_binsizes, 2))
+    for i in xrange(n_binsizes):
+        n_bins = binsizes[i]
+        n, bins = np.histogram(spikes, bins=n_bins, range=range)
+        binsize = round(bins[1] - bins[0])
+        bins_with_max_height = (n == n.max()).nonzero()[0]
+        times_with_max_response = binsize * bins_with_max_height + .5 * binsize
+        t_max, t_max_std = times_with_max_response.mean(), times_with_max_response.std()
+        t_max_depending_on_binsize[i, 0] = t_max
+        t_max_depending_on_binsize[i, 1] = t_max_std
+    return t_max_depending_on_binsize[:, 0].mean(), t_max_depending_on_binsize[:, 1].mean()
+
 
 
 def set_tuning_prop(params, mode='hexgrid', cell_type='exc'):

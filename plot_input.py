@@ -73,7 +73,6 @@ fig = pylab.figure()
 pylab.subplots_adjust(hspace=0.35)
 ax = fig.add_subplot(211)
 
-rate_half = .5 * (np.max(rate) - np.min(rate))
 nspikes = spikes.size
 w_input_exc = 2e-3
 cond_in = w_input_exc * 1000. * nspikes
@@ -81,6 +80,7 @@ print 'Cond_in: %.3e [nS] nspikes: %d' % (cond_in, nspikes)
 ax.set_title('Input spike train and L(t)')
 for s in spikes:
     ax.plot((s, s), (0.2 * (y_max-y_min) + y_min, 0.8 * (y_max-y_min) + y_min), c='k')
+#rate_half = .5 * (np.max(rate) - np.min(rate))
 #ax.plot(spikes, rate_half * np.ones(spikes.size), '|', markersize=1)
 #ax.plot(spikes, 0.5 * np.ones(spikes.size), '|', markersize=1)
 print 'rate', rate
@@ -101,7 +101,7 @@ ax.set_ylabel('Number of input spikes')
 ax.set_xlabel('Times [ms]')
 
 if params_loaded:
-    output_fn = params['figures_folder'] + 'input_%d.eps' % (gid)
+    output_fn = params['figures_folder'] + 'input_%d.png' % (gid)
 #    output_fn = params['figures_folder'] + 'input_%d.png' % (gid)
     print 'Saving to', output_fn
     pylab.savefig(output_fn)

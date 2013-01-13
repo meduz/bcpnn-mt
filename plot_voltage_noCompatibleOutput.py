@@ -2,14 +2,9 @@ import random
 import numpy as np
 import sys
 import pylab
+import utils
 
 
-
-def extract_trace(d, gid):
-    mask = gid * np.ones(d[:, 0].size)
-    indices = mask == d[:, 0]
-    time_axis, volt = d[indices, 1], d[indices, 2]
-    return time_axis, volt
 
 def plot_volt(fn, gid=None, n=1):
     print 'loading', fn
@@ -27,7 +22,7 @@ def plot_volt(fn, gid=None, n=1):
         gids = [gid]
     
     for gid in gids:
-        time_axis, volt = extract_trace(d, gid)
+        time_axis, volt = utils.extract_trace(d, gid)
 #        print 'gid %d v_mean, std = %.2f +- %.2f; min %.2f max %.2f, diff %.2f ' % (gid, volt.mean(), volt.std(), volt.min(), volt.max(), volt.max() - volt.min())
         pylab.plot(time_axis, volt, label='%d' % gid, lw=3)
 
@@ -57,11 +52,11 @@ def plot_average_volt(fn, gid=None, n=1):
     else:
         gids = [gid]
     
-    time_axis, volt = extract_trace(d, gids[0])
+    time_axis, volt = utils.extract_trace(d, gids[0])
     all_volt = np.zeros((time_axis.size, len(gids)))
 
     for i_, gid in enumerate(gids):
-        time_axis, volt = extract_trace(d, gid)
+        time_axis, volt = utils.extract_trace(d, gid)
         print 'gid %d v_mean, std = %.2f +- %.2f; min %.2f max %.2f, diff %.2f ' % (gid, volt.mean(), volt.std(), volt.min(), volt.max(), volt.max() - volt.min())
         all_volt[:, i_] = volt
 
