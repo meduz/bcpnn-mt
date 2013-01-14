@@ -21,6 +21,9 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 #        inh_spikes = params['inh_spiketimes_fn_merged'] + '%d.ras' % (sim_cnt)
 
     plotter = P.PlotPrediction(params, data_fn)
+#    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.2)
+    pylab.rcParams['axes.labelsize'] = 14
+    pylab.rcParams['axes.titlesize'] = 16
     if plotter.no_spikes:
         return
 
@@ -47,13 +50,18 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     pylab.savefig(output_fn)
 
     # poplation level, short time-scale
-    plotter.n_fig_x = 2
+    plotter.n_fig_x = 3
     plotter.n_fig_y = 2
     plotter.create_fig()
-    plotter.plot_vx_estimates(1)                 # 1
-    plotter.plot_vy_estimates(2)                 # 2
-    plotter.plot_theta_estimates(3)              # 3
-    plotter.plot_vdiff(4)                        # 4
+    pylab.rcParams['legend.fontsize'] = 12
+    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.3)
+    plotter.plot_vx_estimates(1)
+    plotter.plot_vy_estimates(2)
+    plotter.plot_vdiff(3)
+    plotter.plot_x_estimates(4)
+    plotter.plot_y_estimates(5) 
+    plotter.plot_xdiff(6)
+#    plotter.plot_theta_estimates(5)
     output_fn = output_fn_base + '_1.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)

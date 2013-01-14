@@ -796,8 +796,12 @@ def linear_transformation(x, y_min, y_max):
     x_max = np.max(x)
     if x_min == x_max:
         x_max = x_min * 1.0001
+
+    return (y_min + (y_max - y_min) / (x_max - x_min) * (x - x_min))
+
 #    print 'debug linear transformation x_min, x_max', x_min, x_max
-    m = 1. / (x_min * (x_max - x_min)) * (y_min * x_max - y_min * x_min - y_min * x_max + y_max * x_min)
+#    m = 1. / (x_min * (x_max - x_min)) * (y_min * x_max - y_min * x_min - y_min * x_max + y_max * x_min)
+#    m = 1. / (x_min * (x_max - x_min)) * (y_min * x_max - y_min * x_min - y_min * x_max + y_max * x_min)
 #    if (x_max / x_min) == np.inf:
 #        print 'inf'
 #        exit(1)
@@ -805,9 +809,9 @@ def linear_transformation(x, y_min, y_max):
 #        print 'nan'
 #        exit(1)
 #    m = (y_max - y_min * (1. - x_max - x_max / x_min)) / (x_max - x_min)
-    b = (y_min * x_max - y_max * x_min) / (x_max - x_min)
+#    b = (y_min * x_max - y_max * x_min) / (x_max - x_min)
 #    print 'debug m, b', m, b
-    return (m * x + b)
+#    return (m * x + b)
 
 def merge_files(input_fn_base, output_fn):
 

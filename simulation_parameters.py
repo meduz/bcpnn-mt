@@ -23,22 +23,22 @@ class parameter_storage(object):
         # HEXGRID PARAMETERS
         # ###################
         # Large-scale system
-#        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
-#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#        self.params['N_V'], self.params['N_theta'] = 10, 10# resolution in velocity norm and direction
+        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+        self.params['N_V'], self.params['N_theta'] = 10, 10# resolution in velocity norm and direction
 
 #         Medium-scale system
-#        self.params['N_RF'] = 60# np.int(n_cells/N_V/N_theta)
+        #self.params['N_RF'] = 60# np.int(n_cells/N_V/N_theta)
+        #self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+        #self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+        #self.params['N_V'], self.params['N_theta'] = 3, 6# resolution in velocity norm and direction
+
+#         Small-scale system
+#        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 3, 3# resolution in velocity norm and direction
-
-#         Small-scale system
-        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 3, 3# resolution in velocity norm and direction
 
 
         # Minimum sized system
@@ -69,7 +69,7 @@ class parameter_storage(object):
         print 'N_RF_X %d N_RF_Y %d' % (self.params['N_RF_X'], self.params['N_RF_Y'])
         print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
         self.params['abstract_input_scaling_factor'] = 1.
-        self.params['log_scale'] = 2. # bas4 of the logarithmic tiling of particle_grid; linear if equal to one
+        self.params['log_scale'] = 2 # base of the logarithmic tiling of particle_grid; linear if equal to one
         self.params['sigma_RF_pos'] = .05 # some variability in the position of RFs
         self.params['sigma_RF_speed'] = .3 # some variability in the speed of RFs
         self.params['sigma_RF_direction'] = .25 * 2 * np.pi # some variability in the direction of RFs
@@ -101,18 +101,18 @@ class parameter_storage(object):
         # #######################
         # CONNECTIVITY PARAMETERS
         # #######################
-        self.params['connect_exc_exc'] = False# enable / disable exc - exc connections for test purpose only
+        self.params['connect_exc_exc'] = True# enable / disable exc - exc connections for test purpose only
         self.params['selective_inhibition'] = False# if True: inh cells have tuning prop and receive input from exc according to those
         # there are three different ways to set up the connections:
         self.params['connectivity'] = 'anisotropic'
 #        self.params['connectivity'] = 'isotropic'
 #        self.params['connectivity'] = 'random'
-        self.params['p_ee'] = 0.05# fraction of network cells allowed to connect to each target cell, used in CreateConnections
+        self.params['p_ee'] = 0.02# fraction of network cells allowed to connect to each target cell, used in CreateConnections
         self.params['p_ee_local'] = 0.80 # connection probability for local connections (isotropic connection scheme), ref: Hellwig 2000 A quantitative analysis of the local connectivity between pyramidal neurons in layers 2/3 of the rat visual cortex
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
         self.params['w_thresh_connection'] = 1e-5 # connections with a weight less then this value will be discarded
-        self.params['delay_scale'] = 20.        # delays are computed based on the expected latency of the stimulus to reach to cells multiplied with this factor
+        self.params['delay_scale'] = 30.        # delays are computed based on the expected latency of the stimulus to reach to cells multiplied with this factor
         self.params['delay_range'] = (0.1, 200.)
         self.params['w_sigma_x'] = 0.10          # width of connectivity profile for pre-computed weights
         self.params['w_sigma_v'] = 0.10         # small w_sigma: tuning_properties get stronger weight when deciding on connection
@@ -121,28 +121,28 @@ class parameter_storage(object):
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.30 # [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ee'] = 0.20 # [uS] how much input should an exc cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ei'] = 0.30 # [uS] how much input should an inh cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ie'] = 0.30 # [uS] how much input should an exc cell get from its inh source cells?
-        self.params['w_tgt_in_per_cell_ii'] = 0.10 # [uS] how much input should an inh cell get from its source cells?
+        self.params['w_tgt_in_per_cell_ii'] = 0.20 # [uS] how much input should an inh cell get from its source cells?
 
         self.params['w_min'] = 5e-4             # When probabilities are transformed to weights, they are scaled so that the map into this range
         self.params['w_max'] = 4e-3
         self.params['n_src_cells_per_neuron'] = round(self.params['p_ee'] * self.params['n_exc'])
 
         # exc - inh
-        self.params['p_ei'] = 0.05 #self.params['p_ee']
+        self.params['p_ei'] = 0.02 #self.params['p_ee']
         self.params['w_ei_mean'] = 0.005
         self.params['w_ei_sigma'] = 0.001          
 
         # inh - exc
 #        self.params['p_ie'] = 1.
-        self.params['p_ie'] = 0.10 #self.params['p_ee']
+        self.params['p_ie'] = 0.02 #self.params['p_ee']
         self.params['w_ie_mean'] = 0.005
         self.params['w_ie_sigma'] = 0.001          
 
         # inh - inh
-        self.params['p_ii'] = 0.10
+        self.params['p_ii'] = 0.02
         self.params['w_ii_mean'] = 0.003
         self.params['w_ii_sigma'] = 0.001          
 
@@ -203,8 +203,8 @@ class parameter_storage(object):
         u0 (v0) : velocity in x-direction (y-direction)
         """
         self.params['motion_params'] = (0.1, 0.5, 0.2, 0) # x0, y0, u0, v0.5
-        self.params['v_max_tp'] = 0.40  # [a.u.] maximal velocity in visual space for tuning_parameters (for each component), 1. means the whole visual field is traversed
-        self.params['v_min_tp'] = 0.10  # [a.u.] minimal velocity in visual space for training
+        self.params['v_max_tp'] = 0.5  # [a.u.] maximal velocity in visual space for tuning_parameters (for each component), 1. means the whole visual field is traversed
+        self.params['v_min_tp'] = 0.15  # [a.u.] minimal velocity in visual space for training
         self.params['v_max_training'] = 0.2
         self.params['v_min_training'] = 0.2
         self.params['blur_X'], self.params['blur_V'] = .10, .10
@@ -244,8 +244,8 @@ class parameter_storage(object):
         # ######################
         # the main folder with all simulation specific content
 
-#        folder_name = 'LargeScaleModel_'
-        folder_name = 'SmallSpikingModel_'
+        folder_name = 'LargeScaleModel_'
+        #folder_name = 'SmallSpikingModel_'
         if self.params['selective_inhibition']:
             folder_name += 'selectiveInh_'
         if self.params['connect_exc_exc']:

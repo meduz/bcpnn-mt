@@ -162,7 +162,6 @@ pylab.rcParams['legend.fontsize'] = 12
 pylab.rcParams['axes.labelsize'] = 16
 pylab.rcParams['axes.titlesize'] = 20
 
-
 ax = fig.add_subplot(221)
 for s in input_spikes_pre:
     ax.plot((s, s), (0.2 * (y_max-y_min) + y_min, 0.8 * (y_max-y_min) + y_min), c='k')
