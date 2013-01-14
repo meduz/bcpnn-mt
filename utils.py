@@ -234,7 +234,7 @@ def get_time_of_max_stim(tuning_prop, motion_params):
     """
     x_i, y_i, u_i, v_i = tuning_prop
     x_stim, y_stim, u_stim, v_stim = motion_params
-    t_min = (u_stim * x_i - u_stim * x_stim + v_stim * y_i - v_stim * y_stim) / (u_stim**2 + v_stim**2)
+    t_min = (u_stim * (x_i - x_stim) + v_stim * (y_i - y_stim)) / (u_stim**2 + v_stim**2)
     return t_min
 
 

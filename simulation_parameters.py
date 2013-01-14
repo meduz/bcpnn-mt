@@ -165,9 +165,9 @@ class parameter_storage(object):
         # SIMULATION PARAMETERS 
         # ###################### 
         self.params['seed'] = 12345
-        self.params['t_sim'] = 800.                 # [ms] total simulation time
-        self.params['t_stimulus'] = 300.            # [ms] time when stimulus ends, i.e. before the stimulus disappears
-        self.params['t_blank'] = 200.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
+        self.params['t_sim'] = 400.                 # [ms] total simulation time
+        self.params['t_stimulus'] = 100.            # [ms] time when stimulus ends, i.e. before the stimulus disappears
+        self.params['t_blank'] = 100.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
         self.params['tuning_prop_seed'] = 0         # seed for randomized tuning properties
         self.params['input_spikes_seed'] = 0
         self.params['dt_sim'] = self.params['delay_range'][0] * 1 # [ms] time step for simulation
