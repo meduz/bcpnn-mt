@@ -587,7 +587,6 @@ class PlotPrediction(object):
         ax.plot(self.t_axis, self.x_non_linear, ls=':', label='soft-max')
         ax.plot(self.t_axis, self.x_stim, ls='-', c='k', lw=2, label='$x_{stim}$')
         ax.legend(loc='lower right')
-        print 'debug x_stim', self.x_stim
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$x$ position [a.u.]')
         ny = self.t_axis.size
@@ -608,7 +607,6 @@ class PlotPrediction(object):
         ax.errorbar(self.t_axis, self.y_moving_avg[:, 0], yerr=self.y_moving_avg[:, 1], ls='--', label='moving avg')
         ax.plot(self.t_axis, self.y_non_linear, ls=':', label='soft-max')
         ax.plot(self.t_axis, self.y_stim, ls='-', c='k', lw=2, label='$y_{stim}$')
-        print 'debug y_stim', self.y_stim
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$y$ position [a.u.]')
 #        ax.legend()
@@ -657,7 +655,7 @@ class PlotPrediction(object):
         ax.plot(self.t_axis, vy, ls='-', c='k', lw=2, label='$v_{y, stim}$')
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$v_y$')
-#        ax.legend()
+        ax.set_title('$v_{y}$-predictions')#: avg, moving_avg, nonlinear')
         ax.legend(loc='lower right')
         ny = self.t_axis.size
         n_ticks = 5
@@ -806,7 +804,6 @@ class PlotPrediction(object):
 
     def plot_blank(self, ax):
         ylim = ax.get_ylim()
-        print 'debug vy estimates', 'ylim', ylim
         ax.plot((self.params['t_stimulus'], self.params['t_stimulus']), (ylim[0], ylim[1]), ls='--', c='k', lw=1)
         ax.plot((self.params['t_stimulus'] + self.params['t_blank'], self.params['t_stimulus'] + self.params['t_blank']), (ylim[0], ylim[1]), ls='--', c='k', lw=1)
         ax.set_ylim(ylim)

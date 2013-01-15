@@ -258,22 +258,23 @@ if __name__ == '__main__':
 #        gid = np.random.randint(0, params['n_exc'], 1)[0]
         print 'plotting GID', gid
         
-    with_directions = True
-    with_delays = False
+    with_directions = False
+    with_delays = True
 
     exc_color = (.5, .5, .5)
     P.plot_cell(gid, exc=True, color='r')
     ee_targets = P.plot_connection_type(gid, 'ee', 'o', 'r', with_directions, with_delays)
-    ei_targets = P.plot_connection_type(gid, 'ei', '*', 'r', with_directions, with_delays)#, annotate=True)
+    ei_targets = P.plot_connection_type(gid, 'ei', 'x', 'r', with_directions, with_delays)#, annotate=True)
 
-#    with_directions = False
-#    with_delays = False
 #    inh_color = (.5, .5, .5)
+
+    with_directions = False
+    with_delays = False
     inh_color = 'b'
     inh_gid = ei_targets[0]
     P.plot_cell(inh_gid, exc=False, color='b')
     ie_targets = P.plot_connection_type(inh_gid, 'ie', 'o', inh_color, with_directions, with_delays)
-    ii_targets = P.plot_connection_type(inh_gid, 'ii', '*', inh_color, with_directions, with_delays)
+    ii_targets = P.plot_connection_type(inh_gid, 'ii', 'x', inh_color, with_directions, with_delays)
 
 #    P.plot_ee(gid)
 #    tgts = P.plot_ei(gid)
@@ -281,8 +282,8 @@ if __name__ == '__main__':
 #    P.plot_cell(gid, exc=False, color='b')
 #    P.plot_connection_type(gid, 'ee', 'x', 'r', with_directions)
 
-    if with_directions:
-        P.plot_quivers()
+#    if with_directions:
+    P.plot_quivers()
 
 #    P.plot_cells_as_dots(range(params['n_exc']), P.tp_exc)
 #    P.plot_cells_as_dots(range(params['n_exc']), P.tp_inh)
@@ -310,5 +311,5 @@ if __name__ == '__main__':
     output_fig = params['figures_folder'] + 'connectivity_profile_%d.png' % gid
     pylab.savefig(output_fig)
 
-#    pylab.show()
+    pylab.show()
 

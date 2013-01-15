@@ -44,10 +44,20 @@ class NetworkModel(object):
     def setup(self):
         self.tuning_prop_exc = utils.set_tuning_prop(params, mode='hexgrid', cell_type='exc')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
         self.tuning_prop_inh= utils.set_tuning_prop(params, mode='hexgrid', cell_type='inh')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
-        print "Saving tuning_prop to file:", params['tuning_prop_means_fn']
-        np.savetxt(params['tuning_prop_means_fn'], self.tuning_prop_exc)
-        print "Saving tuning_prop to file:", params['tuning_prop_inh_fn']
-        np.savetxt(params['tuning_prop_inh_fn'], self.tuning_prop_inh)
+
+        indices, distances = utils.sort_gids_by_distance_to_stimulus(self.tuning_prop_exc, self.params['motion_params'], self.params) # cells in indices should have the highest response to the stimulus
+        if self.pc_id == 0:
+            print "Saving tuning_prop to file:", params['tuning_prop_means_fn']
+            np.savetxt(params['tuning_prop_means_fn'], self.tuning_prop_exc)
+            print "Saving tuning_prop to file:", params['tuning_prop_inh_fn']
+            np.savetxt(params['tuning_prop_inh_fn'], self.tuning_prop_inh)
+            print 'Saving gids to record to: ', params['gids_to_record_fn']
+            np.savetxt(params['gids_to_record_fn'], indices[:params['n_gids_to_record']], fmt='%d')
+
+#        np.savetxt(params['gids_to_record_fn'], indices[:params['n_gids_to_record']], fmt='%d')
+
+        if self.comm != None:
+            self.comm.Barrier()
         from pyNN.utility import Timer
         self.timer = Timer()
         self.timer.start()
@@ -333,10 +343,6 @@ class NetworkModel(object):
             w_= self.params['w_ii_mean']
             w_tgt_in = params['w_tgt_in_per_cell_%s' % conn_type]
 
-        sigma_x, sigma_v = self.params['w_sigma_x'], self.params['w_sigma_v']
-        sigma_x, sigma_v = self.params['w_sigma_x'], self.params['w_sigma_v']
-        (delay_min, delay_max) = self.params['delay_range']
-
         if self.debug_connectivity:
             conn_list_fn = self.params['conn_list_%s_fn_base' % conn_type] + '%d.dat' % (self.pc_id)
             conn_file = open(conn_list_fn, 'w')
@@ -344,20 +350,24 @@ class NetworkModel(object):
 
         for tgt in tgt_cells:
             w = np.zeros(n_src, dtype='float32') 
+            delays = np.zeros(n_src, dtype='float32')
             for src in xrange(n_src):
                 if (src != tgt):
 #                    d_ij = np.sqrt((tp_src[src, 0] - tp_tgt[tgt, 0])**2 + (tp_src[src, 1] - tp_tgt[tgt, 1])**2)
                     d_ij = utils.torus_distance2D(tp_src[src, 0], tp_tgt[tgt, 0], tp_src[src, 1], tp_tgt[tgt, 1])
                     p_ij = p_max * np.exp(-d_ij / (2 * params['w_sigma_x']**2))
-#                    print 'p_ij', p_ij, np.exp(-d_ij / (2 * params['w_sigma_x']**2))
                     if np.random.rand() <= p_ij:
                         w[src] = w_
+                        delays[src] = d_ij / 0.1
             w *= w_tgt_in / w.sum()
             srcs = w.nonzero()[0]
             weights = w[srcs]
             for src in srcs:
-                connect(src_pop[int(src)], tgt_pop[int(tgt)], w[src], delay=params['standard_delay'], synapse_type=syn_type)
-                output += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, w[src], params['standard_delay']) 
+                delay = min(max(delays[src], self.params['delay_range'][0]), self.params['delay_range'][1])  # map the delay into the valid range
+                connect(src_pop[int(src)], tgt_pop[int(tgt)], w[src], delay=delay, synapse_type=syn_type)
+                output += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, w[src], delay) 
+#                connect(src_pop[int(src)], tgt_pop[int(tgt)], w[src], delay=params['standard_delay'], synapse_type=syn_type)
+#                output += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, w[src], params['standard_delay']) 
                     
         if self.debug_connectivity:
             if self.pc_id == 0:
@@ -578,11 +588,14 @@ if __name__ == '__main__':
         pc_id, n_proc, comm = 0, 1, None
         print "MPI not used"
 
-    # optional, to run parameter sweeps by batch scripts
-#    w_sigma = float(sys.argv[1])
-#    ps.params['w_sigma_x'] = w_sigma
-#    ps.params['w_sigma_v'] = w_sigma
-#    ps.set_filenames()
+
+    try:
+        # optional, to run parameter sweeps by batch scripts
+        delay_scale = float(sys.argv[1])
+        ps.params['delay_scale'] = delay_scale
+        ps.set_filenames()
+    except:
+        pass
 
     if pc_id == 0:
         ps.create_folders()

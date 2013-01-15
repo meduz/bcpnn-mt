@@ -591,7 +591,7 @@ def convert_hsl_to_rgb(h, s, l):
     return (r_, g_, b_)
 
 
-def sort_gids_by_distance_to_stimulus(tp, mp, params):
+def sort_gids_by_distance_to_stimulus(tp, mp, params, local_gids=None):
     """
     This function return a list of gids sorted by the distances between cells and the stimulus.
     It calculates the minimal distances between the moving stimulus and the spatial receptive fields of the cells 
@@ -607,15 +607,20 @@ def sort_gids_by_distance_to_stimulus(tp, mp, params):
         mp: motion_parameters (x0, y0, u0, v0)
 
     """
-    n_cells = tp[:, 0].size
+    if local_gids == None: 
+        n_cells = tp[:, 0].size
+    else:
+        n_cells = len(local_gids)
     x_dist = np.zeros(n_cells) # stores minimal distance in space between stimulus and cells
-    t_stop = params['t_sim']
     for i in xrange(n_cells):
         x_dist[i], spatial_dist = get_min_distance_to_stim(mp, tp[i, :], params)
 
     cells_closest_to_stim_pos = x_dist.argsort()
-#    cells_closest_to_stim_velocity = v_dist.argsort()
-    return cells_closest_to_stim_pos, x_dist[cells_closest_to_stim_pos]#, cells_closest_to_stim_velocity
+    if local_gids != None:
+        gids_closest_to_stim = local_gids[cells_closest_to_stim_pos]
+        return gids_closest_to_stim, x_dist[cells_closest_to_stim_pos]#, cells_closest_to_stim_velocity
+    else:
+        return cells_closest_to_stim_pos, x_dist[cells_closest_to_stim_pos]#, cells_closest_to_stim_velocity
 
 def get_min_distance_to_stim(mp, tp_cell, params):
     """
@@ -626,7 +631,7 @@ def get_min_distance_to_stim(mp, tp_cell, params):
     if params['abstract']:
         time = np.arange(0, params['t_sim'], params['dt_rate'])
     else: # use larger time step to numerically find minimum distance --> faster
-        time = np.arange(0, params['t_sim'], 20 * params['dt_rate'])
+        time = np.arange(0, params['t_sim'], 50 * params['dt_rate'])
     spatial_dist = np.zeros(time.shape[0])
     for i_time, time_ in enumerate(time):
         x_pos_stim = mp[0] + mp[2] * time_ / params['t_stimulus']
