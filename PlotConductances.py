@@ -261,10 +261,7 @@ class PlotConductances(object):
         # inh -> g
 
         if conn_list_fn == None:
-            if not self.params['connectivity'] == 'random':
-                conn_list_fn = self.params['merged_conn_list_ee']
-            else: 
-                conn_list_fn = self.params['random_weight_list_fn'] + '0.dat'
+            conn_list_fn = self.params['merged_conn_list_ee']
         print 'utils.get_conn_dict from file:', conn_list_fn 
         self.conn_dict = utils.get_conn_dict(self.params, conn_list_fn)
         spike_fn = self.params['exc_spiketimes_fn_merged'] + '0.ras'

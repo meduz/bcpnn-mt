@@ -26,7 +26,7 @@ def plot_conductances(params=None, comm=None, data_fn=None, inh_spikes = None):
 
     if plotter.no_spikes:
         return
-    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_wthresh%.1e' % (params['grouped_actitivty_fig_fn_base'], params['connectivity'], \
+    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_wthresh%.1e' % (params['grouped_actitivty_fig_fn_base'], params['connectivity_code'], \
             params['w_sigma_x'], params['w_sigma_v'], params['w_thresh_connection'])
 
     # fig 1
@@ -39,7 +39,7 @@ def plot_conductances(params=None, comm=None, data_fn=None, inh_spikes = None):
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
 
-#    output_fn = '%sgoodcell_connections_%s_wsigmaX_%.2f_wsigmaV%.2f_wthresh%.1e.png' % (params['figures_folder'], params['connectivity'], \
+#    output_fn = '%sgoodcell_connections_%s_wsigmaX_%.2f_wsigmaV%.2f_wthresh%.1e.png' % (params['figures_folder'], params['connectivity_code'], \
 #            params['w_sigma_x'], params['w_sigma_v'], params['w_thresh_connection'])
 #    plotter.create_fig()  # create an empty figure
 #    plotter.plot_good_cell_connections(1) # subplot 1 + 2

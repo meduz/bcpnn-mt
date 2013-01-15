@@ -14,16 +14,16 @@ params = PS.load_params()                       # params stores cell numbers, et
 
 tp_exc = np.loadtxt(params['tuning_prop_means_fn'])
 mp = params['motion_params']
-conn_list_fn = 'SmallSpikingModel_CC_delayScale20_blurX1.00e-01_blurV1.00e-01_wsigmax1.00e-01_wsigmav1.00e-01/Connections/merged_conn_list_ee.dat'
-conn_list = np.loadtxt(conn_list_fn)  #params['merged_conn_list_ee'])
+
+#conn_list_fn = 'SmallSpikingModel_CC_delayScale20_blurX1.00e-01_blurV1.00e-01_wsigmax1.00e-01_wsigmav1.00e-01/Connections/merged_conn_list_ee.dat'
+#conn_list = np.loadtxt(conn_list_fn)  #params['merged_conn_list_ee'])
+#n_src = 1 # from how many cells should the post-synaptic cell receive input from?
+#src_gids = utils.get_sources(conn_list, gid_post)
 
 # choose this numbers from the file gids_to_record_fn created by prepare_tuning_prop.py
 gid_pre = 51
 gid_post = 85
 dx = np.sqrt((tp_exc[gid_pre, 0] - tp_exc[gid_post, 0])**2 + (tp_exc[gid_pre, 1] - tp_exc[gid_post, 1])**2)
-
-n_src = 1 # from how many cells should the post-synaptic cell receive input from?
-src_gids = utils.get_sources(conn_list, gid_post)
 
 
 # load file pre

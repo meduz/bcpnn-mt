@@ -1,5 +1,5 @@
 echo 'Starting at' `date`
-python prepare_tuning_prop.py
+#python prepare_tuning_prop.py
 #echo 'Preparation stopped at' `date`
 #mpirun -np 8 python prepare_connections.py
 mpirun -np 8 python NetworkSimModuleNoColumns.py

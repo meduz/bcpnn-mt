@@ -1,7 +1,6 @@
 import os
 import simulation_parameters
 import numpy as np
-import NetworkSimModuleNoColumns as simulation
 import utils
 
 

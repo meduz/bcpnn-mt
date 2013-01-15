@@ -38,25 +38,11 @@ class ConductanceCalculator(object):
 
         self.load_nspikes()
 
-        if self.params['connectivity'] == 'precomputed':
-            conn_fn = self.params['conn_list_ee_fn_base'] + '0.dat'
-        else:
-            conn_fn = self.params['random_weight_list_fn'] + '0.dat'
-        print 'Calling utils.get_conn_dict(..., %s)' % conn_fn
-        self.conn_dict_exc = utils.get_conn_dict(self.params, conn_fn)
-
-        conn_fn = self.params['conn_list_ei_fn']
-        print 'Calling utils.get_conn_dict(..., %s)' % conn_fn
-        self.conn_dict_exc_inh = utils.get_conn_dict(self.params, conn_fn)
-
-        conn_fn = self.params['conn_list_ie_fn']
-        print 'Calling utils.get_conn_dict(..., %s)' % conn_fn
-        self.conn_dict_inh_exc = utils.get_conn_dict(self.params, conn_fn)
-
-        conn_fn = self.params['conn_list_ii_fn']
-        print 'Calling utils.get_conn_dict(..., %s)' % conn_fn
-        self.conn_dict_inh_inh = utils.get_conn_dict(self.params, conn_fn)
-
+        self.conn_dict = {}
+        for conn_type in self.params['conn_types']:
+            print 'Calling utils.get_conn_dict(..., %s)' % conn_fn
+            conn_fn = self.params['conn_list_%s_fn' % conn_type]
+            self.conn_dict[conn_type] = utils.get_conn_dict(self.params, conn_fn)
 
         fig_width_pt = 800.0  # Get this from LaTeX using \showthe\columnwidth
         inches_per_pt = 1.0/72.27               # Convert pt to inch
@@ -277,16 +263,16 @@ def run_all(params=None):
         C.plot()
         C.plot_g_in_histograms()
         return
-    C.get_cond(C.conn_dict_exc, C.good_gids, C.good_gids, C.nspikes_exc, label='G_good_good', src_type='exc')
-    C.get_cond(C.conn_dict_exc, C.good_gids, C.rest_gids, C.nspikes_exc, label='G_good_rest', src_type='exc')
-    C.get_cond(C.conn_dict_exc, C.rest_gids, C.good_gids, C.nspikes_exc, label='G_rest_good', src_type='exc')
-    C.get_cond(C.conn_dict_exc, C.rest_gids, C.rest_gids, C.nspikes_exc, label='G_rest_rest', src_type='exc')
-    C.get_cond(C.conn_dict_exc_inh, C.good_gids, range(C.params['n_inh']), C.nspikes_exc, label='G_good_inh', src_type='exc')
-    C.get_cond(C.conn_dict_exc_inh, C.rest_gids, range(C.params['n_inh']), C.nspikes_exc, label='G_rest_inh', src_type='exc')
-    C.get_cond(C.conn_dict_inh_exc, range(C.params['n_inh']), C.good_gids, C.nspikes_inh, label='G_inh_good', src_type='inh')
-    C.get_cond(C.conn_dict_inh_exc, range(C.params['n_inh']), C.rest_gids, C.nspikes_inh, label='G_inh_rest', src_type='inh')
-    C.get_cond(C.conn_dict_inh_exc, range(C.params['n_inh']), range(C.params['n_exc']), C.nspikes_inh, label='G_inh_exc', src_type='inh')
-    C.get_cond(C.conn_dict_inh_inh, range(C.params['n_inh']), range(C.params['n_inh']), C.nspikes_inh, label='G_inh_inh', src_type='inh')
+    C.get_cond(C.conn_dict['ee'], C.good_gids, C.good_gids, C.nspikes_exc, label='G_good_good', src_type='exc')
+    C.get_cond(C.conn_dict['ee'], C.good_gids, C.rest_gids, C.nspikes_exc, label='G_good_rest', src_type='exc')
+    C.get_cond(C.conn_dict['ee'], C.rest_gids, C.good_gids, C.nspikes_exc, label='G_rest_good', src_type='exc')
+    C.get_cond(C.conn_dict['ee'], C.rest_gids, C.rest_gids, C.nspikes_exc, label='G_rest_rest', src_type='exc')
+    C.get_cond(C.conn_dict['ei'], C.good_gids, range(C.params['n_inh']), C.nspikes_exc, label='G_good_inh', src_type='exc')
+    C.get_cond(C.conn_dict['ei'], C.rest_gids, range(C.params['n_inh']), C.nspikes_exc, label='G_rest_inh', src_type='exc')
+    C.get_cond(C.conn_dict['ie'], range(C.params['n_inh']), C.good_gids, C.nspikes_inh, label='G_inh_good', src_type='inh')
+    C.get_cond(C.conn_dict['ie'], range(C.params['n_inh']), C.rest_gids, C.nspikes_inh, label='G_inh_rest', src_type='inh')
+    C.get_cond(C.conn_dict['ie'], range(C.params['n_inh']), range(C.params['n_exc']), C.nspikes_inh, label='G_inh_exc', src_type='inh')
+    C.get_cond(C.conn_dict['ii'], range(C.params['n_inh']), range(C.params['n_inh']), C.nspikes_inh, label='G_inh_inh', src_type='inh')
     C.plot()
     C.plot_g_in_histograms()
 #    pylab.show()
