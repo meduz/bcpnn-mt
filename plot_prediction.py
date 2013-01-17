@@ -1,5 +1,5 @@
-import matplotlib
-matplotlib.use('Agg')
+#import matplotlib
+#matplotlib.use('Agg')
 import pylab
 import PlotPrediction as P
 import sys
@@ -21,7 +21,6 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 #        inh_spikes = params['inh_spiketimes_fn_merged'] + '%d.ras' % (sim_cnt)
 
     plotter = P.PlotPrediction(params, data_fn)
-#    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.2)
     pylab.rcParams['axes.labelsize'] = 14
     pylab.rcParams['axes.titlesize'] = 16
     if plotter.no_spikes:
@@ -37,6 +36,7 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
             params['w_sigma_x'], params['w_sigma_v'], params['w_thresh_connection'])
 
     plotter.create_fig()  # create an empty figure
+    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.2)
     plotter.n_fig_x = 2
     plotter.n_fig_y = 3
     plotter.plot_rasterplot('exc', 1)               # 1 
@@ -48,6 +48,7 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     output_fn = output_fn_base + '_0.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
+#    pylab.show()
 
     # poplation level, short time-scale
     plotter.n_fig_x = 3

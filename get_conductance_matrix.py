@@ -56,7 +56,7 @@ def get_cond_matrix(nspikes, w):
 
 # compute everything
 input_cond = calculate_input_cond()
-os.system("python merge_connlist_ee.py")
+os.system("python merge_connlists.py")
 conn_list_fn = params['merged_conn_list_ee']
 print 'debug', conn_list_fn
 w, delays = utils.convert_connlist_to_matrix(conn_list_fn, params['n_exc'], params['n_exc'])

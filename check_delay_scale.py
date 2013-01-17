@@ -1,6 +1,7 @@
 """
 This script requires data from an example run to be present in the standard output folder.
-Thus, do a run_all.sh with a small network before.
+Thus, do a run_all.sh with a small network before - without any connectivity, i.e. set all connectivity_* parameters to False
+
 """
 
 
@@ -21,9 +22,8 @@ mp = params['motion_params']
 #src_gids = utils.get_sources(conn_list, gid_post)
 
 # choose this numbers from the file gids_to_record_fn created by prepare_tuning_prop.py
-gid_pre = 217
-gid_post = 288
-dx = np.sqrt((tp_exc[gid_pre, 0] - tp_exc[gid_post, 0])**2 + (tp_exc[gid_pre, 1] - tp_exc[gid_post, 1])**2)
+gid_pre = 148
+gid_post = 192
 
 
 # load file pre
@@ -69,10 +69,15 @@ print 't_max_response_post', t_max_response_post
 
 
 # SETUP etc
+dx = np.sqrt((tp_exc[gid_pre, 0] - tp_exc[gid_post, 0])**2 + (tp_exc[gid_pre, 1] - tp_exc[gid_post, 1])**2)
+latency = dx / np.sqrt(tp_exc[gid_pre, 2]**2 + tp_exc[gid_pre, 3]**2)
+print 'latency: %.3f   latency * t_stimulus = %.1f [ms]   t_pre_input max + latency * t_stimulus = %.1f [ms]' % (latency, latency * params['t_stimulus'], t_max_input_post + latency * params['t_stimulus'])
+print '                                                   t_pre_response_max + latency * t_stimulus = %.1f [ms]' % (t_max_response_pre + latency * params['t_stimulus'])
 (delay_min, delay_max) = params['delay_range']
-w_ij = 0.017 # weight pre --> post
+w_ij = 0.01 # weight pre --> post
 #conn_delay = 40
-conn_delay = .5 * (t_max_input_post - t_max_input_pre)
+#conn_delay = .5 * (t_max_input_post - t_max_input_pre)
+conn_delay = latency * params['t_stimulus']
 conn_delay = min(conn_delay, delay_max)
 print 'conn_delay = %.2f ms' % conn_delay, ' dx(cells) = ', dx
 
@@ -229,8 +234,8 @@ volt = np.loadtxt(volt_sim_fn)
 t_axis, v1= utils.extract_trace(volt, 0)
 t_axis, v2 = utils.extract_trace(volt, 3)
 ax = fig.add_subplot(224)
-ax.plot(t_axis, v1, lw=2, label='input=only stimulus')
-ax.plot(t_axis, v2, lw=2, label='input=stim + rec')
+ax.plot(t_axis, v1, lw=3, ls='--', c='b', label='input=only stimulus')
+ax.plot(t_axis, v2, lw=2, c='g', label='input=stim + rec')
 ax.set_xlabel('Time [ms]')
 ax.set_ylabel('Voltage [mV]')
 ax.set_title('Membrane voltages with and\nwithout pre-post connection')

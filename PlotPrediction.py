@@ -453,6 +453,7 @@ class PlotPrediction(object):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title(title)
         cax = ax.pcolormesh(data)
+#        cax = ax.imshow(data)
 
         ax.set_ylim((0, data[:, 0].size))
         ax.set_xlim((0, data[0, :].size))
@@ -465,7 +466,10 @@ class PlotPrediction(object):
 
         ax.set_xticks(range(self.n_bins)[::4])
         ax.set_xticklabels(['%d' %i for i in self.time_bins[::4]])
-        pylab.colorbar(cax)
+        cb = pylab.colorbar(cax, orientation='horizontal', aspect=40, anchor=(.5, .0))
+        cb.set_label('Prediction confidence')
+        if show_blank:
+            self.plot_blank_on_cmap(cax, txt='blank')
 
 
     def plot_xdiff(self, fig_cnt=1, show_blank=True):
@@ -802,13 +806,28 @@ class PlotPrediction(object):
 #        pylab.axis([l-0.1*dx, r+0.1*dx, b-0.1*dy, t+0.1*dy])
 #        pylab.show()
 
-    def plot_blank(self, ax):
+    def plot_blank(self, ax, c='k'):
         ylim = ax.get_ylim()
-        ax.plot((self.params['t_stimulus'], self.params['t_stimulus']), (ylim[0], ylim[1]), ls='--', c='k', lw=1)
-        ax.plot((self.params['t_stimulus'] + self.params['t_blank'], self.params['t_stimulus'] + self.params['t_blank']), (ylim[0], ylim[1]), ls='--', c='k', lw=1)
+        ax.plot((self.params['t_stimulus'], self.params['t_stimulus']), (ylim[0], ylim[1]), ls='--', c=c, lw=2)
+        ax.plot((self.params['t_stimulus'] + self.params['t_blank'], self.params['t_stimulus'] + self.params['t_blank']), (ylim[0], ylim[1]), ls='--', c=c, lw=2)
         ax.set_ylim(ylim)
 
+    def plot_blank_on_cmap(self, cax, c='w', txt=''):
+        ax = cax.axes
+        ax.axvline(self.params['t_stimulus'] / self.time_binsize, ls='--', color=c, lw=3)
+        ax.axvline((self.params['t_stimulus'] + self.params['t_blank']) / self.time_binsize, ls='--', color=c, lw=3)
 
+        if txt != '':
+            txt_pos_x = (self.params['t_stimulus'] + .25 * self.params['t_blank']) / self.time_binsize
+            ylim = ax.get_ylim()
+            txt_pos_y = .85 * ylim[1]
+            ax.annotate(txt, (txt_pos_x, txt_pos_y), fontsize=14, color='w')
+
+#        print 'debug xlim', ax.get_xlim()
+#        print 'debug', self.params['t_stimulus'], self.params['t_stimulus'] + self.params['t_blank']
+#        ylim = ax.get_ylim()
+#        ax.axvline(self.params['t_stimulus'], ylim[0], ylim[1], ls='--', color=c, lw=3)
+#        ax.axvline(self.params['t_stimulus'] + self.params['t_blank'], ylim[0], ylim[1], ls='--', color=c, lw=3)
 
 #thetas = np.zeros(n_cells)
 #for gid in xrange(n_cells):

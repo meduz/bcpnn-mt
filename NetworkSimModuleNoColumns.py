@@ -33,26 +33,33 @@ class NetworkModel(object):
         self.comm = comm
         if self.comm != None:
             self.pc_id, self.n_proc = self.comm.rank, self.comm.size
-            print "USE_MPI:", USE_MPI, 'pc_id, n_proc:', self.pc_id, self.n_proc
+            print "USE_MPI: yes", '\tpc_id, n_proc:', self.pc_id, self.n_proc
         else:
             self.pc_id, self.n_proc = 0, 1
             print "MPI not used"
 
+    def import_pynn(self):
+        """
+        This function needs only be called when this class is used in another script as imported module
+        """
+        import pyNN
+        exec("from pyNN.%s import *" % self.params['simulator'])
+        print 'import pyNN\npyNN.version: ', pyNN.__version__
+
+    def setup(self):
+        self.tuning_prop_exc = utils.set_tuning_prop(self.params, mode='hexgrid', cell_type='exc')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+        self.tuning_prop_inh= utils.set_tuning_prop(self.params, mode='hexgrid', cell_type='inh')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
 #        self.tuning_prop_exc = np.loadtxt(self.params['tuning_prop_means_fn'])
 #        self.tuning_prop_inh = np.loadtxt(self.params['tuning_prop_inh_fn'])
 
-    def setup(self):
-        self.tuning_prop_exc = utils.set_tuning_prop(params, mode='hexgrid', cell_type='exc')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
-        self.tuning_prop_inh= utils.set_tuning_prop(params, mode='hexgrid', cell_type='inh')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
-
         indices, distances = utils.sort_gids_by_distance_to_stimulus(self.tuning_prop_exc, self.params['motion_params'], self.params) # cells in indices should have the highest response to the stimulus
         if self.pc_id == 0:
-            print "Saving tuning_prop to file:", params['tuning_prop_means_fn']
-            np.savetxt(params['tuning_prop_means_fn'], self.tuning_prop_exc)
-            print "Saving tuning_prop to file:", params['tuning_prop_inh_fn']
-            np.savetxt(params['tuning_prop_inh_fn'], self.tuning_prop_inh)
-            print 'Saving gids to record to: ', params['gids_to_record_fn']
-            np.savetxt(params['gids_to_record_fn'], indices[:params['n_gids_to_record']], fmt='%d')
+            print "Saving tuning_prop to file:", self.params['tuning_prop_means_fn']
+            np.savetxt(self.params['tuning_prop_means_fn'], self.tuning_prop_exc)
+            print "Saving tuning_prop to file:", self.params['tuning_prop_inh_fn']
+            np.savetxt(self.params['tuning_prop_inh_fn'], self.tuning_prop_inh)
+            print 'Saving gids to record to: ', self.params['gids_to_record_fn']
+            np.savetxt(self.params['gids_to_record_fn'], indices[:self.params['n_gids_to_record']], fmt='%d')
 
 #        np.savetxt(params['gids_to_record_fn'], indices[:params['n_gids_to_record']], fmt='%d')
 
@@ -90,14 +97,18 @@ class NetworkModel(object):
             #     C R E A T E     #
             # # # # # # # # # # # #
         """
-        # Excitatory populations
-        self.exc_pop = Population(self.params['n_exc'], IF_cond_exp, self.params['cell_params_exc'], label='exc_cells')
+        if self.params['neuron_model'] == 'IF_cond_exp':
+            self.exc_pop = Population(self.params['n_exc'], IF_cond_exp, self.params['cell_params_exc'], label='exc_cells')
+            self.inh_pop = Population(self.params['n_inh'], IF_cond_exp, self.params['cell_params_inh'], label="inh_pop")
+        elif self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
+            self.exc_pop = Population(self.params['n_exc'], EIF_cond_exp_isfa_ista, self.params['cell_params_exc'], label='exc_cells')
+            self.inh_pop = Population(self.params['n_inh'], EIF_cond_exp_isfa_ista, self.params['cell_params_inh'], label="inh_pop")
+        else:
+            print '\n\nUnknown neuron model:\n\t', self.params['neuron_model']
         self.local_idx_exc = get_local_indices(self.exc_pop, offset=0)
         print 'Debug, pc_id %d has local exc indices:' % self.pc_id, self.local_idx_exc
         self.exc_pop.initialize('v', self.v_init_dist)
 
-        # Inhibitory population
-        self.inh_pop = Population(self.params['n_inh'], IF_cond_exp, self.params['cell_params_inh'], label="inh_pop")
         self.local_idx_inh = get_local_indices(self.inh_pop, offset=self.params['n_exc'])
         print 'Debug, pc_id %d has local inh indices:' % self.pc_id, self.local_idx_inh
         self.inh_pop.initialize('v', self.v_init_dist)
@@ -105,7 +116,11 @@ class NetworkModel(object):
         self.times['t_create'] = self.timer.diff()
 
     def connect(self):
-        self.connect_input_to_exc(load_files=False, save_output=True)
+        if self.params['n_exc'] > 2000:
+            save_output = False
+        else:
+            save_output = True
+        self.connect_input_to_exc(load_files=False, save_output=save_output)
         self.connect_populations('ee')
         self.connect_populations('ei')
         self.connect_populations('ie')
@@ -202,11 +217,16 @@ class NetworkModel(object):
             if conn_type[0] == 'e':
                 sources = sorted_indices[-n_src_cells_per_neuron:] 
             else:
-                sources = sorted_indices[:n_src_cells_per_neuron] 
+                if conn_type == 'ii':
+                    sources = sorted_indices[1:n_src_cells_per_neuron+1]  # shift indices to avoid self-connection, because p_ii = .0
+                else:
+                    sources = sorted_indices[:n_src_cells_per_neuron] 
             w = (self.params['w_tgt_in_per_cell_%s' % conn_type] / p[sources].sum()) * p[sources]
             for i in xrange(len(sources)):
 #                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
                 delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
+#                print 'debug ', delay , ' latency', latency[sources[i]]
+#                delay = min(max(latency[sources[i]] * self.params['t_stimulus'], delay_min), delay_max)  # map the delay into the valid range
                 connect(src_pop[sources[i]], tgt_pop[tgt], w[i], delay=delay, synapse_type=syn_type)
                 if self.debug_connectivity:
                     output += '%d\t%d\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay) #                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], latency[sources[i]], p[sources[i]])
@@ -291,8 +311,6 @@ class NetworkModel(object):
             l_ = latency[sources][non_zero_idx]
 
             w = utils.linear_transformation(p_, self.params['w_min'], self.params['w_max'])
-#                if w = nan:
-#                print 'debug pid tgt w', self.pc_id, tgt, w, '\nnonzeros idx', idx, p[idx]
             for i in xrange(len(p_)):
 #                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
                 delay = min(max(l_[i] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
@@ -358,7 +376,7 @@ class NetworkModel(object):
                     p_ij = p_max * np.exp(-d_ij / (2 * params['w_sigma_x']**2))
                     if np.random.rand() <= p_ij:
                         w[src] = w_
-                        delays[src] = d_ij / 0.1
+                        delays[src] = d_ij * self.params['delay_scale']
             w *= w_tgt_in / w.sum()
             srcs = w.nonzero()[0]
             weights = w[srcs]
@@ -591,8 +609,14 @@ if __name__ == '__main__':
 
     try:
         # optional, to run parameter sweeps by batch scripts
-        delay_scale = float(sys.argv[1])
-        ps.params['delay_scale'] = delay_scale
+        p1, p2, p3, p4, p5, p6 = float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5]), float(sys.argv[6])
+        ps.params['w_tgt_in_per_cell_ee'] = p1
+        ps.params['w_tgt_in_per_cell_ei'] = p2
+        ps.params['w_tgt_in_per_cell_ie'] = p3
+        ps.params['w_tgt_in_per_cell_ii'] = p4
+        ps.params['w_sigma_x'] = p5
+        ps.params['w_sigma_v'] = p6
+
         ps.set_filenames()
     except:
         pass

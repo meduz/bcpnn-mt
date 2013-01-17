@@ -108,36 +108,36 @@ class parameter_storage(object):
 #        self.params['connectivity_ee'] = 'isotropic'
 #        self.params['connectivity_ee'] = 'random'
 #        self.params['connectivity_ee'] = False
-#        self.params['connectivity_ei'] = 'anisotropic'
-        self.params['connectivity_ei'] = 'isotropic'
+        self.params['connectivity_ei'] = 'anisotropic'
+#        self.params['connectivity_ei'] = 'isotropic'
 #        self.params['connectivity_ei'] = 'random'
 #        self.params['connectivity_ei'] = False
-#        self.params['connectivity_ie'] = 'anisotropic'
-        self.params['connectivity_ie'] = 'isotropic'
+        self.params['connectivity_ie'] = 'anisotropic'
+#        self.params['connectivity_ie'] = 'isotropic'
 #        self.params['connectivity_ie'] = 'random'
 #        self.params['connectivity_ie'] = False
-#        self.params['connectivity_ii'] = 'anisotropic'
-        self.params['connectivity_ii'] = 'isotropic'
+        self.params['connectivity_ii'] = 'anisotropic'
+#        self.params['connectivity_ii'] = 'isotropic'
 #        self.params['connectivity_ii'] = 'random'
 #        self.params['connectivity_ii'] = False
 
         # there are three different ways to set up the connections:
-        self.params['p_ee'] = 0.05# fraction of network cells allowed to connect to each target cell, used in CreateConnections
+        self.params['p_ee'] = 0.02# fraction of network cells allowed to connect to each target cell, used in CreateConnections
         self.params['p_ee_local'] = 0.80 # connection probability for local connections (isotropic connection scheme), ref: Hellwig 2000 A quantitative analysis of the local connectivity between pyramidal neurons in layers 2/3 of the rat visual cortex
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
         self.params['w_thresh_connection'] = 1e-5 # connections with a weight less then this value will be discarded
-        self.params['delay_scale'] = 30.        # delays are computed based on the expected latency of the stimulus to reach to cells multiplied with this factor
+        self.params['delay_scale'] = 1.        # delays are computed based on the expected latency of the stimulus to reach to cells multiplied with this factor
         self.params['delay_range'] = (0.1, 200.)
-        self.params['w_sigma_x'] = 0.30          # width of connectivity profile for pre-computed weights
-        self.params['w_sigma_v'] = 0.30         # small w_sigma: tuning_properties get stronger weight when deciding on connection
+        self.params['w_sigma_x'] = 0.10          # width of connectivity profile for pre-computed weights
+        self.params['w_sigma_v'] = 0.10         # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.25 # [uS] how much input should an exc cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ei'] = 0.40 # [uS] how much input should an inh cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ee'] = 0.15 # [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ei'] = 0.30 # [uS] how much input should an inh cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ie'] = 0.30 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.20 # [uS] how much input should an inh cell get from its source cells?
 
@@ -146,18 +146,18 @@ class parameter_storage(object):
         self.params['n_src_cells_per_neuron'] = round(self.params['p_ee'] * self.params['n_exc'])
 
         # exc - inh
-        self.params['p_ei'] = 0.05 #self.params['p_ee']
+        self.params['p_ei'] = 0.02 #self.params['p_ee']
         self.params['w_ei_mean'] = 0.005
         self.params['w_ei_sigma'] = 0.001          
 
         # inh - exc
 #        self.params['p_ie'] = 1.
-        self.params['p_ie'] = 0.05 #self.params['p_ee']
+        self.params['p_ie'] = 0.02 #self.params['p_ee']
         self.params['w_ie_mean'] = 0.005
         self.params['w_ie_sigma'] = 0.001          
 
         # inh - inh
-        self.params['p_ii'] = 0.05
+        self.params['p_ii'] = 0.02
         self.params['w_ii_mean'] = 0.003
         self.params['w_ii_sigma'] = 0.001          
 
@@ -310,7 +310,7 @@ class parameter_storage(object):
 
         self.params['connectivity_code'] = connectivity_code
         folder_name += connectivity_code
-        folder_name += "_delayScale%d_blurX%.2e_blurV%.2e_wsigmax%.2e_wsigmav%.2e_wee%.2f/" % \
+        folder_name += "_delayScale%d_blurX%.2e_blurV%.2e_wsigmax%.2e_wsigmav%.2e_wee%.2e/" % \
                         (self.params['delay_scale'], self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'])
 
         self.params['folder_name'] = folder_name 

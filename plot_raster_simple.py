@@ -32,7 +32,10 @@ pylab.rcParams.update(params2)
 fns = sys.argv[1:]
 
 for fn in fns:
-    data = pylab.loadtxt(fn)
+    try:
+        data = np.loadtxt(fn)
+    except:
+        data = np.load(fn)
 
     fig = pylab.figure()
     ax = fig.add_subplot(111)

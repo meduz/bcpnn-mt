@@ -6,8 +6,10 @@ import sys
 pylab.figure()
 
 for fn in sys.argv[1:]:
-#    data = np.load(fn)
-    data = pylab.loadtxt(fn)# , skiprows=1)
+    try:
+        data = np.loadtxt(fn)# , skiprows=1)
+    except:
+        data = np.load(fn)# , skiprows=1)
     if (data.ndim == 1):
         print 'ndim = 1'
         x_axis = np.arange(data.size)

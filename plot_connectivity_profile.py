@@ -9,8 +9,9 @@ from matplotlib import cm
 
 class ConnectionPlotter(object):
 
-    def __init__(self, params):
+    def __init__(self, params, n_plots_x, n_plots_y):
         self.params = params
+        self.n_plots_x, self.n_plots_y = n_plots_x, n_plots_y
 
         self.tp_exc = np.loadtxt(params['tuning_prop_means_fn'])
         self.tp_inh = np.loadtxt(params['tuning_prop_inh_fn'])
@@ -23,8 +24,8 @@ class ConnectionPlotter(object):
         self.markersize_min = 3
         self.markersize_max = 12
         self.shaft_width = 0.003
-        self.fig = pylab.figure()
-        self.ax = self.fig.add_subplot(111)
+        self.fig = pylab.figure(figsize=(14, 10))
+        self.ax = self.fig.add_subplot(n_plots_y, n_plots_x, 1)
         self.ax.set_xlabel('x position')
         self.ax.set_ylabel('y position')
         self.ax.set_xlim((-0.1, 1.1))
@@ -61,47 +62,48 @@ class ConnectionPlotter(object):
             self.ax.annotate('%d' % cell_id, (x0 + 0.01, y0 + 0.01), fontsize=12)
 
 
-    def plot_connections(self, tgt_ids, tgt_tp, weights, marker, color, quiver=False, annotate=False):
+    def plot_connections(self, tgt_ids, tgt_tp, weights, marker, color, with_directions=False, annotate=False):
         """
         """
+        print 'debug ', weights, self.markersize_min, self.markersize_max
         markersizes = utils.linear_transformation(weights, self.markersize_min, self.markersize_max)
         for i_, tgt in enumerate(tgt_ids):
             x_tgt = tgt_tp[tgt, 0] 
             y_tgt = tgt_tp[tgt, 1] 
             w = weights[i_]
             plot = self.ax.plot(x_tgt, y_tgt, marker, c=color, markersize=markersizes[i_])
-            if quiver:
+            if with_directions:
                 self.quivers[tgt] = (x_tgt, y_tgt, tgt_tp[tgt, 2], tgt_tp[tgt, 3], color, self.shaft_width)
             if annotate:
                 self.ax.annotate('%d' % tgt, (x_tgt + 0.01, y_tgt + 0.01), fontsize=12)
         return plot
 
-    def plot_connection_type(self, src_gid, conn_type, marker, color, quiver=False, plot_delays=False, annotate=False):
+    def plot_connection_type(self, src_gid, conn_type, marker, color, with_directions=False, plot_delays=False, annotate=False, with_histogram=False):
         self.load_connection_list(conn_type)
         targets = utils.get_targets(self.connection_lists[conn_type], src_gid)
         tgt_ids, weights, delays = targets[:, 1], targets[:, 2], targets[:, 3]
         if conn_type == 'ee':
             src_tp = self.tp_exc
             tgt_tp = self.tp_exc
-            legend_txt = 'exc src %d --> exc tgts' % src_gid
+            legend_txt = 'exc src gid: %d --> exc tgts, n=%d' % (src_gid, len(tgt_ids))
         elif conn_type == 'ei':
             src_tp = self.tp_exc
             tgt_tp = self.tp_inh
-            legend_txt = 'exc src %d --> inh tgts' % src_gid
+            legend_txt = 'exc src gid: %d --> inh tgts, n=%d' % (src_gid, len(tgt_ids))
         elif conn_type == 'ie':
             src_tp = self.tp_inh
             tgt_tp = self.tp_exc
-            legend_txt = 'inh src %d --> exc tgts' % src_gid
+            legend_txt = 'inh src gid: %d --> exc tgts, n=%d' % (src_gid, len(tgt_ids))
         elif conn_type == 'ii':
             src_tp = self.tp_inh
             tgt_tp = self.tp_inh
-            legend_txt = 'inh src %d --> inh tgts' % src_gid
-        plot = self.plot_connections(tgt_ids, tgt_tp, weights, marker, color, quiver, annotate)
+            legend_txt = 'inh src gid: %d --> inh tgts, n=%d' % (src_gid, len(tgt_ids))
+        plot = self.plot_connections(tgt_ids, tgt_tp, weights, marker, color, with_directions, annotate)
 
         if plot_delays:
-#            delay_max = self.connection_lists[conn_type][:, 3].max()
-#            delay_min = self.connection_lists[conn_type][:, 3].min()
-            delay_min, delay_max = self.params['delay_range'][0], self.params['delay_range'][1]
+            delay_max = self.connection_lists[conn_type][:, 3].max()
+            delay_min = self.connection_lists[conn_type][:, 3].min()
+#            delay_min, delay_max = self.params['delay_range'][0], self.params['delay_range'][1]
             norm = matplotlib.mpl.colors.Normalize(vmin=delay_min, vmax=delay_max)
             m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cm.jet)#spring)
             m.set_array(np.arange(delay_min, delay_max, 0.01))
@@ -110,10 +112,11 @@ class ConnectionPlotter(object):
             for i_, tgt_gid in enumerate(tgt_ids):
                 x_tgt, y_tgt = tgt_tp[tgt_gid, 0], tgt_tp[tgt_gid, 1]
                 c = m.to_rgba(delays[i_])
-                self.ax.plot((x_src, x_tgt), (y_src, y_tgt), c=c, lw=2)
+                self.ax.plot((x_src, x_tgt), (y_src, y_tgt), c=c, lw=2, alpha=.5)
 
             if not self.delay_colorbar_set:
-                self.fig.colorbar(m)
+                cb = self.fig.colorbar(m)
+                cb.set_label('Connection delays [ms]')
                 self.delay_colorbar_set = True
 #            s = 1. # saturation
 #            for 
@@ -130,9 +133,35 @@ class ConnectionPlotter(object):
 #                colors[frame, tgt_gid, :] = [r, g, b]
 #                
 
+        if with_histogram:
+            print '\nPlotting weight and delay histogram'
+            self.plot_weight_and_delay_histogram(weights, delays)
+
         self.legends.append((plot[0], legend_txt))
         print 'src_gid %d has %d outgoing %s->%s connection' % (src_gid, len(weights), conn_type[0].capitalize(), conn_type[1].capitalize())
         return tgt_ids
+
+    
+    def plot_weight_and_delay_histogram(self, weights, delays):
+        n_bins = 20
+        w_mean, w_std = weights.mean(), weights.std()
+        self.ax2 = self.fig.add_subplot(self.n_plots_x + 1, self.n_plots_y, 3)
+        self.ax3 = self.fig.add_subplot(self.n_plots_x + 1, self.n_plots_y, 4)
+        n_w, bins_w = np.histogram(weights, bins=n_bins, normed=False)
+        bin_width = bins_w[1] - bins_w[0]
+        self.ax2.bar(bins_w[:-1]-.5*bin_width, n_w, width=bin_width, label='$w_{mean} = %.2e \pm %.2e$' % (w_mean, w_std))
+        self.ax2.set_xlabel('Weights')
+        self.ax2.set_ylabel('Count')
+        self.ax2.set_title('Histogram of outgoing weights')
+
+        n_d, bins_d = np.histogram(delays, bins=n_bins, normed=False)
+        bin_didth = bins_d[1] - bins_d[0]
+        self.ax3.bar(bins_d[:-1]-.5*bin_didth, n_d, width=bin_didth, label='$w_{mean} = %.2e \pm %.2e$' % (w_mean, w_std))
+        self.ax2.set_title('Histogram of connection delays')
+        self.ax3.set_xlabel('Delays')
+        self.ax3.set_ylabel('Count')
+
+
 
 
     def plot_cells_as_dots(self, gids, tp):
@@ -161,7 +190,11 @@ class ConnectionPlotter(object):
         for i_, key in enumerate(self.quivers.keys()):
             (x, y, u, v, c, shaft_width) = self.quivers[key]
             data[i_, :] = np.array([x, y, u, v])
-            self.ax.quiver(data[i_, 0], data[i_, 1], data[i_, 2], data[i_, 3], angles='xy', scale_units='xy', scale=1, color=c, headwidth=3, width=shaft_width)
+            if c == 'y': #  it's the preferred direction of the source cell
+                alpha=1.
+            else: # it's the preferred direction of any other cell -> alpha
+                alpha=.3
+            self.ax.quiver(data[i_, 0], data[i_, 1], data[i_, 2], data[i_, 3], angles='xy', scale_units='xy', scale=1, color=c, headwidth=3, width=shaft_width, alpha=alpha)
 #        self.ax.quiver(data[:, 0], data[:, 1], data[:, 2], data[:, 3], angles='xy', scale_units='xy', scale=1, color=c, headwidth=3)
 
 
@@ -185,7 +218,7 @@ class ConnectionPlotter(object):
 
         conn_list_fn = self.params['merged_conn_list_%s' % conn_type]
         if not os.path.exists(conn_list_fn):
-            print '\n%s NOT FOUND\n Calling python merge_connlists.py\n'
+            print '\n%s NOT FOUND\n Calling python merge_connlists.py\n' % conn_list_fn
             os.system('python merge_connlists.py')
         self.connection_lists[conn_type] = np.loadtxt(conn_list_fn)
             
@@ -247,34 +280,42 @@ if __name__ == '__main__':
     network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
     params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
-    P = ConnectionPlotter(params)
+    with_directions = True
+    with_delays = True
+    with_histogram = True
+    if with_histogram:
+        n_plots_x, n_plots_y = 1, 2
+    else:
+        n_plots_x, n_plots_y = 1, 1
+    P = ConnectionPlotter(params, n_plots_x, n_plots_y)
 
     np.random.seed(0)
     try:
         gid = int(sys.argv[1])
     except:
-        # choose a cell as source 
-        gid = int(.5 * params['n_exc'])
-#        gid = np.random.randint(0, params['n_exc'], 1)[0]
+        if os.path.exists(params['gids_to_record_fn']):
+            good_gids = np.loadtxt(params['gids_to_record_fn'], dtype='int')
+            idx = P.tp_exc[good_gids, 0].argsort()
+            gid = good_gids[idx[0]]
+        else: # choose a cell as source 
+            gid = int(.5 * params['n_exc'])
         print 'plotting GID', gid
         
-    with_directions = False
-    with_delays = True
-
     exc_color = (.5, .5, .5)
+    ee_targets = P.plot_connection_type(gid, 'ee', 'o', 'r', with_directions, plot_delays=with_delays, with_histogram=with_histogram)
+    ei_targets = P.plot_connection_type(gid, 'ei', 'x', 'r', with_directions, plot_delays=with_delays)#, annotate=True)
     P.plot_cell(gid, exc=True, color='r')
-    ee_targets = P.plot_connection_type(gid, 'ee', 'o', 'r', with_directions, with_delays)
-    ei_targets = P.plot_connection_type(gid, 'ei', 'x', 'r', with_directions, with_delays)#, annotate=True)
 
 #    inh_color = (.5, .5, .5)
 
-    with_directions = False
-    with_delays = False
-    inh_color = 'b'
-    inh_gid = ei_targets[0]
-    P.plot_cell(inh_gid, exc=False, color='b')
-    ie_targets = P.plot_connection_type(inh_gid, 'ie', 'o', inh_color, with_directions, with_delays)
-    ii_targets = P.plot_connection_type(inh_gid, 'ii', 'x', inh_color, with_directions, with_delays)
+#    with_directions = False
+#    with_delays = False
+#    inh_color = 'b'
+#    inh_gid = ei_targets[1]
+#    print 'inh gid', inh_gid
+#    P.plot_cell(inh_gid, exc=False, color='b')
+#    ie_targets = P.plot_connection_type(inh_gid, 'ie', 'o', inh_color, with_directions, with_delays)
+#    ii_targets = P.plot_connection_type(inh_gid, 'ii', 'x', inh_color, with_directions, with_delays)
 
 #    P.plot_ee(gid)
 #    tgts = P.plot_ei(gid)
@@ -309,6 +350,7 @@ if __name__ == '__main__':
     P.make_legend()
 
     output_fig = params['figures_folder'] + 'connectivity_profile_%d.png' % gid
+    print 'Saving figure to', output_fig
     pylab.savefig(output_fig)
 
     pylab.show()
