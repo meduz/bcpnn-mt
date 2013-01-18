@@ -17,4 +17,5 @@ python get_conductance_matrix.py 0
 #python plot_connlist_as_colormap.py 'ii'
 #python plot_input.py 205
 #python plot_input.py 245
+python plot_spike_histogram.py
 echo 'Stopping at' `date`

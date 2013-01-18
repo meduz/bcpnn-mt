@@ -183,7 +183,6 @@ class CompareSimulations(object):
 
         c = self.color_dict[gid]
         n, bins = np.histogram(spiketimes, bins=n_bins, range=(0, self.params['t_sim']))
-        print 'debug, n bins', n_bins
         bin_width = (bins[1] - bins[0]) / len(self.gids_to_plot)
         bins += shift * bin_width
         ax.bar(bins[:-1], n, width=bin_width, facecolor=c)
@@ -211,7 +210,6 @@ class CompareSimulations(object):
             txt_pos_x = (self.params['t_stimulus'] + .25 * self.params['t_blank'])
             ylim = ax.get_ylim()
             txt_pos_y = ylim[0] + .85 * (ylim[1] - ylim[0])
-            print 'DEBUG txt_pos', txt_pos_x, txt_pos_y
             ax.annotate(txt, (txt_pos_x, txt_pos_y), fontsize=14, color='k')
 
 

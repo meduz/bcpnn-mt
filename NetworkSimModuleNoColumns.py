@@ -38,6 +38,7 @@ class NetworkModel(object):
             self.pc_id, self.n_proc = 0, 1
             print "MPI not used"
 
+
     def import_pynn(self):
         """
         This function needs only be called when this class is used in another script as imported module
@@ -45,6 +46,8 @@ class NetworkModel(object):
         import pyNN
         exec("from pyNN.%s import *" % self.params['simulator'])
         print 'import pyNN\npyNN.version: ', pyNN.__version__
+
+
 
     def setup(self):
         self.tuning_prop_exc = utils.set_tuning_prop(self.params, mode='hexgrid', cell_type='exc')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
@@ -609,13 +612,14 @@ if __name__ == '__main__':
 
     try:
         # optional, to run parameter sweeps by batch scripts
-        p1, p2, p3, p4, p5, p6 = float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5]), float(sys.argv[6])
+        p1, p2, p3, p4, p5, p6, p7 = float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5]), float(sys.argv[6]), float(sys.argv[7])
         ps.params['w_tgt_in_per_cell_ee'] = p1
         ps.params['w_tgt_in_per_cell_ei'] = p2
         ps.params['w_tgt_in_per_cell_ie'] = p3
         ps.params['w_tgt_in_per_cell_ii'] = p4
         ps.params['w_sigma_x'] = p5
         ps.params['w_sigma_v'] = p6
+        ps.params['delay_scale'] = p7
 
         ps.set_filenames()
     except:

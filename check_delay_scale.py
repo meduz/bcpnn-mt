@@ -22,8 +22,8 @@ mp = params['motion_params']
 #src_gids = utils.get_sources(conn_list, gid_post)
 
 # choose this numbers from the file gids_to_record_fn created by prepare_tuning_prop.py
-gid_pre = 148
-gid_post = 192
+gid_pre = 152
+gid_post = 363
 
 
 # load file pre

@@ -10,6 +10,8 @@ python plot_weight_and_delay_histogram.py
 #python get_conductance_matrix.py 0
 python merge_connlists.py
 python plot_connectivity_profile.py
+python plot_spike_histogram.py exc
+python plot_spike_histogram.py inh
 #python plot_connlist_as_colormap.py 'ee'
 #python plot_connlist_as_colormap.py 'ei'
 #python plot_connlist_as_colormap.py 'ie'

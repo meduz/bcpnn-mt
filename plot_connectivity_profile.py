@@ -157,7 +157,7 @@ class ConnectionPlotter(object):
         n_d, bins_d = np.histogram(delays, bins=n_bins, normed=False)
         bin_didth = bins_d[1] - bins_d[0]
         self.ax3.bar(bins_d[:-1]-.5*bin_didth, n_d, width=bin_didth, label='$w_{mean} = %.2e \pm %.2e$' % (w_mean, w_std))
-        self.ax2.set_title('Histogram of connection delays')
+        self.ax3.set_title('Histogram of connection delays')
         self.ax3.set_xlabel('Delays')
         self.ax3.set_ylabel('Count')
 
@@ -353,5 +353,5 @@ if __name__ == '__main__':
     print 'Saving figure to', output_fig
     pylab.savefig(output_fig)
 
-    pylab.show()
+#    pylab.show()
 
