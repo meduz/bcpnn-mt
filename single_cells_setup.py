@@ -28,7 +28,8 @@ tuning_prop = np.loadtxt(params['tuning_prop_means_fn'])
 (delay_min, delay_max) = params['delay_range']
 setup(timestep=0.1, min_delay=delay_min, max_delay=delay_max)
 
-gids = [130, 177]
+#gids = [130, 177]
+gids = [207, 483]
 n_exc = len(gids)
 exc_pop = Population(n_exc, IF_cond_exp, params['cell_params_exc'], label='exc_cells')
 

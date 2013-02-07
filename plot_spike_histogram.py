@@ -11,7 +11,7 @@ try:
     cell_type = sys.argv[1]
 except:
     cell_type = 'exc'
-spike_fn = params['%s_spiketimes_fn_merged' % cell_type] + '0.ras'
+spike_fn = params['%s_spiketimes_fn_merged' % cell_type] + '.ras'
 print 'Loading ', spike_fn
 #np.loadtxt(spike_fn)
 
@@ -22,7 +22,7 @@ n_cells = nspikes.nonzero()[0].size
 idx = np.argsort(nspikes)
 print 'GID\tnspikes'
 print '----------------'
-for i in xrange(1, n_cells + 1):
+for i in xrange(1, int(round(.2 *(n_cells + 1)))):
     print '%d\t%d' % (idx[-i], nspikes[idx[-i]])
 
 fig = pylab.figure(figsize=(16, 10))

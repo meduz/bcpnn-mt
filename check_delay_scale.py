@@ -22,8 +22,8 @@ mp = params['motion_params']
 #src_gids = utils.get_sources(conn_list, gid_post)
 
 # choose this numbers from the file gids_to_record_fn created by prepare_tuning_prop.py
-gid_pre = 152
-gid_post = 363
+gid_pre = 207
+gid_post = 483
 
 
 # load file pre
@@ -46,7 +46,7 @@ rate_post_noblank *= params['f_max_stim']
 np.save('debug_rate_post_noblank.npy', rate_post_noblank)
 
 # load output spikes from the network simulation (only response to stimulus)
-spikes_fn = params['exc_spiketimes_fn_merged'] + '0.ras'
+spikes_fn = params['exc_spiketimes_fn_merged'] + '.ras'
 nspikes, spiketrains = utils.get_nspikes(spikes_fn, params['n_exc'], get_spiketrains=True)
 
 # only response to stimulus
@@ -74,7 +74,7 @@ latency = dx / np.sqrt(tp_exc[gid_pre, 2]**2 + tp_exc[gid_pre, 3]**2)
 print 'latency: %.3f   latency * t_stimulus = %.1f [ms]   t_pre_input max + latency * t_stimulus = %.1f [ms]' % (latency, latency * params['t_stimulus'], t_max_input_post + latency * params['t_stimulus'])
 print '                                                   t_pre_response_max + latency * t_stimulus = %.1f [ms]' % (t_max_response_pre + latency * params['t_stimulus'])
 (delay_min, delay_max) = params['delay_range']
-w_ij = 0.01 # weight pre --> post
+w_ij = 0.003 # weight pre --> post
 #conn_delay = 40
 #conn_delay = .5 * (t_max_input_post - t_max_input_pre)
 conn_delay = latency * params['t_stimulus']
@@ -239,7 +239,7 @@ ax.plot(t_axis, v2, lw=2, c='g', label='input=stim + rec')
 ax.set_xlabel('Time [ms]')
 ax.set_ylabel('Voltage [mV]')
 ax.set_title('Membrane voltages with and\nwithout pre-post connection')
-ax.legend()
+ax.legend(loc='upper right')
 
 
 #ax = fig.add_subplot(226)
@@ -272,4 +272,7 @@ ax.legend()
 
 #ax.bar(bins_post[:-1], n_post, width = bins_post[1] - bins_post[0])
 #ax.set_xlim((0, params['t_sim']))
+
+output_fn = params['figures_folder'] + 'check_delay_scale_%d_%d.png' % (gid_pre, gid_post)
+pylab.savefig(output_fn)
 pylab.show()

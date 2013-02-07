@@ -62,7 +62,7 @@ class ConductanceCalculator(object):
         pylab.subplots_adjust(bottom=0.30)
 
     def load_nspikes(self): 
-        fn = self.params['exc_spiketimes_fn_merged'] + '0.ras'
+        fn = self.params['exc_spiketimes_fn_merged'] + '.ras'
         try:
             self.nspikes_exc = utils.get_nspikes(fn, self.params['n_exc'])
         except:
@@ -70,7 +70,7 @@ class ConductanceCalculator(object):
             self.nspikes_exc = np.zeros(self.params['n_exc'])
             self.no_spikes = True
 
-        fn = self.params['inh_spiketimes_fn_merged'] + '0.ras'
+        fn = self.params['inh_spiketimes_fn_merged'] + '.ras'
         try:
             self.nspikes_inh = utils.get_nspikes(fn, self.params['n_inh'])
         except:

@@ -6,32 +6,46 @@ import simulation_parameters
 import sys
 from scipy.optimize import leastsq
 import os
+import utils
 
 # load simulation parameters
 network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
 params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
 if (len(sys.argv) < 2):
-    sim_cnt = 0
-    fn = params['conn_list_ee_fn_base'] + '%d.dat' % sim_cnt
-    output_fn = params['weight_and_delay_fig']
-    if not os.path.exists(fn):
-        tmp_fn = 'delme_tmp_%d' % (np.random.randint(0, 1e7))
-        cat = 'cat %s* > %s' % (params['conn_list_ee_fn_base'], tmp_fn)
-        sort = 'sort -gk 2 -gk 1 %s > %s' % (tmp_fn, fn)
-        del_tmp_fn = 'rm %s' % (tmp_fn)
-        print cat
-        os.system(cat)
-        print sort
-        os.system(sort)
-        print del_tmp_fn
-        os.system(del_tmp_fn)
-
+    conn_type = 'ee'
 else:
-    fn = sys.argv[1]
-    output_fn = fn.rsplit('.dat')[0] + '.png'
+    conn_type = sys.argv[1]
+
+
+def get_incoming_connection_numbers(conn_data, n_tgt):
+    n_in = np.zeros(n_tgt)
+    for i in xrange(conn_data[:, 0].size):
+        src, tgt, w, delay = conn_data[i, :]
+        n_in[tgt] += 1
+
+    return n_in
+
+
+fn = params['merged_conn_list_%s' % conn_type] 
+if not os.path.exists(fn):
+    os.system('python merge_connlists.py')
+output_fn = params['figures_folder'] + 'weights_and_delays_%s.png' % (conn_type)
 
 d = np.loadtxt(fn)
+
+(n_src, n_tgt, syn_type) = utils.resolve_src_tgt(conn_type, params)
+n_in = get_incoming_connection_numbers(d, n_tgt)
+string = 'n_%s = %.2f +- %.2f' % (conn_type, n_in.mean(), n_in.std())
+string += '\nn_%s_min = %.2f' % (conn_type, n_in.min())
+string += '\nn_%s_max = %.2f' % (conn_type, n_in.max())
+out_fn = params['data_folder'] + 'nconn_%s.txt' % (conn_type)
+f = open(out_fn, 'w')
+f.write(string)
+f.flush()
+f.close()
+print 'Writing to:', out_fn 
+print string
 
 weights = d[:, 2]
 delays = d[:, 3]
@@ -40,7 +54,7 @@ d_mean, d_std = delays.mean(), delays.std()
 n_weights = weights.size
 n_possible = params['n_exc']**2
 
-n_bins = 40
+n_bins = 50
 n_w, bins_w = np.histogram(weights, bins=n_bins, normed=True)
 #n_w = n_w / float(n_w.sum())
 
@@ -62,20 +76,32 @@ def residuals_delay_dist(p, y, x):
 def eval_delay_dist(x, p):
     return x * p[1] * np.exp(- x / p[0])
 
+def residuals_gaussian(p, y, x):
+    return y - eval_gaussian(x, p)
+
+def eval_gaussian(x, p):
+    return 1. / (np.sqrt(2 * np.pi) * p[1]) * np.exp(-(x - p[0])**2 / (2 *p[1]**2))
+
+
 
 print "Fitting function to weight distribution"
 guess_params = (5e-2) # (w[0], w_tau)
 #guess_params = (0.5, 5e-4) # (w[0], w_tau)
-opt_params = leastsq(residuals_exp_dist, guess_params, args=(n_w, bins_w[:-1]), maxfev=1000)
+#opt_params = leastsq(residuals_exp_dist, guess_params, args=(n_w, bins_w[:-1]), maxfev=1000)
+guess_params = (0.001, 0.001)
+opt_params = leastsq(residuals_gaussian, guess_params, args=(n_w, bins_w[:-1]), maxfev=1000)[0]
 #opt_w0 = opt_params[0][0]
 #print "Optimal parameters: w_0 %.2e w_tau %.2e" % (opt_w0, opt_wtau)
-opt_wtau= opt_params[0]#[0]
+#opt_wtau= opt_params[0]#[0]
+opt_wmean= opt_params[0]#[0]
+opt_wsigma= opt_params[1]#[0]
 
 p_ee = float(n_weights) / n_possible
 print 'P_ee: %.3e' % p_ee
 print 'w_min: %.2e w_max %.2e w_mean: %.2e  w_std: %.2e' % (weights.min(), weights.max(), weights.mean(), weights.std())
 print 'd_min: %.2e d_max %.2e d_mean: %.2e  d_std: %.2e' % (delays.min(), delays.max(), delays.mean(), delays.std())
-print "Optimal parameters: w_lambda %.5e" % (opt_wtau)
+#print "Optimal parameters: w_lambda %.5e" % (opt_wtau)
+print "Optimal parameters: w_mu %.2e w_sigma = %.2e" % (opt_wmean, opt_wsigma)
 
 print "Fitting function to delay distribution"
 guess_params = (5., 10.)
@@ -89,13 +115,14 @@ fig = pylab.figure()
 ax1 = fig.add_subplot(211)
 bin_width = bins_w[1] - bins_w[0]
 ax1.bar(bins_w[:-1]-.5*bin_width, n_w, width=bin_width, label='$w_{mean} = %.2e \pm %.2e$' % (w_mean, w_std))
-ax1.plot(bins_w[:-1], eval_exp_dist(bins_w[:-1], opt_params), 'r--', label='Fit: $(%.2e) * exp(-(%.2e) \cdot w)$' % (opt_wtau, opt_wtau))
+ax1.plot(bins_w[:-1], eval_gaussian(bins_w[:-1], opt_params), 'r--', label='Fit: gaussian $\mu_{w}=%.2e \quad \sigma_{w}=%.2e$' % (opt_wmean, opt_wsigma))
+#ax1.plot(bins_w[:-1], eval_exp_dist(bins_w[:-1], opt_params), 'r--', label='Fit: $(%.2e) * exp(-(%.2e) \cdot w)$' % (opt_wtau, opt_wtau))
 #ax1.plot(bins_w[:-1], eval_exp_dist(bins_w[:-1], opt_params[0]), 'r--', label='Fit: $(%.1e) * exp(-w / (%.1e))$' % (opt_w0, opt_wtau))
 ax1.set_xlabel('Weights')
 ax1.set_ylabel('Count')
 ax1.set_xlim((weights.min()-.5*bin_width, weights.max()))
-title = 'Weight profile $\sigma_{X(V)} = %.1f (%.1f)$' % (params['w_sigma_x'], params['w_sigma_v'])
-ax1.set_title(fn)
+title = 'Weight profile for %s connections\n$\sigma_{X(V)} = %.1f (%.1f)$' % (conn_type, params['w_sigma_x'], params['w_sigma_v'])
+ax1.set_title(title)
 ax1.legend()
 
 ax2 = fig.add_subplot(212)
@@ -104,7 +131,8 @@ ax2.bar(bins_d[:-1]-.5*bin_width, n_d, width=bin_width, label='$\delta_{mean} = 
 ax2.plot(bins_d[:-1], eval_delay_dist(bins_d[:-1], (opt_d0, opt_d1)), 'r--', label='Fit: $\delta \cdot exp(-\delta / (%.1e))$' % (opt_d0))
 ax2.set_xlabel('Delays')
 ax2.set_ylabel('Count')
-ax2.set_xlim((0. - .5 * bin_width, delays.max()))
+ax2.set_xlim((0. - .5 * bin_width, delays.max() + 2 * bin_width))
+#ax2.set_xlim((0. - .5 * bin_width, 20))
 #ax2.set_xlim((delays.min()-.5*bin_width, delays.max()))
 ax2.legend()
 

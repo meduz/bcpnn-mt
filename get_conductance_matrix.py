@@ -14,9 +14,9 @@ params = PS.load_params()                       # params stores cell numbers, et
 
 n_cells = params['n_gids_to_record']
 
-d = np.loadtxt(params['exc_spiketimes_fn_merged'] + '0.ras')
+d = np.loadtxt(params['exc_spiketimes_fn_merged'] + '.ras')
 if d.size > 0:
-    nspikes = utils.get_nspikes(params['exc_spiketimes_fn_merged'] + '0.ras', n_cells=params['n_exc'])
+    nspikes = utils.get_nspikes(params['exc_spiketimes_fn_merged'] + '.ras', n_cells=params['n_exc'])
     spiking_cells = np.nonzero(nspikes)[0]
     fired_spikes = nspikes[spiking_cells]
    
@@ -29,18 +29,17 @@ else:
 
 
 
-
 def calculate_input_cond():
     input_cond = np.zeros(params['n_exc'])
     for cell in xrange(params['n_exc']):
-#        try:
-        fn = params['input_st_fn_base'] + str(cell) + '.npy'
-        spike_times = np.load(fn)
-        nspikes_in = spike_times.size
-#        except: # this cell does not get any input
-#            print "Missing file: ", fn
-#            spike_times = []
-#            nspikes_in = 0
+        try:
+            fn = params['input_st_fn_base'] + str(cell) + '.npy'
+            spike_times = np.load(fn)
+            nspikes_in = spike_times.size
+        except: # this cell does not get any input
+            print "Missing file: ", fn
+            spike_times = []
+            nspikes_in = 0
         input_cond[cell] = nspikes_in * params['w_input_exc']
     return input_cond
 
@@ -73,8 +72,9 @@ for tgt in xrange(params['n_exc']):
     summed_network_cond[tgt] = cond_matrix[:, tgt].sum()
 
 
-cmap = 'jet'
 
+
+cmap = 'jet'
 m1 = matplotlib.cm.ScalarMappable(cmap=cm.jet)
 m1.set_array(np.arange(0, cond_matrix.max(), 0.01))
 m2 = matplotlib.cm.ScalarMappable(cmap=cm.jet)
@@ -82,7 +82,6 @@ m2.set_array(np.arange(0, summed_network_cond.max(), 0.01))
 m3 = matplotlib.cm.ScalarMappable(cmap=cm.jet)
 m3.set_array(np.arange(0, input_cond.max(), 0.01))
 
-#fig = pylab.figure(figsize = (11.69, 8.27))
 h = 10
 fig = pylab.figure(figsize = (np.sqrt(2) * h, h))
 ax1 = fig.add_subplot(311)

@@ -11,9 +11,9 @@ params = PS.load_params()                       # params stores cell numbers, et
 n_cells = params['n_gids_to_record']
 idx, dist = utils.sort_cells_by_distance_to_stimulus(n_cells)
 
-d = np.loadtxt(params['exc_spiketimes_fn_merged'] + '0.ras')
+d = np.loadtxt(params['exc_spiketimes_fn_merged'] + '.ras')
 if d.size > 0:
-    nspikes = utils.get_nspikes(params['exc_spiketimes_fn_merged'] + '0.ras', n_cells=params['n_exc'])
+    nspikes = utils.get_nspikes(params['exc_spiketimes_fn_merged'] + '.ras', n_cells=params['n_exc'])
     spiking_cells = np.nonzero(nspikes)[0]
     fired_spikes = nspikes[spiking_cells]
    

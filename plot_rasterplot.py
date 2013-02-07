@@ -10,10 +10,10 @@ params = network_params.load_params()                       # params stores cell
 
 cell_type = sys.argv[1]
 if cell_type == 'inh':
-    fn = params['inh_spiketimes_fn_base'] + '0.ras'
+    fn = params['inh_spiketimes_fn_base'] + '.ras'
     n_cells = params['n_inh']
 elif cell_type == 'exc':
-    fn = params['exc_spiketimes_fn_merged'] + '0.ras'
+    fn = params['exc_spiketimes_fn_merged'] + '.ras'
     n_cells = params['n_exc']
 nspikes, spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
 

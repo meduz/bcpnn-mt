@@ -4,6 +4,7 @@ import pylab
 import numpy as np
 import simulation_parameters
 import utils
+import os
 
 class PlotConductances(object):
     def __init__(self, params=None, comm=None, data_fn=None, sim_cnt=0):
@@ -38,7 +39,8 @@ class PlotConductances(object):
         self.tuning_prop = np.loadtxt(self.params['tuning_prop_means_fn'])
         # sort the cells by their proximity to the stimulus into 'good_gids' and the 'rest'
         # cell in 'good_gids' should have the highest response to the stimulus
-        all_gids, all_distances = utils.sort_gids_by_distance_to_stimulus(self.tuning_prop, self.params['motion_params']) 
+        print 'utils.sort_gids_by_distance_to_stimulus'
+        all_gids, all_distances = utils.sort_gids_by_distance_to_stimulus(self.tuning_prop, self.params['motion_params'], self.params) 
         self.good_gids, self.good_distances = all_gids[0:self.n_good], all_distances[0:self.n_good]
         print 'Saving gids to record to', self.params['gids_to_record_fn']
         np.savetxt(self.params['gids_to_record_fn'], np.array(self.good_gids), fmt='%d')
@@ -46,9 +48,6 @@ class PlotConductances(object):
         for gid in self.good_gids:
             self.rest_gids.remove(gid)
 
-        self.load_spiketimes(data_fn)
-        if self.no_spikes:
-            return
         fig_width_pt = 800.0  # Get this from LaTeX using \showthe\columnwidth
         inches_per_pt = 1.0/72.27               # Convert pt to inch
         golden_mean = (np.sqrt(5)-1.0)/2.0         # Aesthetic ratio
@@ -64,6 +63,115 @@ class PlotConductances(object):
 #                  'text.usetex': True,
                   'figure.figsize': fig_size}
         pylab.rcParams.update(params)
+
+
+    def plot_conductance_composition(self):
+
+        self.load_nspikes()
+        if self.no_spikes:
+            return
+
+        self.load_input_spikes()
+        self.g_exc_noise = self.params['w_exc_noise'] * self.params['tau_syn_exc'] * self.params['f_exc_noise']
+        self.g_inh_noise = self.params['w_inh_noise'] * self.params['tau_syn_inh'] * self.params['f_inh_noise']
+
+        conn_list_ee = self.params['merged_conn_list_ee']
+        conn_list_ei = self.params['merged_conn_list_ei']
+        conn_list_ie = self.params['merged_conn_list_ie']
+        conn_list_ii = self.params['merged_conn_list_ii']
+        if not os.path.exists(conn_list_ee):
+            os.system("python merge_connlists.py")
+
+        print 'Getting connection matrices ...'
+        w_ee, delays_ee = utils.convert_connlist_to_matrix(conn_list_ee, self.params['n_exc'], self.params['n_exc'])
+        w_ei, delays_ei = utils.convert_connlist_to_matrix(conn_list_ei, self.params['n_exc'], self.params['n_inh'])
+        w_ie, delays_ie = utils.convert_connlist_to_matrix(conn_list_ie, self.params['n_inh'], self.params['n_exc'])
+        w_ii, delays_ii = utils.convert_connlist_to_matrix(conn_list_ii, self.params['n_inh'], self.params['n_inh'])
+        c_ee = self.get_cond_matrix(self.nspikes_exc, w_ee, 'ee')
+        c_ei = self.get_cond_matrix(self.nspikes_exc, w_ei, 'ei')
+        c_ie = self.get_cond_matrix(self.nspikes_inh, w_ie, 'ie')
+        c_ii = self.get_cond_matrix(self.nspikes_inh, w_ii, 'ii')
+
+        self.create_fig()
+        self.n_fig_x, self.n_fig_y = 1, 1
+
+        color_net_exc = 'r'
+        color_net_inh = 'b'
+        color_stim = 'g'
+        color_noise = 'w'
+
+        ax = self.fig.add_subplot(111)
+        lw = 4
+        width=.5
+        for gid in xrange(self.params['n_exc']):
+            x = self.nspikes_exc[gid]
+            y0 = self.g_stim[gid]
+            y1 = c_ee[:, gid].sum()
+            y3 = c_ie[:, gid].sum()
+            ax.bar(x, y0, width=width, color=color_stim)
+            ax.bar(x, y1, width=width, bottom=y0, color=color_net_exc)
+#            ax.bar(x, self.g_exc_noise, width=width, bottom=y1+y0, color=color_noise)
+            ax.bar(x, -y3, width=width, color=color_net_inh)
+#            ax.bar(x, -self.g_inh_noise, width=width, bottom=-y3, color=color_noise)
+#            ax.bar(x, (0, -y2), c=color_net_inh, lw=lw)
+#            ax.plot((x, x), (0, y0), c=color_stim, lw=lw)
+#            ax.plot((x, x), (y0, y1), c=color_net_exc, lw=lw)
+#            ax.plot((x, x), (0, -y2), c=color_net_inh, lw=lw)
+
+
+
+    def load_nspikes(self):
+
+        fn = self.params['exc_spiketimes_fn_merged'] + '.ras'
+        try:
+            self.nspikes_exc = utils.get_nspikes(fn, n_cells=self.params['n_exc'])
+        except:
+            self.nspikes_exc = np.zeros(self.params['n_exc'])
+            print 'No spikes found in ', fn
+            self.no_spikes = True
+            return
+
+        try:
+            self.nspikes_inh = utils.get_nspikes(fn, n_cells=self.params['n_inh'])
+        except:
+            self.nspikes_inh = np.zeros(self.params['n_inh'])
+
+
+
+    def get_cond_matrix(self, nspikes, w, conn_type):
+        if conn_type == 'ee':
+            n_src, n_tgt = self.params['n_exc'], self.params['n_exc']
+        elif conn_type == 'ei':
+            n_src, n_tgt = self.params['n_exc'], self.params['n_inh']
+        elif conn_type == 'ie':
+            n_src, n_tgt = self.params['n_inh'], self.params['n_exc']
+        elif conn_type == 'ii':
+            n_src, n_tgt = self.params['n_inh'], self.params['n_inh']
+
+        cond_matrix = np.zeros((n_src, n_tgt))
+        for tgt in xrange(n_tgt):
+            for src in xrange(n_src):
+                if src != tgt:
+                    cond_matrix[src, tgt] =  w[src, tgt] * nspikes[src]
+        return cond_matrix
+
+
+    def load_input_spikes(self):
+
+        self.nspikes_stim = np.zeros(self.params['n_exc'])
+        self.g_stim = np.zeros(self.params['n_exc'])
+
+        for gid in xrange(self.params['n_exc']):
+            fn = self.params['input_st_fn_base'] + '%d.npy' % gid
+            try: 
+                d = np.load(fn)
+                self.nspikes_stim[gid] = d.size
+                self.g_stim[gid] = d.size / (self.params['t_sim'] - self.params['t_blank']) * 1000. * self.params['w_input_exc'] * self.params['tau_syn_exc']
+
+            except:
+                pass
+
+
 
 
     def load_spiketimes(self, fn=None):
@@ -136,10 +244,10 @@ class PlotConductances(object):
 
     def plot_rasterplot(self, cell_type, fig_cnt=1):
         if cell_type == 'inh':
-            fn = self.params['inh_spiketimes_fn_merged'] + '0.ras'
+            fn = self.params['inh_spiketimes_fn_merged'] + '.ras'
             n_cells = self.params['n_inh']
         elif cell_type == 'exc':
-            fn = self.params['exc_spiketimes_fn_merged'] + '0.ras'
+            fn = self.params['exc_spiketimes_fn_merged'] + '.ras'
             n_cells = self.params['n_exc']
 
         try:
@@ -264,7 +372,7 @@ class PlotConductances(object):
             conn_list_fn = self.params['merged_conn_list_ee']
         print 'utils.get_conn_dict from file:', conn_list_fn 
         self.conn_dict = utils.get_conn_dict(self.params, conn_list_fn)
-        spike_fn = self.params['exc_spiketimes_fn_merged'] + '0.ras'
+        spike_fn = self.params['exc_spiketimes_fn_merged'] + '.ras'
 
 
     def get_input_cond(self, tgts, srcs):#, source_spike_fn):

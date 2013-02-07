@@ -5,7 +5,7 @@ from scipy.spatial import distance
 import os
 import time
 
-def get_p_conn(tp_src, tp_tgt, w_sigma_x, w_sigma_v):
+def get_p_conn(tp_src, tp_tgt, w_sigma_x, w_sigma_v, scale_latency=1.0):
     """
     tp_src is a list/array with the 4 tuning property values of the source cell: x, y, u, v
         
@@ -38,11 +38,50 @@ def get_p_conn(tp_src, tp_tgt, w_sigma_x, w_sigma_v):
 
     d_ij = utils.torus_distance2D(tp_src[0], tp_tgt[0], tp_src[1], tp_tgt[1])
     latency = d_ij / np.sqrt(tp_src[2]**2 + tp_src[3]**2)
-    x_predicted = tp_src[0] + tp_src[2] * latency  
-    y_predicted = tp_src[1] + tp_src[3] * latency  
+    x_predicted = tp_src[0] + tp_src[2] * latency * scale_latency
+    y_predicted = tp_src[1] + tp_src[3] * latency * scale_latency
     p = np.exp(- (utils.torus_distance2D(x_predicted, tp_tgt[0], y_predicted, tp_tgt[1]))**2 / (2 * w_sigma_x**2)) \
             * np.exp(- ((tp_src[2] - tp_tgt[2])**2 + (tp_src[3] - tp_tgt[3])**2) / (2 * w_sigma_v**2))
     return p, latency
+
+
+def get_p_conn_no_xpred(tp_src, tp_tgt, w_sigma_x, w_sigma_v):
+    """
+    tp_src is a list/array with the 4 tuning property values of the source cell: x, y, u, v
+        
+    Latex code for formulas:
+    \delta_{latency} = \frac{\sqrt{d_{torus}(x_0, x_1)^2 + d_{torus}(y_0, y_1)^2}}{\sqrt{u_0^2 + v_0^2}}
+    x_{predicted} = x_0 + u_0 \cdot \delta_{latency}
+    y_{predicted} = y_0 + v_0 \cdot \delta_{latency}
+    p = exp(-\frac{(d_{torus}(x_{predicted}, x_1))^2 + (d_{torus}(y_{predicted}, y_1))^2}{2 \cdot \sigma_{space}^2})
+        \cdot exp(-\frac{(u_0-u_1)^2 + (v_0 - v_1)^2}{2 \cdot \sigma_V^2})
+ 
+    """
+
+#    x0 = tp_src[0]
+#    y0 = tp_src[1]
+#    u0 = tp_src[2]
+#    v0 = tp_src[3]
+#    x1 = tp_tgt[0]
+#    y1 = tp_tgt[1]
+#    u1 = tp_tgt[2]
+#    v1 = tp_tgt[3]
+#    dx = utils.torus_distance(x0, x1)
+#    dy = utils.torus_distance(y0, y1)
+#    latency = np.sqrt(dx**2 + dy**2) / np.sqrt(u0**2 + v0**2)
+#    x_predicted = x0 + u0 * latency  
+#    y_predicted = y0 + v0 * latency  
+#    p = np.exp(-.5 * (utils.torus_distance(x_predicted, x1))**2 / w_sigma_x**2 \
+#               -.5 * (utils.torus_distance(y_predicted, y1))**2 / w_sigma_x**2) \
+#      * np.exp(-.5 * (u0 - u1)**2 / w_sigma_v ** 2 \
+#               -.5 * (v0 - v1)**2 / w_sigma_v ** 2)
+
+    d_ij = utils.torus_distance2D(tp_src[0], tp_tgt[0], tp_src[1], tp_tgt[1])
+    latency = d_ij / np.sqrt(tp_src[2]**2 + tp_src[3]**2)
+    p = np.exp(- (utils.torus_distance2D(tp_src[0], tp_tgt[0], tp_src[1], tp_tgt[1]))**2 / (2 * w_sigma_x**2)) \
+            * np.exp(- ((tp_src[2] - tp_tgt[2])**2 + (tp_src[3] - tp_tgt[3])**2) / (2 * w_sigma_v**2))
+    return p, latency
+
 
 
 def compute_weights_convergence_constrained(tuning_prop, params, comm=None):
@@ -88,7 +127,7 @@ def compute_weights_convergence_constrained(tuning_prop, params, comm=None):
         for i in xrange(len(sources)):
 #            w[i] = max(params['w_min'], min(w[i], params['w_max']))
             src = sources[i]
-            delay = min(max(latency[src] * params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
+            delay = min(max(latency[src], delay_min), delay_max)  # map the delay into the valid range
             d_ij = utils.euclidean(tuning_prop[src, :], tuning_prop[tgt, :])
             output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (src, tgt, w[i], delay, d_ij)
             cnt += 1
@@ -133,7 +172,7 @@ def compute_weights_from_tuning_prop(tuning_prop, params, comm=None):
         for tgt in xrange(params['n_exc']):
             if (src != tgt):
                 p, latency = get_p_conn(tuning_prop[src, :], tuning_prop[tgt, :], sigma_x, sigma_v)
-                delay = min(max(latency * params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
+                delay = min(max(latency, delay_min), delay_max)  # map the delay into the valid range
                 output += '%d\t%d\t%.4e\t%.2e\n' % (src, tgt, p, delay)
                 i += 1
 

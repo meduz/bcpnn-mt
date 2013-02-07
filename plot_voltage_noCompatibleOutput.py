@@ -24,7 +24,7 @@ def plot_volt(fn, gid=None, n=1):
     for gid in gids:
         time_axis, volt = utils.extract_trace(d, gid)
 #        print 'gid %d v_mean, std = %.2f +- %.2f; min %.2f max %.2f, diff %.2f ' % (gid, volt.mean(), volt.std(), volt.min(), volt.max(), volt.max() - volt.min())
-        pylab.plot(time_axis, volt, label='%d' % gid, lw=3)
+        pylab.plot(time_axis, volt, label='%d' % gid, lw=2)
 
 #    output_fn = 'volt_%d.png' % gid
     parts = fn.rsplit('.')
@@ -66,7 +66,7 @@ def plot_average_volt(fn, gid=None, n=1):
         avg_volt[t, 1] = all_volt[t, :].std()
 
     print 'Average voltage and std: %.2e +- %.2e (%.2e)' % (avg_volt[:, 0].mean(), avg_volt[:, 0].std(), avg_volt[:, 1].mean())
-    pylab.errorbar(time_axis, avg_volt[:, 0], yerr=avg_volt[:, 1], lw=2) 
+    pylab.errorbar(time_axis, avg_volt[:, 0], yerr=avg_volt[:, 1], lw=3, c='k') 
 
 
 if __name__ == '__main__':
@@ -79,6 +79,7 @@ if __name__ == '__main__':
         fns = sys.argv[1:]
     for fn in fns:
         pylab.figure()
+
 #    fn = sys.argv[1]
 #    gids = np.loadtxt('Testing/Parameters/gids_to_record.dat')
 
@@ -90,12 +91,14 @@ if __name__ == '__main__':
 #        n = 5
 #        plot_volt(fn, gid=None, n=n)
 
+#        plot_volt(fn, gid=[207])
         plot_volt(fn, gid='all')
 #    plot_average_volt(fn, gids)
+
 #    plot_average_volt(fn, gid='all')
 
-        pylab.xlabel('Time [ms]')
-        pylab.ylabel('Voltage [mV]')
+    pylab.xlabel('Time [ms]')
+    pylab.ylabel('Voltage [mV]')
 
 #    output_fn = fn.rsplit('.')[0] + '.png'
 #    print 'Saving to', output_fn

@@ -16,7 +16,8 @@ def convert_connlist_to_matrix(fn, n_src, n_tgt):
     conn_list = np.loadtxt(fn)
     m = np.zeros((n_src, n_tgt))
     delays = np.zeros((n_src, n_tgt))
-    print 'utils.convert_connlist_to_matrix(%s, %d, %d) conn_list size: %d' % (fn, n_src, n_tgt, conn_list[:, 0].size)
+    print 'utils.convert_connlist_to_matrix(%s, %d, %d)' % (fn, n_src, n_tgt)
+#    print 'utils.convert_connlist_to_matrix(%s, %d, %d) conn_list size: %d' % (fn, n_src, n_tgt, conn_list[:, 0].size)
     for i in xrange(conn_list[:,0].size):
         src = conn_list[i, 0]
         tgt = conn_list[i, 1]
@@ -257,6 +258,99 @@ def get_time_of_max_response(spikes, range=None, n_binsizes=1):
     return t_max_depending_on_binsize[:, 0].mean(), t_max_depending_on_binsize[:, 1].mean()
 
 
+def set_limited_tuning_properties(params, y_range=(0, 1.), x_range=(0, 1.), u_range=(0, 1.), v_range=(0, 1.), cell_type='exc'):
+    """
+    This function uses the same algorithm as set_tuning_prop, but discards those cells
+    that are out of the given parameter range.
+    Purpose of this is to simulate a sub-network of cells with only limited tuning properties 
+    and tune this network.
+    """
+
+    rnd.seed(params['tuning_prop_seed'])
+    if cell_type == 'exc':
+        n_cells = params['n_exc']
+        n_theta = params['N_theta']
+        n_v = params['N_V']
+        n_rf_x = params['N_RF_X']
+        n_rf_y = params['N_RF_Y']
+        v_max = params['v_max_tp']
+        v_min = params['v_min_tp']
+    else:
+        n_cells = params['n_inh']
+        n_theta = params['N_theta_inh']
+        n_v = params['N_V_INH']
+        n_rf_x = params['N_RF_X_INH']
+        n_rf_y = params['N_RF_Y_INH']
+        if n_v == 1:
+            v_min = params['v_min_tp'] + .5 * (params['v_max_tp'] - params['v_min_tp'])
+            v_max = v_min
+        else:
+            v_max = params['v_max_tp']
+            v_min = params['v_min_tp']
+
+    tuning_prop = np.zeros((n_cells, 4))
+    if params['log_scale']==1:
+        v_rho = np.linspace(v_min, v_max, num=n_v, endpoint=True)
+    else:
+        v_rho = np.logspace(np.log(v_min)/np.log(params['log_scale']),
+                        np.log(v_max)/np.log(params['log_scale']), num=n_v,
+                        endpoint=True, base=params['log_scale'])
+    v_theta = np.linspace(0, 2*np.pi, n_theta, endpoint=False)
+    parity = np.arange(params['N_V']) % 2
+
+    RF = np.zeros((2, n_rf_x * n_rf_y))
+    X, Y = np.mgrid[0:1:1j*(n_rf_x+1), 0:1:1j*(n_rf_y+1)]
+
+    # It's a torus, so we remove the first row and column to avoid redundancy (would in principle not harm)
+    X, Y = X[1:, 1:], Y[1:, 1:]
+    # Add to every even Y a half RF width to generate hex grid
+    Y[::2, :] += (Y[0, 0] - Y[0, 1])/2 # 1./N_RF
+    RF[0, :] = X.ravel()
+    RF[1, :] = Y.ravel()
+
+    # wrapping up:
+    index = 0
+    random_rotation = 2*np.pi*rnd.rand(n_rf_x * n_rf_y) * params['sigma_RF_direction']
+    neuron_in_range = np.zeros((n_cells, 1), dtype=bool)
+    for i_RF in xrange(n_rf_x * n_rf_y):
+        for i_v_rho, rho in enumerate(v_rho):
+            for i_theta, theta in enumerate(v_theta):
+                x_pos = (RF[0, i_RF] + params['sigma_RF_pos'] * rnd.randn()) % 1.
+                y_pos = (RF[1, i_RF] + params['sigma_RF_pos'] * rnd.randn()) % 1.
+                v_x = np.cos(theta + random_rotation[i_RF] + parity[i_v_rho] * np.pi / n_theta) \
+                        * rho * (1. + params['sigma_RF_speed'] * rnd.randn())
+                v_y = np.sin(theta + random_rotation[i_RF] + parity[i_v_rho] * np.pi / n_theta) \
+                        * rho * (1. + params['sigma_RF_speed'] * rnd.randn())
+
+                tuning_prop[index, 0] = x_pos 
+                tuning_prop[index, 1] = y_pos
+                tuning_prop[index, 2] = v_x
+                tuning_prop[index, 3] = v_y
+                if ((x_pos > x_range[0]) and (x_pos <= x_range[1]) \
+                        and (y_pos > y_range[0]) and (y_pos <= y_range[1]) \
+                        and (v_x > u_range[0]) and (v_x <= u_range[1]) \
+                        and (v_y > v_range[0]) and (v_y <= v_range[1])):
+                    neuron_in_range[index] = True
+                index += 1
+
+    n_cells_in_range = neuron_in_range.nonzero()[0].size
+    tp_good = np.zeros((n_cells_in_range, 4))
+    tp_good = tuning_prop[neuron_in_range.nonzero()[0], :]
+
+    idx_out_of_range = np.ones((n_cells, 1), dtype=int)
+    idx_out_of_range -= neuron_in_range
+    n_cells_out_of_range = idx_out_of_range.nonzero()[0].size
+    assert (n_cells_out_of_range + n_cells_in_range == n_cells), 'Number of cells in/out of range do not sum to one'
+    tp_out_of_range = np.zeros((n_cells_out_of_range, 4))
+    tp_out_of_range = tuning_prop[idx_out_of_range, :]
+    
+    return tp_good, tp_out_of_range
+
+
+
+
+
+
 
 def set_tuning_prop(params, mode='hexgrid', cell_type='exc'):
     """
@@ -339,8 +433,8 @@ def set_tuning_prop(params, mode='hexgrid', cell_type='exc'):
         for i_RF in xrange(n_rf_x * n_rf_y):
             for i_v_rho, rho in enumerate(v_rho):
                 for i_theta, theta in enumerate(v_theta):
-                    tuning_prop[index, 0] = RF[0, i_RF] + params['sigma_RF_pos'] * rnd.randn()
-                    tuning_prop[index, 1] = RF[1, i_RF] + params['sigma_RF_pos'] * rnd.randn()
+                    tuning_prop[index, 0] = (RF[0, i_RF] + params['sigma_RF_pos'] * rnd.randn()) % 1.
+                    tuning_prop[index, 1] = (RF[1, i_RF] + params['sigma_RF_pos'] * rnd.randn()) % 1.
                     tuning_prop[index, 2] = np.cos(theta + random_rotation[i_RF] + parity[i_v_rho] * np.pi / n_theta) \
                             * rho * (1. + params['sigma_RF_speed'] * rnd.randn())
                     tuning_prop[index, 3] = np.sin(theta + random_rotation[i_RF] + parity[i_v_rho] * np.pi / n_theta) \
@@ -622,6 +716,7 @@ def sort_gids_by_distance_to_stimulus(tp, mp, params, local_gids=None):
     else:
         return cells_closest_to_stim_pos, x_dist[cells_closest_to_stim_pos]#, cells_closest_to_stim_velocity
 
+
 def get_min_distance_to_stim(mp, tp_cell, params):
     """
     mp : motion_parameters (x,y,u,v)
@@ -678,7 +773,6 @@ def gather_conn_list(comm, data, n_total, output_fn):
     """
 
     pc_id, n_proc = comm.rank, comm.size
-    print "debug pc_id, n_proc", pc_id, n_proc
     # receiving data
     if (pc_id == 0):
         output_data = np.zeros((n_total, 4))
@@ -839,6 +933,29 @@ def sort_cells_by_distance_to_stimulus(n_cells):
     return indices, distances
 
 
+def get_pmax(p_effective):
+    """
+    When using isotropic connectivity, the connections are drawn based upon
+    this formula:
+        p_ij = p_max * np.exp(-d_ij / (2 * w_sigma_x**2))
+    This function return the p_max to use in order to get a desired p_effective
+    The values used here come from a linear fit to the numerical results of
+    p_effective vs p_max simulated as :
+
+        for j in xrange(n_tgt):
+            for i in xrange(n_src):
+                d_ij = np.random.rand()
+                p_ij = p_max * np.exp(-d_ij / (2 * w_sigma_x**2))
+                if np.random.rand() <= p_ij:
+                    n_conn += 1
+        p_eff = n_conn / (n_src * float(n_tgt))
+
+
+    """
+    p_max = (p_effective + 4.87881811e-05) / (1.79464025e-01)
+    return p_max
+
+
 def scale_input_frequency(x):
     """
     How these optimal values come about:
@@ -852,3 +969,39 @@ def scale_input_frequency(x):
     p = [2.64099116e-01,   3.27055672e-02,  9.66385641e-03,   3.24742098e-03, -4.62469854e-05,  -1.34801304e-06]
     y = p[0] + p[1] / x + p[2] / x**2 + p[3] / x**3 + p[4] / x**4 + p[5] / x**5
     return y
+
+
+
+def resolve_src_tgt(conn_type, params):
+    """
+    Deliver the correct source and target parameters based on conn_type
+    """
+
+    if conn_type == 'ee':
+        n_src, n_tgt = params['n_exc'], params['n_exc']
+#        tp_src = tuning_prop_exc
+#        tp_tgt = tuning_prop_exc
+        syn_type = 'excitatory'
+
+    elif conn_type == 'ei':
+        n_src, n_tgt = params['n_exc'], params['n_inh']
+#        tp_src = tuning_prop_exc
+#        tp_tgt = tuning_prop_inh
+        syn_type = 'excitatory'
+
+    elif conn_type == 'ie':
+        n_src, n_tgt = params['n_inh'], params['n_exc']
+#        tp_src = tuning_prop_inh
+#        tp_tgt = tuning_prop_exc
+        syn_type = 'inhibitory'
+
+    elif conn_type == 'ii':
+        n_src, n_tgt = params['n_inh'], params['n_inh']
+#        tp_src = tuning_prop_inh
+#        tp_tgt = tuning_prop_inh
+        syn_type = 'inhibitory'
+
+    return (n_src, n_tgt, syn_type)
+#    return (n_src, n_tgt, tp_src, tp_tgt, syn_type)
+
+

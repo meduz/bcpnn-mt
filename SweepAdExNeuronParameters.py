@@ -192,8 +192,9 @@ if __name__ == '__main__':
     n_values = 9
     n_trials = 20
 
+
 #    NS.create_neurons(n_values, n_trials, 'a', 0.02, 0.4)      # high a gives sub-threshold oscillations, medium can give overshoots to current pulses
-    NS.create_neurons(n_values, n_trials, 'b', 0.1, 1.0)       # high b gives strong spike-frequency adaptation
+    NS.create_neurons(n_values, n_trials, 'b', 0.05, 1.0)       # high b gives strong spike-frequency adaptation
 #    NS.create_neurons(n_values, n_trials, 'tau_w', 20, 144)    # 
 
     try:

@@ -23,22 +23,29 @@ class ConnectionPlotter(object):
         self.markersize_cell = 10
         self.markersize_min = 3
         self.markersize_max = 12
-        self.shaft_width = 0.003
+        self.shaft_width = 0.005
+        pylab.rcParams['axes.labelsize'] = 28
+        pylab.rcParams['axes.titlesize'] = 32
+        pylab.rcParams['xtick.labelsize'] = 24
+        pylab.rcParams['ytick.labelsize'] = 24
         self.fig = pylab.figure(figsize=(14, 10))
         self.ax = self.fig.add_subplot(n_plots_y, n_plots_x, 1)
+        self.ax.set_title('Outgoing connections')
         self.ax.set_xlabel('x position')
         self.ax.set_ylabel('y position')
         self.ax.set_xlim((-0.1, 1.1))
         self.ax.set_ylim((-0.1, 1.1))
         self.legends = []
         self.quivers = {}
+        self.directions = {}
+#            (x, y, u, v, c, shaft_width) = self.quivers[key]
         self.conn_list_loaded = [False, False, False, False]
         self.conn_mat_loaded = [False, False, False, False]
         self.delay_colorbar_set = False
 
 
 
-    def plot_cell(self, cell_id, exc=True, color='r', annotate=True):
+    def plot_cell(self, cell_id, exc=True, color='r', annotate=False):
         """
         markers = {0: 'tickleft', 1: 'tickright', 2: 'tickup', 3: 'tickdown', 4: 'caretleft', 'D': 'diamond', 
                     6: 'caretup', 7: 'caretdown', 's': 'square', '|': 'vline', '': 'nothing', 'None': 'nothing', 'x': 'x', 
@@ -55,9 +62,16 @@ class ConnectionPlotter(object):
 #            color = 'b'
             tp = self.tp_inh
 
-        x0, y0, u0, v0 = tp[cell_id, 0], tp[cell_id, 1], tp[cell_id, 2], tp[cell_id, 3]
+        x0, y0, u0, v0 = tp[cell_id, 0] % 1, tp[cell_id, 1] % 1, tp[cell_id, 2], tp[cell_id, 3]
+#        x0, y0, u0, v0 = tp[cell_id, 0], tp[cell_id, 1], tp[cell_id, 2], tp[cell_id, 3]
         self.ax.plot(x0, y0, marker, c=color, markersize=self.markersize_cell)
-        self.quivers[cell_id] = (x0, y0, u0, v0, 'y', self.shaft_width*3)
+
+        if exc:
+            color = 'r'
+        else:
+            color = 'b'
+        self.ax.quiver(x0, y0, u0, v0, angles='xy', scale_units='xy', scale=1, color=color, headwidth=3, width=self.shaft_width * 2, linewidths=(1,), edgecolors=('k'), zorder=100000)
+#        self.quivers[cell_id] = (x0, y0, u0, v0, 'y', self.shaft_width*3, 'k')
         if annotate:
             self.ax.annotate('%d' % cell_id, (x0 + 0.01, y0 + 0.01), fontsize=12)
 
@@ -67,13 +81,14 @@ class ConnectionPlotter(object):
         """
         print 'debug ', weights, self.markersize_min, self.markersize_max
         markersizes = utils.linear_transformation(weights, self.markersize_min, self.markersize_max)
+        direction_color = (.5, .5, .5)
         for i_, tgt in enumerate(tgt_ids):
-            x_tgt = tgt_tp[tgt, 0] 
-            y_tgt = tgt_tp[tgt, 1] 
+            x_tgt = tgt_tp[tgt, 0] % 1
+            y_tgt = tgt_tp[tgt, 1] % 1
             w = weights[i_]
             plot = self.ax.plot(x_tgt, y_tgt, marker, c=color, markersize=markersizes[i_])
             if with_directions:
-                self.quivers[tgt] = (x_tgt, y_tgt, tgt_tp[tgt, 2], tgt_tp[tgt, 3], color, self.shaft_width)
+                self.directions[tgt] = (x_tgt, y_tgt, tgt_tp[tgt, 2], tgt_tp[tgt, 3], direction_color, self.shaft_width)
             if annotate:
                 self.ax.annotate('%d' % tgt, (x_tgt + 0.01, y_tgt + 0.01), fontsize=12)
         return plot
@@ -98,11 +113,18 @@ class ConnectionPlotter(object):
             src_tp = self.tp_inh
             tgt_tp = self.tp_inh
             legend_txt = 'inh src gid: %d --> inh tgts, n=%d' % (src_gid, len(tgt_ids))
-        plot = self.plot_connections(tgt_ids, tgt_tp, weights, marker, color, with_directions, annotate)
+
+        if len(tgt_ids) > 0:
+            plot = self.plot_connections(tgt_ids, tgt_tp, weights, marker, color, with_directions, annotate)
+        else:
+            return []
 
         if plot_delays:
-            delay_max = self.connection_lists[conn_type][:, 3].max()
-            delay_min = self.connection_lists[conn_type][:, 3].min()
+#            delay_min = self.connection_lists[conn_type][:, 3].min()
+#            delay_max = self.connection_lists[conn_type][:, 3].max()
+            delay_min, delay_max = delays.min(), delays.max()
+            print 'debug delay_min, max', delay_max, delay_min
+            print 'debug 2 delay_min, max', delays
 #            delay_min, delay_max = self.params['delay_range'][0], self.params['delay_range'][1]
             norm = matplotlib.mpl.colors.Normalize(vmin=delay_min, vmax=delay_max)
             m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cm.jet)#spring)
@@ -116,7 +138,7 @@ class ConnectionPlotter(object):
 
             if not self.delay_colorbar_set:
                 cb = self.fig.colorbar(m)
-                cb.set_label('Connection delays [ms]')
+                cb.set_label('Connection delays [ms]', fontsize=28)
                 self.delay_colorbar_set = True
 #            s = 1. # saturation
 #            for 
@@ -181,19 +203,16 @@ class ConnectionPlotter(object):
         for i in xrange(len(self.legends)):
             plots.append(self.legends[i][0])
             labels.append(self.legends[i][1])
-        self.ax.legend(plots, labels)
+        self.ax.legend(plots, labels, loc='upper left')
 
 
-    def plot_quivers(self):
+    def plot_directions(self):
 
-        data = np.zeros((len(self.quivers.keys()), 4))
-        for i_, key in enumerate(self.quivers.keys()):
-            (x, y, u, v, c, shaft_width) = self.quivers[key]
+        data = np.zeros((len(self.directions.keys()), 4))
+        alpha = .4
+        for i_, key in enumerate(self.directions.keys()):
+            (x, y, u, v, c, shaft_width) = self.directions[key]
             data[i_, :] = np.array([x, y, u, v])
-            if c == 'y': #  it's the preferred direction of the source cell
-                alpha=1.
-            else: # it's the preferred direction of any other cell -> alpha
-                alpha=.3
             self.ax.quiver(data[i_, 0], data[i_, 1], data[i_, 2], data[i_, 3], angles='xy', scale_units='xy', scale=1, color=c, headwidth=3, width=shaft_width, alpha=alpha)
 #        self.ax.quiver(data[:, 0], data[:, 1], data[:, 2], data[:, 3], angles='xy', scale_units='xy', scale=1, color=c, headwidth=3)
 
@@ -276,13 +295,42 @@ class ConnectionPlotter(object):
             self.conn_mat_loaded[3] = True
 
 
+    def find_exc_gid_to_plot(self):
+
+        if os.path.exists(self.params['gids_to_record_fn']):
+            good_gids = np.loadtxt(self.params['gids_to_record_fn'], dtype='int')
+            idx = self.tp_exc[good_gids, 0].argsort()
+            gids_to_check = good_gids[idx]
+            print 'debug x_pos', self.tp_exc[idx, 0]
+
+            conn_list_ei = np.loadtxt(self.params['merged_conn_list_ei'])
+
+            for gid in gids_to_check:
+                inh_targets = utils.get_targets(conn_list_ei, gid)
+                print 'gid %d at xpos %.2f has %d inh targets' % (gid, self.tp_exc[gid, 0], len(inh_targets))
+                if len(inh_targets) > 0:
+                    return gid
+                 
+
+        else: # choose any cell as source 
+            gid = int(.5 * self.params['n_exc'])
+
+        return gid
+
+
 if __name__ == '__main__':
+
+
+    print 'Running merge_connlists.py...'
+    os.system('python merge_connlists.py')
+
+
     network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
     params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
     with_directions = True
     with_delays = True
-    with_histogram = True
+    with_histogram = False
     if with_histogram:
         n_plots_x, n_plots_y = 1, 2
     else:
@@ -293,24 +341,29 @@ if __name__ == '__main__':
     try:
         gid = int(sys.argv[1])
     except:
-        if os.path.exists(params['gids_to_record_fn']):
-            good_gids = np.loadtxt(params['gids_to_record_fn'], dtype='int')
-            idx = P.tp_exc[good_gids, 0].argsort()
-            gid = good_gids[idx[0]]
-        else: # choose a cell as source 
-            gid = int(.5 * params['n_exc'])
-        print 'plotting GID', gid
+        gid = np.loadtxt(params['gids_to_record_fn'])[0]
+#        gid = P.find_exc_gid_to_plot()
         
-    exc_color = (.5, .5, .5)
+#    exc_color = (.5, .5, .5)
     ee_targets = P.plot_connection_type(gid, 'ee', 'o', 'r', with_directions, plot_delays=with_delays, with_histogram=with_histogram)
-    ei_targets = P.plot_connection_type(gid, 'ei', 'x', 'r', with_directions, plot_delays=with_delays)#, annotate=True)
+#    ei_targets = P.plot_connection_type(gid, 'ei', 'x', 'r', with_directions, plot_delays=with_delays)#, annotate=True)
     P.plot_cell(gid, exc=True, color='r')
 
-#    inh_color = (.5, .5, .5)
 
+    # search for an adequate inhibitory target cell
+#    distances_between_exc_and_inh = np.zeros(len(ei_targets))
+#    exc_x_pos, exc_y_pos = P.tp_exc[gid, 0], P.tp_exc[gid, 1]
+#    for i_, inh_gid in enumerate(ei_targets):
+#        inh_x_pos = P.tp_inh[inh_gid, 0]
+#        inh_y_pos = P.tp_inh[inh_gid, 1]
+#        distances_between_exc_and_inh[i_] = (inh_x_pos - exc_x_pos)**2 + (inh_y_pos - exc_y_pos)**2
+#    idx = distances_between_exc_and_inh.argsort()
+#    inh_gid = ei_targets[idx[int(.2 * len(ei_targets))]]
+
+#    inh_color = (.5, .5, .5)
 #    with_directions = False
 #    with_delays = False
-#    inh_color = 'b'
+    inh_color = 'b'
 #    inh_gid = ei_targets[1]
 #    print 'inh gid', inh_gid
 #    P.plot_cell(inh_gid, exc=False, color='b')
@@ -323,8 +376,8 @@ if __name__ == '__main__':
 #    P.plot_cell(gid, exc=False, color='b')
 #    P.plot_connection_type(gid, 'ee', 'x', 'r', with_directions)
 
-#    if with_directions:
-    P.plot_quivers()
+    if with_directions:
+        P.plot_directions()
 
 #    P.plot_cells_as_dots(range(params['n_exc']), P.tp_exc)
 #    P.plot_cells_as_dots(range(params['n_exc']), P.tp_inh)
@@ -349,9 +402,9 @@ if __name__ == '__main__':
 #    gid = targets[0]
     P.make_legend()
 
-    output_fig = params['figures_folder'] + 'connectivity_profile_%d.png' % gid
+    output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.png' % (gid, params['w_sigma_x'], params['w_sigma_v'])
     print 'Saving figure to', output_fig
     pylab.savefig(output_fig)
 
-#    pylab.show()
+    pylab.show()
 

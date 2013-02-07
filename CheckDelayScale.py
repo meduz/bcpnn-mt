@@ -22,17 +22,22 @@ class CompareSimulations(object):
 
         assert os.path.exists(self.params['tuning_prop_means_fn']), \
                 '\nFile not found: %s\n\nPlease run NetworkSimModuleNoColumns.py or run_all.sh before with NO connectivity!\n' % (self.params['tuning_prop_means_fn'])
+
         self.tuning_prop_exc = np.loadtxt(self.params['tuning_prop_means_fn'])
         self.tuning_prop_inh = np.loadtxt(self.params['tuning_prop_inh_fn'])
+
 
         self.color_dict = {}
         self.input_rate = {}
         self.input_spike_trains = {}
-
-        self.fig = pylab.figure(figsize=(10, 12))
-        self.n_fig_y, self.n_fig_x = 5, 1
+        self.time_of_max_stim = {}
+        self.fig = pylab.figure(figsize=(14, 12))
+        self.n_fig_y, self.n_fig_x = 6, 1
         self.fig_cnt = 1
         pylab.subplots_adjust(hspace=.45)
+
+        self.spiketrains_with_connectivity = None
+        self.spiketrains_without_connectivity = None
 
 
     def set_gids_to_plots(self, n_cells=2, cell_type='exc'):
@@ -49,8 +54,8 @@ class CompareSimulations(object):
 
         good_gids = np.loadtxt(self.params['gids_to_record_fn'], dtype='int')
         idx_sorted_by_xpos = tp[good_gids, 0].argsort()
-        idx_ = np.linspace(0, good_gids.size, n_cells, endpoint=False)
-        idx_to_plot = [int(round(i)) for i in idx_]
+        idx_ = np.linspace(0, good_gids.size, n_cells + 2, endpoint=False)
+        idx_to_plot = [int(round(i)) for i in idx_[1:-1]]
         print 'idx_to_plot', idx_to_plot
         self.gids_to_plot = good_gids[idx_sorted_by_xpos[idx_to_plot]]
         print 'Plotting GIDS\tx\t\ty\t\tu\tv\t\tdx'
@@ -99,6 +104,7 @@ class CompareSimulations(object):
             self.input_rate[gid]['with_blank'] = L_input[i_, :]
 
         # create input without blank
+        print 'GID\tTime of max stim'
         for i_, gid in enumerate(self.gids_to_plot):
             rate_of_t = L_input_noblank[i_, :]
             n_steps = rate_of_t.size
@@ -110,6 +116,8 @@ class CompareSimulations(object):
             self.input_spike_trains[gid]['no_blank'] = spike_times
             self.input_rate[gid]['no_blank'] = L_input_noblank[i_, :]
 
+            self.time_of_max_stim[gid] = L_input_noblank[i_, :].argmax() * dt
+            print '%d\t%.1f' % (gid, L_input_noblank[i_, :].argmax() * dt)
 
 
     def plot_input(self, fill_blank=True):
@@ -148,7 +156,7 @@ class CompareSimulations(object):
         self.plot_blank(ax, txt='Blank')
 
 
-    def plot_response(self, title):
+    def plot_response(self, title, connectivity=None):
         """
         Plots the cell's membrane potential and output spikes in response to the
         stimulus alone (that's why you need to simulate without connectivity before),
@@ -160,6 +168,11 @@ class CompareSimulations(object):
         spike_fn = self.params['exc_spiketimes_fn_merged'] + '%d.ras' % 0
         nspikes, spiketimes = utils.get_nspikes(spike_fn, self.params['n_exc'], get_spiketrains=True)
 
+        if connectivity == False:
+            self.spiketrains_without_connectivity = spiketimes
+        else:
+            self.spiketrains_with_connectivity = spiketimes
+
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, self.fig_cnt)
         self.fig_cnt += 1
         ax2 = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, self.fig_cnt)
@@ -168,12 +181,32 @@ class CompareSimulations(object):
         for i_, gid in enumerate(self.gids_to_plot):
             time_axis, volt = utils.extract_trace(volt_data, gid)
             ax.plot(time_axis, volt, lw=1, label='nspikes[%d]=%d' % (gid, nspikes[gid]), color=self.color_dict[gid])
-            self.plot_spikes(ax, spiketimes[gid], gid, y_min, y_max, lw=2)
+#            self.plot_spikes(ax, spiketimes[gid], gid, y_min, y_max, lw=2)
             self.plot_spike_histogram(ax2, gid, i_, spiketimes[gid])
 
+        ax.legend()
         ax.set_ylim((y_min, y_max))
         ax.set_ylabel('Membrane voltage [mV]', fontsize=14)
         ax.set_title(title, fontsize=14)
+        self.plot_blank(ax, txt='Blank')
+
+
+    def plot_response_difference(self):
+
+        ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, self.fig_cnt)
+        self.fig_cnt += 1
+        for i_, gid in enumerate(self.gids_to_plot):
+            n_bins = 20
+            c = self.color_dict[gid]
+            n_with_conn, bins = np.histogram(self.spiketrains_with_connectivity[gid], bins=n_bins, range=(0, self.params['t_sim']))
+            n_without_conn, bins = np.histogram(self.spiketrains_without_connectivity[gid], bins=n_bins, range=(0, self.params['t_sim']))
+            bin_width = (bins[1] - bins[0]) / len(self.gids_to_plot)
+            shift = i_
+            bins += shift * bin_width
+            ax.bar(bins[:-1], n_with_conn - n_without_conn, width=bin_width, facecolor=c)
+            ax.set_ylabel('Output spike histogram', fontsize=14)
+
+        ax.set_title('NSpikes With - without connectivity')
         self.plot_blank(ax, txt='Blank')
 
 
@@ -186,8 +219,7 @@ class CompareSimulations(object):
         bin_width = (bins[1] - bins[0]) / len(self.gids_to_plot)
         bins += shift * bin_width
         ax.bar(bins[:-1], n, width=bin_width, facecolor=c)
-
-#        ax.set_xlabel('Time [ms]', fontsize=14)
+        ax.set_ylabel('Output spike histogram', fontsize=14)
 
 
 
@@ -213,6 +245,22 @@ class CompareSimulations(object):
             ax.annotate(txt, (txt_pos_x, txt_pos_y), fontsize=14, color='k')
 
 
+    def print_delays(self):
+        fn = self.params['merged_conn_list_ee']
+        if not os.path.exists(fn):
+            print 'File: %s not found\nCalling merge_connlists.py now...\n'
+            os.system('python merge_connlists.py')
+        conn_mat, delays = utils.convert_connlist_to_matrix(fn, self.params['n_exc'], self.params['n_exc'])
+        for i_, src  in enumerate(self.gids_to_plot):
+            for j_, tgt in enumerate(self.gids_to_plot):
+                if src != tgt:
+                    t1 = self.time_of_max_stim[src] 
+                    t2 = self.time_of_max_stim[tgt] 
+                    w, delay = conn_mat[src, tgt], delays[src, tgt]
+                    if t1 < t2:
+                        optimal_tau_prediction = (t2 - t1) / self.params['t_stimulus']
+                        optimal_delay_scale = delay / (self.params['delay_scale'] * (t2 - t1))
+                        print '%d (%d)\t->\t%d (%d)\t: dt_max_stim = %.1f\toptimal_tau_prediction = %.1f\toptimal_delay_scale = %.1f' % (src, t1, tgt, t2, t2 - t1, optimal_tau_prediction, optimal_delay_scale)
 
 if __name__ == '__main__':
 
@@ -227,19 +275,29 @@ if __name__ == '__main__':
     ps.set_filenames()
 
     CS = CompareSimulations(ps)
-    CS.set_gids_to_plots(n_cells = 5)
+    CS.set_gids_to_plots(n_cells = 3)
     CS.plot_input(fill_blank=True)
-    CS.plot_response('Response to stimulus only (without connectivity)')
+    CS.plot_response('Response to stimulus only (without connectivity)', connectivity=False)
 
+#    ps.params['connectivity_ee'] = 'anisotropic'
+#    ps.params['connectivity_ei'] = 'random'
+#    ps.params['connectivity_ie'] = 'random'
+#    ps.params['connectivity_ii'] = 'random'
     ps.params['connectivity_ee'] = 'anisotropic'
-    ps.params['connectivity_ei'] = 'anisotropic'
-    ps.params['connectivity_ie'] = 'anisotropic'
-    ps.params['connectivity_ii'] = 'anisotropic'
+    ps.params['connectivity_ei'] = 'isotropic'
+    ps.params['connectivity_ie'] = 'isotropic'
+    ps.params['connectivity_ii'] = 'isotropic'
+#    ps.params['connectivity_ee'] = 'anisotropic'
+#    ps.params['connectivity_ei'] = 'anisotropic'
+#    ps.params['connectivity_ie'] = 'anisotropic'
+#    ps.params['connectivity_ii'] = 'anisotropic'
     ps.set_filenames()
 
     CS.ps = ps
-    CS.plot_response('Response to stimulus with connectivity')
+    CS.print_delays()
+    CS.plot_response('Response to stimulus with connectivity', connectivity=True)
 
+    CS.plot_response_difference()
     axes = CS.fig.get_axes()
     axes[-1].set_xlabel('Time [ms]', fontsize=14)
 
@@ -247,4 +305,7 @@ if __name__ == '__main__':
 #    CS.plot_response()
 #    
 #    
+    output_fig = ps.params['figures_folder'] + 'tau_prediction%.1f.png' % ps.params['tau_prediction']
+    print 'Saving to:', output_fig
+    pylab.savefig(output_fig)
     pylab.show()

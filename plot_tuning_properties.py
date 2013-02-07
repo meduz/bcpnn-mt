@@ -7,21 +7,70 @@ import matplotlib
 import sys
 from matplotlib import cm
 
+def plot_scatter_with_histograms(x, y):
+#    from matplotlib.ticker import NullFormatter
+
+#    nullfmt   = NullFormatter()         # no labels
+
+    # definitions for the axes
+    left, width = 0.1, 0.65
+    bottom, height = 0.1, 0.65
+    bottom_h = left_h = left+width+0.02
+
+    rect_scatter = [left, bottom, width, height]
+    rect_histx = [left, bottom_h, width, 0.2]
+    rect_histy = [left_h, bottom, 0.2, height]
+
+    # start with a rectangular Figure
+    fig2 = pylab.figure(figsize=(8,8))
+#    ax = fig.add_subplot(111)
+    
+    axScatter = fig2.add_axes(rect_scatter)
+    axScatter.set_xlabel('v_x')
+    axScatter.set_ylabel('v_y')
+    axHistx = fig2.add_axes(rect_histx)
+    axHisty = fig2.add_axes(rect_histy)
+
+    # no labels
+#    axHistx.xaxis.set_major_formatter(nullfmt)
+#    axHisty.yaxis.set_major_formatter(nullfmt)
+
+    # the scatter plot:
+    axScatter.scatter(x, y)
+
+    # now determine nice limits by hand:
+    binwidth = 0.025
+    xymax = np.max( [np.max(np.fabs(x)), np.max(np.fabs(y))] )
+    lim = ( int(xymax/binwidth) + 1) * binwidth
+
+    axScatter.set_xlim( (-lim, lim) )
+    axScatter.set_ylim( (-lim, lim) )
+
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    axHistx.hist(x, bins=bins)
+    axHisty.hist(y, bins=bins, orientation='horizontal')
+
+    axHistx.set_xlim( axScatter.get_xlim() )
+    axHisty.set_ylim( axScatter.get_ylim() )
+
+
+
+
 # load simulation parameters
 network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
 params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 pylab.rcParams['lines.markeredgewidth'] = 0
 
 
-#fn = params['tuning_prop_means_fn']
-#d = np.loadtxt(fn)
 print 'Computing the tuning properties'
 try:
     cell_type = sys.argv[1]
 except:
     cell_type = 'exc'
 
-d = utils.set_tuning_prop(params, mode='hexgrid', cell_type=cell_type)        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+fn = params['tuning_prop_means_fn']
+d = np.loadtxt(fn)
+#d = utils.set_tuning_prop(params, mode='hexgrid', cell_type=cell_type)        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
 
 n_cells = d[:, 0].size
 if cell_type == 'exc':
@@ -98,4 +147,11 @@ ax2.set_title('Receptive fields for speed')
 output_fn = params['tuning_prop_fig_%s_fn' % cell_type]
 print "Saving to ... ", output_fn
 pylab.savefig(output_fn)
+
+
+plot_scatter_with_histograms(d[:, 2], d[:, 3])
+output_fn = params['figures_folder'] + 'v_tuning_histogram.png'
+print 'Saving to', output_fn
+pylab.savefig(output_fn)
+
 pylab.show()

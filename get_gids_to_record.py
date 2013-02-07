@@ -18,8 +18,8 @@ conn_mat, delays = utils.convert_connlist_to_matrix(params['conn_list_ee_fn_base
 #n = 50
 n = int(params['n_exc'] * .05) # fraction of 'interesting' cells
 
-print "Loading nspikes", params['exc_spiketimes_fn_merged'] + '0.ras'
-nspikes = utils.get_nspikes(params['exc_spiketimes_fn_merged'] + '0.ras', n_cells=params['n_exc'])
+print "Loading nspikes", params['exc_spiketimes_fn_merged'] + '.ras'
+nspikes = utils.get_nspikes(params['exc_spiketimes_fn_merged'] + '.ras', n_cells=params['n_exc'])
 mans = (nspikes.argsort()).tolist() # mans = most active neurons
 mans.reverse()
 mans = mans[0:n]

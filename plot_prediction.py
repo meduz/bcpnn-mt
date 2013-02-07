@@ -13,12 +13,11 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 #        P = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
         params = network_params.params
 
-    sim_cnt = 0
     if data_fn == None:
-        data_fn = params['exc_spiketimes_fn_merged'] + '%d.ras' % (sim_cnt)
+        data_fn = params['exc_spiketimes_fn_merged'] + '.ras'
 
 #    if inh_spikes == None:
-#        inh_spikes = params['inh_spiketimes_fn_merged'] + '%d.ras' % (sim_cnt)
+#        inh_spikes = params['inh_spiketimes_fn_merged'] + '.ras'
 
     plotter = P.PlotPrediction(params, data_fn)
     pylab.rcParams['axes.labelsize'] = 14
@@ -92,6 +91,7 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
 
+    plotter.save_data()
 #    plotter.n_fig_x = 1
 #    plotter.n_fig_y = 1
 #    time_binsize = plotter.time_binsize
@@ -114,12 +114,22 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 #    plotter.plot_vy_confidence_binned()         # 4
 
 if __name__ == '__main__':
-    plot_prediction()
+
+
+    try:
+        param_fn = sys.argv[1]
+        import NeuroTools.parameters as NTP
+        params = NTP.ParameterSet(param_fn)
+        print 'Loading parameters from', param_fn
+        plot_prediction(params=params)
+
+    except:
+        plot_prediction()
 
 #folder = 'Data_inputstrength_swepng/NoColumns_winit_random_wsigmaX2.50e-01_wsigmaV2.50e-01_winput2.00e-03_finput2.00e+03pthresh1.0e-01_ptow1.0e-02/' 
 #params_fn = folder + 'simulation_parameters.info'
-#data_fn = folder + 'Spikes/exc_spikes_merged_0.ras'
-#inh_spikes = folder + 'Spikes/inh_spikes_0.ras'
+#data_fn = folder + 'Spikes/exc_spikes_merged_.ras'
+#inh_spikes = folder + 'Spikes/inh_spikes_.ras'
 #tuning_prop_means_fn = folder + 'Parameters/tuning_prop_means.prm'
 #output_fn = folder + 'Figures/prediction_0.png'
 
@@ -132,7 +142,7 @@ if __name__ == '__main__':
 #params = PS.params
 #PS.update_values(new_params)
 #print 'debug', PS.params['folder_name']
-#data_fn = params['exc_spiketimes_fn_merged'] + '0.ras'
+#data_fn = params['exc_spiketimes_fn_merged'] + '.ras'
 #print 'data_fn: ', data_fn
 #exit(1)
 

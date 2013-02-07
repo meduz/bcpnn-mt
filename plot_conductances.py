@@ -7,7 +7,7 @@ import NeuroTools.parameters as ntp
 import simulation_parameters
 import time
 
-def plot_conductances(params=None, comm=None, data_fn=None, inh_spikes = None):
+def plot_conductances_vs_time(params=None, comm=None, data_fn=None, inh_spikes = None):
 
     t_start = time.time()
     if params== None:
@@ -23,6 +23,7 @@ def plot_conductances(params=None, comm=None, data_fn=None, inh_spikes = None):
 #        inh_spikes = params['inh_spiketimes_fn_merged'] + '%d.ras' % (sim_cnt)
 
     plotter = P.PlotConductances(params, comm, data_fn)
+    plotter.load_spiketimes()
 
     if plotter.no_spikes:
         return
@@ -65,6 +66,17 @@ def plot_conductances(params=None, comm=None, data_fn=None, inh_spikes = None):
     # fig 3
 #    pylab.show()
 
+    
+def plot_conductance_composition(params=None, comm=None):
+
+    plotter = P.PlotConductances(params, comm)
+
+    if plotter.no_spikes:
+        return
+
+    plotter.plot_conductance_composition()
+
+
 if __name__ == '__main__':
     try:
         from mpi4py import MPI
@@ -77,5 +89,7 @@ if __name__ == '__main__':
         pc_id, n_proc, comm = 0, 1, None
         print "MPI not used"
 
-    plot_conductances(params=None, comm=comm)
+#    plot_conductances_vs_time(params=None, comm=comm)
+    plot_conductance_composition()
+    pylab.show()
 
