@@ -1005,3 +1005,8 @@ def resolve_src_tgt(conn_type, params):
 #    return (n_src, n_tgt, tp_src, tp_tgt, syn_type)
 
 
+def convert_to_url(fn):
+    p = os.path.realpath('.')
+    s = 'file:///%s/%s' % (p, fn)
+    return s
+

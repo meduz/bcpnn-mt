@@ -2,6 +2,7 @@ import numpy as np
 import numpy.random as rnd
 import os
 from NeuroTools import parameters as ntp
+import utils
 
 class parameter_storage(object):
     """
@@ -195,7 +196,7 @@ class parameter_storage(object):
         self.params['seed'] = 12345
         self.params['t_sim'] = 800.                 # [ms] total simulation time
         self.params['t_stimulus'] = 200.            # [ms] time when stimulus ends, i.e. before the stimulus disappears
-        self.params['t_blank'] = 200.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
+        self.params['t_blank'] = 0.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
         self.params['tuning_prop_seed'] = 0         # seed for randomized tuning properties
         self.params['input_spikes_seed'] = 0
         self.params['dt_sim'] = self.params['delay_range'][0] * 1 # [ms] time step for simulation
@@ -279,8 +280,8 @@ class parameter_storage(object):
 #                folder_name = 'AdEx_SmallSpikingModel_'
                 folder_name = 'AdEx_LargeScaleModel_'
             else:
-#                folder_name = 'LimitedModel_'
-                folder_name = 'LargeScaleModel_tauSynE%dI%d_' % (self.params['tau_syn_exc'], self.params['tau_syn_inh'])
+                folder_name = 'LimitedModel_'
+#                folder_name = 'LargeScaleModel_tauSynE%dI%d_' % (self.params['tau_syn_exc'], self.params['tau_syn_inh'])
 
 
             connectivity_code = ''
@@ -517,6 +518,7 @@ class parameter_storage(object):
         print 'Writing parameters to: %s' % (fn)
 
         self.ParamSet = ntp.ParameterSet(self.params)
+        fn = utils.convert_to_url(fn)
         self.ParamSet.save(fn)
 #        output_f = file(fn, 'w')
 #        self.list_of_params = self.params.keys()
