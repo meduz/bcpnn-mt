@@ -4,18 +4,121 @@ import pylab
 import sys
 import re
 import os
-
-
 import simulation_parameters
-network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
-params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
-#params['w_sigma_x'], params['w_sigma_v'] = float(sys.argv[1]), float(sys.argv[2])
-#file_count = int(sys.argv[3])
-print 'w_sigma', params['w_sigma_x'], params['w_sigma_v']
+class ConnectivityAnalyser(object):
 
-#fn = params['conn_list_ee_conv_constr_fn_base'] + 'merged.dat'
-fn = params['merged_conn_list_ee']
+    def __init__(self, params=None):
+        if params == None:
+            network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
+            params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
+        else:
+            self.params = params
+        print 'Merging connlists ...'
+        os.system('python merge_connlists.py')
+
+    def plot_tuning_vs_conn_cg(self, conn_type, show=False):
+        """
+        For each source cell, loop through all target connections and compute the 
+        scalar (dot) product between the preferred direction of the source cell and the center of gravity of the connection vector
+        (both in the spatial domain and the direction domain)
+        c_x_i = sum_j w_ij * (x_i - x_j) # x_ are position vectors of the cell
+        c_v_i = sum_j w_ij * (v_i - v_j) # v_ are preferred directions
+        """
+        (n_src, n_tgt, tp_src, tp_tgt) = utils.resolve_src_tgt_with_tp(conn_type, self.params)
+        conn_list = np.loadtxt(self.params['merged_conn_list_%s' % conn_type])
+
+        conn_mat_fn = self.params['conn_mat_fn_base'] + '%s.dat' % (conn_type)
+        if os.path.exists(conn_mat_fn):
+            print 'Loading', conn_mat_fn
+            w = np.loadtxt(conn_mat_fn)
+        else:
+            w, delays = utils.convert_connlist_to_matrix(params['merged_conn_list_%s' % conn_type], n_src, n_tgt)
+            print 'Saving:', conn_mat_fn
+            np.savetxt(conn_mat_fn, w)
+
+        cx_ = np.zeros(n_src)
+        cv_ = np.zeros(n_src)
+        for i in xrange(n_src):
+            src_gid = i
+            targets = utils.get_targets(conn_list, src_gid)
+            targets = np.array(targets[:, 1], dtype=np.int)
+            weights = w[src_gid, targets]
+            c_x, c_v = self.get_cg_vec(tp_src[src_gid, :], tp_tgt[targets, :], weights)
+
+            (x_src, y_src, vx_src, vy_src) = tp_src[src_gid, :]
+            cx_[i] = np.abs(np.dot(c_x, (vx_src, vy_src)))
+            cv_[i] = np.abs(np.dot(c_v, (vx_src, vy_src)))
+
+        cx_mean = cx_.mean()
+        cx_sem = cx_.std() / np.sqrt(cx_.size)
+        cv_mean = cv_.mean()
+        cv_sem = cv_.std() / np.sqrt(cv_.size)
+
+        output_fn = self.params['data_folder'] + 'scalar_products_between_tuning_prop_and_cgxv.dat'
+        output_data = np.array((cx_, cv_)).transpose()
+        print 'Saving to:', output_fn
+        np.savetxt(output_fn, output_data)
+
+        fig = pylab.figure(figsize=(12, 10))
+        pylab.subplots_adjust(hspace=0.35)
+        ax1 = fig.add_subplot(211)
+        ax2 = fig.add_subplot(212)
+        x = range(n_src)
+        ax1.set_xlabel('source cell')
+        ax1.set_ylabel('$|\\vec{v}_i \cdot \\vec{c}_i^X|$')
+        title = '$\langle|\\vec{v}_i \cdot \\vec{c}_i^X| \\rangle = %.2e \pm %.1e$' % (cx_mean, cx_sem)
+        ax1.bar(x, cx_)
+        ax1.set_title('Scalar product between preferred direction $\\vec{v}_i$ and CG $\\vec{c}_i^x$\n%s' % title)
+#        ax1.legend()
+               
+        ax2.bar(x, cv_)
+        ax2.set_xlabel('source cell')
+        ax1.set_ylabel('$|\\vec{v}_i \cdot \\vec{c}_i^V|$')
+        title = '$\langle|\\vec{v}_i \cdot \\vec{c}_i^V| \\rangle = %.2e \pm %.1e$' % (cv_mean, cv_sem)
+        ax2.set_title(title)
+#        ax2.legend()
+        output_fig = self.params['figures_folder'] + 'scalar_products_between_tuning_prop_and_cgxv.png'
+        print 'Saving to:', output_fig
+        pylab.savefig(output_fig)
+        if show:
+            pylab.show()
+
+
+
+    def get_cg_vec(self, tp_src, tp_tgt, weights):
+        """
+        Computes the center of gravity connection vector in the spatial and direction domain
+        c_x_i = sum_j w_ij * (x_i - x_j) # x_ are position vectors of the cell
+        c_v_i = sum_j w_ij * (v_i - v_j) # v_ are preferred directions
+
+        tp_src = 4-tuple of the source's tuning properties
+        tp_tgt = 4 x n_tgt array with all the target's tuning properties
+        """
+
+        c_x = np.zeros(2)
+        c_v = np.zeros(2)
+        (x_src, y_src, vx_src, vy_src) = tp_src
+
+        n_tgt = tp_tgt[:, 0].size
+        for tgt in xrange(n_tgt):
+            (x_tgt, y_tgt, vx_tgt, vy_tgt) = tp_tgt[tgt, :]
+            c_x += weights[tgt] * np.array(x_src - x_tgt, y_src - y_tgt)
+            c_v += weights[tgt] * np.array(vx_src - vx_tgt, vy_src - vy_tgt)
+
+        return c_x, c_v
+#        n_tgt = 
+
+
+"""
+if (len(sys.argv) < 2):
+    conn_type = 'ee'
+else:
+    conn_type = sys.argv[1]
+
+fn = params['merged_conn_list_%s' % conn_type] 
+if not os.path.exists(fn):
+    os.system('python merge_connlists.py')
 
 conn_list = np.loadtxt(fn)
 w = conn_list[:, 2]
@@ -66,3 +169,40 @@ output_fig = '%sconnection_hist.png' % (params['figures_folder'])
 print 'Saving to:', output_fig
 pylab.savefig(output_fig)
 #pylab.show()
+"""
+
+
+if __name__ == '__main__':
+
+    conn_types = ['ee', 'ei', 'ie', 'ii']
+    print len(sys.argv)
+        
+    try:
+        param_fn = sys.argv[1]
+        print 'Trying to load parameters from', param_fn, 
+        import NeuroTools.parameters as NTP
+        params = NTP.ParameterSet(param_fn)
+        print '\n succesfull!\n'
+    except:
+        print '\n NOT SUCCESSFULL!\n', '\nPlease give the path to the parameter file\n'
+        network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
+        params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
+
+    try:
+        conn_type = sys.argv[1]
+        if conn_type not in conn_types:
+            a = 1 / 0
+    except:
+        try:
+            conn_type = sys.argv[2]
+            if conn_type not in conn_types:
+                a = 1 / 0
+        except:
+            conn_type = 'ee'
+
+    print 'conn_type', conn_type
+    CA = ConnectivityAnalyser(params)
+    CA.plot_tuning_vs_conn_cg(conn_type, show=False)
+
+
+

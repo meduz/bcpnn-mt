@@ -161,7 +161,7 @@ def get_input(tuning_prop, params, t, motion_params=None, contrast=.9, motion='d
             
             L range between 0 and 1
         """
-        x, y = x0 + u0*t, y0 + v0*t # current position of the blob at time t assuming a perfect translation
+        x, y = (x0 + u0*t) % 1., (y0 + v0*t) % 1. # current position of the blob at time t assuming a perfect translation
 
     for cell in xrange(n_cells): # todo: vectorize
         L[cell] = np.exp( -.5 * (torus_distance(tuning_prop[cell, 0], x))**2/blur_X**2
@@ -867,16 +867,16 @@ def get_conn_dict(params, conn_fn, comm=None):
     return conn_dict
 
 
-def get_incoming_connections(conn_fn, tgt_gids):
-    d = np.loadtxt(conn_fn)
+def get_incoming_connections(d, tgt_gids):
+#    d = conn_list
     c_in = [[] for i in xrange(len(tgt_gids))]
     for i in xrange(d[:, 0].size):
         if d[i, 1] == tgt_gid:
             c_in.append(d[i, :])
     return c_in
 
-def get_outgoing_connections(conn_fn, src_gid):
-    d = np.loadtxt(conn_fn)
+def get_outgoing_connections(d, src_gid):
+#    d = conn_list
     c_out = []
     for i in xrange(d[:, 0].size):
         if d[i, 0] == src_gid:
@@ -1003,6 +1003,44 @@ def resolve_src_tgt(conn_type, params):
 
     return (n_src, n_tgt, syn_type)
 #    return (n_src, n_tgt, tp_src, tp_tgt, syn_type)
+
+
+def resolve_src_tgt_with_tp(conn_type, params):
+    """
+    Deliver the correct source and target parameters based on conn_type
+    """
+    if conn_type == 'ee':
+        n_src, n_tgt = params['n_exc'], params['n_exc']
+        tuning_prop_exc = np.loadtxt(params['tuning_prop_means_fn'])
+        tp_src = tuning_prop_exc
+        tp_tgt = tuning_prop_exc
+        syn_type = 'excitatory'
+
+    elif conn_type == 'ei':
+        n_src, n_tgt = params['n_exc'], params['n_inh']
+        tuning_prop_exc = np.loadtxt(params['tuning_prop_means_fn'])
+        tuning_prop_inh = np.loadtxt(params['tuning_prop_inh_fn'])
+        tp_src = tuning_prop_exc
+        tp_tgt = tuning_prop_inh
+        syn_type = 'excitatory'
+
+    elif conn_type == 'ie':
+        n_src, n_tgt = params['n_inh'], params['n_exc']
+        tuning_prop_exc = np.loadtxt(params['tuning_prop_means_fn'])
+        tuning_prop_inh = np.loadtxt(params['tuning_prop_inh_fn'])
+        tp_src = tuning_prop_inh
+        tp_tgt = tuning_prop_exc
+        syn_type = 'inhibitory'
+
+    elif conn_type == 'ii':
+        n_src, n_tgt = params['n_inh'], params['n_inh']
+        tuning_prop_inh = np.loadtxt(params['tuning_prop_inh_fn'])
+        tp_src = tuning_prop_inh
+        tp_tgt = tuning_prop_inh
+        syn_type = 'inhibitory'
+
+    return (n_src, n_tgt, tp_src, tp_tgt)
+
 
 
 def convert_to_url(fn):
