@@ -153,8 +153,8 @@ class NetworkModel(object):
 #            save_output = False
 #        else:
 #            save_output = True
-#        self.connect_input_to_exc(load_files=True, save_output=False)
-        self.connect_input_to_exc(load_files=False, save_output=True)
+        self.connect_input_to_exc(load_files=True, save_output=False)
+#        self.connect_input_to_exc(load_files=False, save_output=True)
         self.connect_populations('ee')
 #        self.connect_populations('ei')
 #        self.connect_populations('ie')
@@ -572,7 +572,8 @@ class NetworkModel(object):
             self.times = ntp.ParameterSet(self.times)
             print "Proc %d Simulation time: %d sec or %.1f min for %d cells (%d exc %d inh)" % (self.pc_id, self.times['t_sim'], (self.times['t_sim'])/60., self.params['n_cells'], self.params['n_exc'], self.params['n_inh'])
             print "Proc %d Full pyNN run time: %d sec or %.1f min for %d cells (%d exc %d inh)" % (self.pc_id, self.times['t_all'], (self.times['t_all'])/60., self.params['n_cells'], self.params['n_exc'], self.params['n_inh'])
-            self.times.save(params['folder_name'] + 'times_dict_np%d.py' % self.n_proc)
+            fn = utils.convert_to_url(params['folder_name'] + 'times_dict_np%d.py' % self.n_proc)
+            self.times.save(fn)
 
 
 if __name__ == '__main__':

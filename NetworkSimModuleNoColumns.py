@@ -172,6 +172,7 @@ class NetworkModel(object):
             save_output = True
         self.connect_input_to_exc(load_files=False, save_output=save_output)
 #        self.connect_input_to_exc(load_files=True, save_output=False)
+#        self.connect_input_to_exc(load_files=False, save_output=True)
         self.connect_populations('ee')
         self.connect_populations('ei')
         self.connect_populations('ie')

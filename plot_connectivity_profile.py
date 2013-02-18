@@ -79,12 +79,11 @@ class ConnectionPlotter(object):
     def plot_connections(self, tgt_ids, tgt_tp, weights, marker, color, with_directions=False, annotate=False):
         """
         """
-        print 'debug ', weights, self.markersize_min, self.markersize_max
         markersizes = utils.linear_transformation(weights, self.markersize_min, self.markersize_max)
         direction_color = (.5, .5, .5)
         for i_, tgt in enumerate(tgt_ids):
-            x_tgt = tgt_tp[tgt, 0] % 1
-            y_tgt = tgt_tp[tgt, 1] % 1
+            x_tgt = tgt_tp[tgt, 0] #% 1
+            y_tgt = tgt_tp[tgt, 1] #% 1
             w = weights[i_]
             plot = self.ax.plot(x_tgt, y_tgt, marker, c=color, markersize=markersizes[i_])
             if with_directions:
@@ -92,6 +91,8 @@ class ConnectionPlotter(object):
             if annotate:
                 self.ax.annotate('%d' % tgt, (x_tgt + 0.01, y_tgt + 0.01), fontsize=12)
         return plot
+
+    
 
     def plot_connection_type(self, src_gid, conn_type, marker, color, with_directions=False, plot_delays=False, annotate=False, with_histogram=False):
         self.load_connection_list(conn_type)

@@ -14,6 +14,8 @@ if (data.ndim == 1):
     pylab.plot(x_axis, data)
 else:
     pylab.plot(data[:,0], data[:, 1], '-')
+#    pylab.plot(data[:,0], data[:, 2], '-')
+#    pylab.plot(data[:,0], data[:, 3], '-')
 
 #pylab.plot((0.12, 0.12), (0, 7000), lw=2, c='k')
 pylab.show()

@@ -2,6 +2,7 @@ import numpy as np
 import os
 import simulation_parameters
 import NeuroTools.parameters as NTP
+import ResultsCollector
 
 try:
     from mpi4py import MPI
@@ -14,63 +15,31 @@ except:
     comm = None
     pc_id, n_proc = 0, 1
 
-#        network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
-#        params = network_params.params
+network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
+params = network_params.params
 
-class ResultsCollector(object):
+RC = ResultsCollector.ResultsCollector(params)
 
-    def __init__(self):
-        pass
+#RC.collect_files()
+dir_names = [#'SmallScale_noBlank_AIII_scaleLatency0.02_wsigmax1.00e-01_wsigmav1.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+        'SmallScale_noBlank_AIII_scaleLatency0.02_wsigmax2.00e-01_wsigmav1.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+        'SmallScale_noBlank_AIII_scaleLatency0.02_wsigmax2.00e-01_wsigmav2.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+#        'SmallScale_noBlank_AIII_scaleLatency0.05_wsigmax1.00e-01_wsigmav1.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+        'SmallScale_noBlank_AIII_scaleLatency0.05_wsigmax2.00e-01_wsigmav1.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+        'SmallScale_noBlank_AIII_scaleLatency0.05_wsigmax2.00e-01_wsigmav2.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+#        'SmallScale_noBlank_AIII_scaleLatency0.10_wsigmax1.00e-01_wsigmav1.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+        'SmallScale_noBlank_AIII_scaleLatency0.10_wsigmax2.00e-01_wsigmav1.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+        'SmallScale_noBlank_AIII_scaleLatency0.10_wsigmax2.00e-01_wsigmav2.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+#        'SmallScale_noBlank_AIII_scaleLatency0.20_wsigmax1.00e-01_wsigmav1.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+        'SmallScale_noBlank_AIII_scaleLatency0.20_wsigmax2.00e-01_wsigmav1.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+        'SmallScale_noBlank_AIII_scaleLatency0.20_wsigmax2.00e-01_wsigmav2.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+#        'SmallScale_noBlank_AIII_scaleLatency0.30_wsigmax1.00e-01_wsigmav1.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+        'SmallScale_noBlank_AIII_scaleLatency0.30_wsigmax2.00e-01_wsigmav1.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5', \
+        'SmallScale_noBlank_AIII_scaleLatency0.30_wsigmax2.00e-01_wsigmav2.00e-01_wee3.50e-02_wei1.00e-01_wie1.50e-01_wii1.00e-02_delayScale5']
 
-
-    def collect_files(self):
-        all_dirs = []
-        for f in os.listdir('.'):
-            if os.path.isdir(f):
-                all_dirs.append(f)
-
-        self.mandatory_files = ['Spikes/exc_spikes_merged_.ras', \
-                'Parameters/simulation_parameters.info', \
-                'Parameters/tuning_prop_means.prm']
-
-        self.dirs_to_process = []
-        sim_id = 0
-        for dir_name in all_dirs:
-            # check if all necessary files exist
-            check_passed = True
-            for fn in self.mandatory_files:
-                fn_ = dir_name + '/' + fn
-#                print 'checking', fn_
-                if not os.path.exists(fn_):
-                    check_passed = False
-            if check_passed:
-                self.dirs_to_process.append((dir_name, sim_id))
-                sim_id += 1
-
-
-    def build_parameter_space(self):
-
-        # take a sample simulation_parameters.info file to generate all possible keys
-        sample_fn = self.dirs_to_process[0][0] + '/Parameters/simulation_parameters.info'
-        sample_dict = NTP.ParameterSet(sample_fn)
-        all_param_names = sample_dict.keys()
-
-    def check_for_correctness(self):
-        for dirname, sim_id in self.dirs_to_process:
-            idx = dirname.find('wee')
-            idx2 = dirname[idx:].find('_')
-            print 'debug', dirname, idx, idx2
-            print 'debug', dirname[idx+3:idx+idx2]
-            val_in_folder = float(dirname[idx+3:idx+idx2])
-
-            fn = dirname + '/Parameters/simulation_parameters.info'
-            param_dict = NTP.ParameterSet(fn)
-            if param_dict['w_tgt_in_per_cell_ee'] == val_in_folder:
-                print 'Mismatch in folder name and parameter dict:', dirname
-
-
-
-RC = ResultsCollector()
-RC.collect_files()
-RC.check_for_correctness()
+RC.dirs_to_process = dir_names
+print "RC.dirs_to_process", RC.dirs_to_process
+RC.get_xvdiff_integral()
+RC.get_cgxv()
+RC.plot_cgxv_vs_xvdiff()
 
