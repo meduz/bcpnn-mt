@@ -1,8 +1,9 @@
 """
 Simple network with a Poisson spike source projecting to populations of of IF_cond_exp neurons
 """
-
 import time
+times = {}
+t0 = time.time()
 import numpy as np
 import numpy.random as nprnd
 import sys
@@ -10,6 +11,24 @@ import NeuroTools.parameters as ntp
 import os
 import CreateConnections as CC
 import utils
+import simulation_parameters
+ps = simulation_parameters.parameter_storage()
+params = ps.params
+import pyNN
+exec("from pyNN.%s import *" % params['simulator'])
+print 'pyNN.version: ', pyNN.__version__
+try:
+    from mpi4py import MPI
+    USE_MPI = True
+    comm = MPI.COMM_WORLD
+    pc_id, n_proc = comm.rank, comm.size
+    print "USE_MPI:", USE_MPI, 'pc_id, n_proc:', pc_id, n_proc
+except:
+    USE_MPI = False
+    pc_id, n_proc, comm = 0, 1, None
+    print "MPI not used"
+times['time_to_import'] = time.time() - t0
+
 
 def get_local_indices(pop, offset=0):
     """
@@ -50,7 +69,7 @@ class NetworkModel(object):
 
 
 
-    def setup(self, load_tuning_prop=False):
+    def setup(self, load_tuning_prop=False, times={}):
 
         if not load_tuning_prop:
             self.tuning_prop_exc = utils.set_tuning_prop(self.params, mode='hexgrid', cell_type='exc')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
@@ -75,7 +94,7 @@ class NetworkModel(object):
         from pyNN.utility import Timer
         self.timer = Timer()
         self.timer.start()
-        self.times = {}
+        self.times = times
         # # # # # # # # # # # # 
         #     S E T U P       #
         # # # # # # # # # # # #
@@ -151,7 +170,7 @@ class NetworkModel(object):
             save_output = False
         else:
             save_output = True
-        self.connect_input_to_exc(load_files=False, save_output=False)
+        self.connect_input_to_exc(load_files=False, save_output=save_output)
 #        self.connect_input_to_exc(load_files=True, save_output=False)
         self.connect_populations('ee')
         self.connect_populations('ei')
@@ -193,7 +212,7 @@ class NetworkModel(object):
             n_cells = len(my_units)
             L_input = np.zeros((n_cells, time.shape[0]))
             for i_time, time_ in enumerate(time):
-                if (i_time % 100 == 0):
+                if (i_time % 500 == 0):
                     print "t:", time_
                 L_input[:, i_time] = utils.get_input(self.tuning_prop_exc[my_units, :], self.params, time_/self.params['t_stimulus'])
                 L_input[:, i_time] *= self.params['f_max_stim']
@@ -612,29 +631,11 @@ class NetworkModel(object):
             self.times = ntp.ParameterSet(self.times)
             print "Proc %d Simulation time: %d sec or %.1f min for %d cells (%d exc %d inh)" % (self.pc_id, self.times['t_sim'], (self.times['t_sim'])/60., self.params['n_cells'], self.params['n_exc'], self.params['n_inh'])
             print "Proc %d Full pyNN run time: %d sec or %.1f min for %d cells (%d exc %d inh)" % (self.pc_id, self.times['t_all'], (self.times['t_all'])/60., self.params['n_cells'], self.params['n_exc'], self.params['n_inh'])
-            self.times.save(params['folder_name'] + 'times_dict_np%d.py' % self.n_proc)
+            fn = utils.convert_to_url(params['folder_name'] + 'times_dict_np%d.py' % self.n_proc)
+            self.times.save(fn)
 
 
 if __name__ == '__main__':
-
-    import simulation_parameters
-    ps = simulation_parameters.parameter_storage()
-    params = ps.params
-    import pyNN
-    exec("from pyNN.%s import *" % params['simulator'])
-    print 'pyNN.version: ', pyNN.__version__
-
-    try:
-        from mpi4py import MPI
-        USE_MPI = True
-        comm = MPI.COMM_WORLD
-        pc_id, n_proc = comm.rank, comm.size
-        print "USE_MPI:", USE_MPI, 'pc_id, n_proc:', pc_id, n_proc
-    except:
-        USE_MPI = False
-        pc_id, n_proc, comm = 0, 1, None
-        print "MPI not used"
-
 
     try:
         # optional, to run parameter sweeps by batch scripts
@@ -659,8 +660,9 @@ if __name__ == '__main__':
         comm.Barrier()
     sim_cnt = 0
 
+    print '\ndebug\ntimes:', times
     NM = NetworkModel(ps.params, comm)
-    NM.setup()
+    NM.setup(times=times)
     NM.create()
     NM.connect()
     NM.run_sim(sim_cnt)
