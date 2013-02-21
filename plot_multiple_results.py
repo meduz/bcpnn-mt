@@ -5,6 +5,11 @@ import sys
 #pylab.rcParams.update({'path.simplify' : False})
 pylab.figure()
 
+#plot_params = {'legend.fontsize': 8}
+#pylab.rcParams.update(plot_params)
+
+pylab.subplots_adjust(right=.6)
+
 for fn in sys.argv[1:]:
     try:
         data = np.loadtxt(fn)# , skiprows=1)
@@ -29,5 +34,5 @@ for fn in sys.argv[1:]:
 #print 'output_fn:', output_fn 
 #pylab.savefig(output_fn)
 
-pylab.legend()#]fontsize='small')
+pylab.legend(prop={'size':8}, loc=(.9, .1))
 pylab.show()

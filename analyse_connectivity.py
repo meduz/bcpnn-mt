@@ -184,23 +184,22 @@ if __name__ == '__main__':
         params = NTP.ParameterSet(param_fn)
         print '\n succesfull!\n'
     except:
-        print '\n NOT SUCCESSFULL!\n', '\nPlease give the path to the parameter file\n'
+        print '\n NOT successfull\nLoading the parameters currently in simulation_parameters.py\n'
         network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
         params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
+    # get the connection type either from sys.argv[1] or [2]
     try:
         conn_type = sys.argv[1]
-        if conn_type not in conn_types:
-            a = 1 / 0
+        assert (conn_type in conn_types), 'Non-existant conn_type %s' % conn_type
     except:
         try:
             conn_type = sys.argv[2]
-            if conn_type not in conn_types:
-                a = 1 / 0
+            assert (conn_type in conn_types), 'Non-existant conn_type %s' % conn_type
         except:
             conn_type = 'ee'
 
-    print 'conn_type', conn_type
+    print 'Processing conn_type', conn_type
     CA = ConnectivityAnalyser(params)
     CA.plot_tuning_vs_conn_cg(conn_type, show=False)
 

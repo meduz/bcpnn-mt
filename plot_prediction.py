@@ -5,6 +5,8 @@ import PlotPrediction as P
 import sys
 import NeuroTools.parameters as ntp
 import simulation_parameters
+import os
+import utils
 
 def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
@@ -31,8 +33,9 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
     # fig 1
     # neuronal level
-    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_pthresh%.1e' % (params['prediction_fig_fn_base'], params['connectivity_code'], \
-            params['w_sigma_x'], params['w_sigma_v'], params['w_thresh_connection'])
+    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_delayScale%d_scaleLatency%.2f' % (params['prediction_fig_fn_base'], params['connectivity_code'], \
+            params['w_sigma_x'], params['w_sigma_v'], params['delay_scale'], params['scale_latency'])
+
 
     plotter.create_fig()  # create an empty figure
     pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.2)
@@ -47,7 +50,6 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     output_fn = output_fn_base + '_0.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
-#    pylab.show()
 
     # poplation level, short time-scale
     plotter.n_fig_x = 3
@@ -81,6 +83,13 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
 
+    plotter.n_fig_x = 1
+    plotter.n_fig_y = 2
+    output_fn = output_fn_base + '_4.png'
+    plotter.create_fig()  # create an empty figure
+    plotter.plot_network_activity('exc', 1)
+    plotter.plot_network_activity('inh', 2)
+    pylab.savefig(output_fn)
 
     plotter.n_fig_x = 1
     plotter.n_fig_y = 1
@@ -118,12 +127,15 @@ if __name__ == '__main__':
 
     try:
         param_fn = sys.argv[1]
+        if os.path.isdir(param_fn):
+            param_fn += '/Parameters/simulation_parameters.info'
         import NeuroTools.parameters as NTP
-        params = NTP.ParameterSet(param_fn)
+        params = NTP.ParameterSet(utils.convert_to_url(param_fn))
         print 'Loading parameters from', param_fn
         plot_prediction(params=params)
 
     except:
+        print '\nPlotting the default parameters give in simulation_parameters.py\n'
         plot_prediction()
 
 #folder = 'Data_inputstrength_swepng/NoColumns_winit_random_wsigmaX2.50e-01_wsigmaV2.50e-01_winput2.00e-03_finput2.00e+03pthresh1.0e-01_ptow1.0e-02/' 

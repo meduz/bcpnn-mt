@@ -23,10 +23,8 @@ def plot_volt(fn, gid=None, n=1):
     
     for gid in gids:
         time_axis, volt = utils.extract_trace(d, gid)
-#        print 'gid %d v_mean, std = %.2f +- %.2f; min %.2f max %.2f, diff %.2f ' % (gid, volt.mean(), volt.std(), volt.min(), volt.max(), volt.max() - volt.min())
         pylab.plot(time_axis, volt, label='%d' % gid, lw=2)
 
-#    output_fn = 'volt_%d.png' % gid
     parts = fn.rsplit('.')
     output_fn = "" 
     for i in xrange(len(parts)-1):

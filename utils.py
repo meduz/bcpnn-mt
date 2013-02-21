@@ -26,6 +26,36 @@ def convert_connlist_to_matrix(fn, n_src, n_tgt):
     return m, delays
 
 
+def convert_connlist_to_adjlist_srcidx(fn, n_src):
+    """
+    Convert the connlist which is in format (src, tgt, weight, delay) to an
+    adjacency list:
+    src : [tgt_0, ..., tgt_n]
+    """
+    conn_list = np.loadtxt(fn)
+    print 'utils.convert_connlist_to_adjlist(%s, %d, %d)' % (fn, n_src)
+    adj_list = [[] for i in xrange(n_src)]
+    for src in xrange(n_src):
+        targets = get_targets(conn_list, src)
+        adj_list[src] = targets[:, 1:].tolist()
+    return adj_list
+
+
+def convert_connlist_to_adjlist_tgtidx(fn, n_tgt):
+    """
+    Convert the connlist which is in format (src, tgt, weight, delay) to an
+    adjacency list:
+    src : [tgt_0, ..., tgt_n]
+    """
+    conn_list = np.loadtxt(fn)
+    print 'utils.convert_connlist_to_adjlist(%s, %d, %d)' % (fn, n_tgt)
+    adj_list = [[] for i in xrange(n_tgt)]
+    for tgt in xrange(n_src):
+        targets = get_targets(conn_list, tgt)
+        adj_list[tgt] = targets[:, [0, 2, 3]].tolist()
+    return adj_list
+
+
 def extract_trace(d, gid):
     """
     d : voltage trace from a saved with compatible_output=False
@@ -747,7 +777,7 @@ def torus_distance(x0, x1):
     return min(abs(x0 - x1), 1. - abs(x0 - x1))
 
 def torus_distance2D(x1, x2, y1, y2):
-    return np.sqrt(min(abs(x1 - x2), 1. - abs(x1 - x2))**2 + min(abs(y1 - y2), 1. - abs(y1-y2))**2)
+    return np.sqrt(min(abs(x1 - x2), abs(1. - abs(x1 - x2)))**2 + min(abs(y1 - y2), abs(1. - abs(y1-y2)))**2)
     # if not on a torus:
 #    return np.sqrt( (x1 - x2)**2 + (y1 - y2)**2)
 
@@ -1045,6 +1075,6 @@ def resolve_src_tgt_with_tp(conn_type, params):
 
 def convert_to_url(fn):
     p = os.path.realpath('.')
-    s = 'file:///%s/%s' % (p, fn)
+    s = 'file://%s/%s' % (p, fn)
     return s
 

@@ -95,6 +95,7 @@ class NetworkModel(object):
         self.timer = Timer()
         self.timer.start()
         self.times = times
+        self.times['t_all'] = 0
         # # # # # # # # # # # # 
         #     S E T U P       #
         # # # # # # # # # # # #
@@ -166,12 +167,13 @@ class NetworkModel(object):
 
 
     def connect(self):
-        if self.params['n_exc'] > 3000:
+        if self.params['n_exc'] > 5000:
             save_output = False
         else:
             save_output = True
-        self.connect_input_to_exc(load_files=False, save_output=save_output)
-#        self.connect_input_to_exc(load_files=True, save_output=False)
+
+#        self.connect_input_to_exc(load_files=False, save_output=save_output)
+        self.connect_input_to_exc(load_files=True, save_output=False)
 #        self.connect_input_to_exc(load_files=False, save_output=True)
         self.connect_populations('ee')
         self.connect_populations('ei')
@@ -238,6 +240,7 @@ class NetworkModel(object):
                     np.save(output_fn, rate_of_t)
                     output_fn = params['input_st_fn_base'] + str(unit) + '.npy'
                     np.save(output_fn, np.array(spike_times))
+        self.times['create_and_connect_input'] = self.timer.diff()
 
 
     def connect_anisotropic(self, conn_type):
@@ -433,8 +436,6 @@ class NetworkModel(object):
                     delay = min(max(delays[src], self.params['delay_range'][0]), self.params['delay_range'][1])  # map the delay into the valid range
                     connect(src_pop[int(src)], tgt_pop[int(tgt)], w[src], delay=delay, synapse_type=syn_type)
                     output += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, w[src], delay) 
-    #                connect(src_pop[int(src)], tgt_pop[int(tgt)], w[src], delay=params['standard_delay'], synapse_type=syn_type)
-    #                output += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, w[src], params['standard_delay']) 
                     
         if self.debug_connectivity:
             if self.pc_id == 0:
@@ -513,7 +514,7 @@ class NetworkModel(object):
             self.connect_random(conn_type)
         else: # populations do not get connected
             pass
-        self.times['t_calc_conns'] += self.timer.diff()
+        self.times['t_calc_conns'] = self.timer.diff()
 
 
     def connect_noise(self):
@@ -548,7 +549,7 @@ class NetworkModel(object):
                 noise_inh = create(SpikeSourcePoisson, {'rate' : self.params['f_inh_noise']})
             connect(noise_exc, self.inh_pop[tgt], weight=self.params['w_exc_noise'], synapse_type='excitatory', delay=1.)
             connect(noise_inh, self.inh_pop[tgt], weight=self.params['w_inh_noise'], synapse_type='inhibitory', delay=1.)
-
+        self.times['connect_noise'] = self.timer.diff()
 
 
 
@@ -637,34 +638,26 @@ class NetworkModel(object):
 
 
 if __name__ == '__main__':
+    
+    for delay_scale in [2]:
+        for scale_latency in [0.10, 0.20, 0.30, 0.40]:
+#            for w_sigma_x in [0.05, 0.10, 015]:
+#                for w_sigma_v in [0.05, 0.10, 015]:
+#            ps.params['w_sigma_x'] = w_sigma_x
+#            ps.params['w_sigma_v'] = w_sigma_v
+            ps.params['scale_latency'] = scale_latency
+            ps.params['delay_scale'] = delay_scale
+            ps.set_filenames()
+            if pc_id == 0:
+                ps.create_folders()
+                ps.write_parameters_to_file()
+            if comm != None:
+                comm.Barrier()
+            sim_cnt = 0
+            NM = NetworkModel(ps.params, comm)
+            NM.setup(times=times)
+            NM.create()
+            NM.connect()
+            NM.run_sim(sim_cnt)
+            NM.print_results()
 
-    try:
-        # optional, to run parameter sweeps by batch scripts
-        p1, p2, p3, p4, p5, p6, p7, p8 = float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5]), float(sys.argv[6]), float(sys.argv[7]), float(sys.argv[8])
-        ps.params['w_tgt_in_per_cell_ee'] = p1
-        ps.params['w_tgt_in_per_cell_ei'] = p2
-        ps.params['w_tgt_in_per_cell_ie'] = p3
-        ps.params['w_tgt_in_per_cell_ii'] = p4
-        ps.params['w_sigma_x'] = p5
-        ps.params['w_sigma_v'] = p6
-        ps.params['scale_latency'] = p7
-        ps.params['delay_scale'] = p8
-
-        ps.set_filenames()
-    except:
-        pass
-
-    if pc_id == 0:
-        ps.create_folders()
-        ps.write_parameters_to_file()
-    if comm != None:
-        comm.Barrier()
-    sim_cnt = 0
-
-    print '\ndebug\ntimes:', times
-    NM = NetworkModel(ps.params, comm)
-    NM.setup(times=times)
-    NM.create()
-    NM.connect()
-    NM.run_sim(sim_cnt)
-    NM.print_results()

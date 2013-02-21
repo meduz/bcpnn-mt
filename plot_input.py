@@ -65,8 +65,9 @@ spikes = np.load(spike_fn) # spikedata
 
 #spikes *= 10. # because rate(t) = L(t) was created with a stepsize of .1 ms
 
-n, bins = np.histogram(spikes, bins=20, range=(0, params['t_sim']))
-binsize = round(bins[1] - bins[0])
+binsize = 50
+n_bins = int(round(params['t_sim'] / binsize))
+n, bins = np.histogram(spikes, bins=n_bins, range=(0, params['t_sim']))
 print 'n, bins', n, 'total', np.sum(n), 'binsize:', binsize
 
 fig = pylab.figure()

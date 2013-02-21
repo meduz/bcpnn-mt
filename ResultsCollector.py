@@ -3,6 +3,7 @@ import os
 import simulation_parameters
 import NeuroTools.parameters as NTP
 import pylab
+import utils
 
 try:
     from mpi4py import MPI
@@ -20,7 +21,15 @@ class ResultsCollector(object):
 
     def __init__(self, params):
         self.params = params
+        self.param_space = {}
+        self.dirs_to_process = []
         pass
+
+    def set_dirs_to_process(self, list_of_dir_names):
+
+        for i_, folder in enumerate(list_of_dir_names):
+            self.dirs_to_process.append(folder)
+            self.param_space[i_] = {}
 
 
     def collect_files(self):
@@ -33,7 +42,6 @@ class ResultsCollector(object):
                 'Parameters/simulation_parameters.info', \
                 'Parameters/tuning_prop_means.prm']
 
-        self.dirs_to_process = []
         sim_id = 0
         for dir_name in all_dirs:
             # check if all necessary files exist
@@ -44,7 +52,7 @@ class ResultsCollector(object):
                 if not os.path.exists(fn_):
                     check_passed = False
             if check_passed:
-                self.dirs_to_process.append((dir_name, sim_id))
+                self.dirs_to_process.append((dir_name, sim_id, {}))
                 sim_id += 1
 
     def get_xvdiff_integral(self):
@@ -65,6 +73,49 @@ class ResultsCollector(object):
             vdiff = np.loadtxt(fn_v)
             self.xdiff_integral[i_] = xdiff[:, 1].sum()
             self.vdiff_integral[i_] = vdiff[:, 1].sum()
+
+
+    def get_parameter(self, param_name):
+        """
+        For all simulations (in self.dirs_to_process) get the according parameter value
+        """
+        for i_, folder in enumerate(self.dirs_to_process):
+            param_fn = folder + '/Parameters/simulation_parameters.info'
+            param_fn = utils.convert_to_url(param_fn)
+            param_dict = NTP.ParameterSet(param_fn)
+            value = param_dict[param_name]
+            self.param_space[i_][param_name] = value
+            
+
+    def plot_param_vs_xvdiff_integral(self, param_name, xv='x'):
+
+        fig = pylab.figure()
+        ax = fig.add_subplot(111)
+        
+        if xv == 'x':
+            xvdiff_integral = self.xdiff_integral
+            title = '$\int_0^{t_{sim}} |\\vec{x}_{stim}(t) - \\vec{x}_{prediction}(t)| dt$ vs. %s' % param_name
+        else:
+            xvdiff_integral = self.vdiff_integral
+            title = 'Integral of $|\\vec{v}_{stim}(t) - \\vec{v}_{prediction}(t)|$ vs. %s ' % param_name
+
+        x_data = np.zeros(len(self.dirs_to_process))
+        y_data = xvdiff_integral
+
+        for i_, folder in enumerate(self.dirs_to_process):
+            param_value = self.param_space[i_][param_name]
+            x_data[i_] = param_value
+
+        print 'debug x', x_data
+        print 'debug y', y_data
+        ax.plot(x_data, y_data, 'o')
+        ax.set_xlim((x_data.min() * .9, x_data.max() * 1.1))
+        ax.set_ylim((y_data.min() * .9, y_data.max() * 1.1))
+        ax.set_xlabel(param_name, fontsize=18)
+        ax.set_ylabel('Integral %s' % xv)
+        ax.set_title(title)
+        pylab.show()
+            
 
 
     def get_cgxv(self):

@@ -28,8 +28,9 @@ class parameter_storage(object):
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 10, 10# resolution in velocity norm and direction
 
+
 #         Medium-large system
-        self.params['N_RF'] = 80# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
         self.params['N_V'], self.params['N_theta'] = 6, 6# resolution in velocity norm and direction
@@ -129,19 +130,19 @@ class parameter_storage(object):
 
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
-        self.params['scale_latency'] = 0.20 # this determines how much the directional tuning of the src is considered when drawing connections
-        self.params['delay_scale'] = 5.     # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
+        self.params['scale_latency'] = 0.10 # this determines how much the directional tuning of the src is considered when drawing connections
+        self.params['delay_scale'] = 1.     # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 10.)
-        self.params['w_sigma_x'] = 0.20  # width of connectivity profile for pre-computed weights
-        self.params['w_sigma_v'] = 0.20 # small w_sigma: tuning_properties get stronger weight when deciding on connection
+        self.params['w_sigma_x'] = 0.05  # width of connectivity profile for pre-computed weights
+        self.params['w_sigma_v'] = 0.05 # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.035 # [uS] how much input should an exc cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ei'] = 0.10 # [uS] how much input should an inh cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ie'] = 0.15 # [uS] how much input should an exc cell get from its inh source cells?
+        self.params['w_tgt_in_per_cell_ee'] = 0.03 # [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ei'] = 0.04 # [uS] how much input should an inh cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ie'] = 0.06 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.01 # [uS] how much input should an inh cell get from its source cells?
 
         self.params['p_ee'] = 0.01# fraction of network cells allowed to connect to each target cell, used in CreateConnections
@@ -166,7 +167,7 @@ class parameter_storage(object):
         self.params['w_ii_mean'] = 0.003
         self.params['w_ii_sigma'] = 0.001          
 
-        # for all non anisotropic (isotropic + random) connections
+        # for random connections only:
         self.params['standard_delay'] = 5           # [ms]
         self.params['standard_delay_sigma'] = 2           # [ms]
 
@@ -196,7 +197,7 @@ class parameter_storage(object):
         self.params['seed'] = 12345
         self.params['t_sim'] = 3000.                 # [ms] total simulation time
         self.params['t_stimulus'] = 200.            # [ms] time when stimulus ends, i.e. before the stimulus disappears
-        self.params['t_blank'] = 0.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
+        self.params['t_blank'] = 200.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
         self.params['tuning_prop_seed'] = 0         # seed for randomized tuning properties
         self.params['input_spikes_seed'] = 0
         self.params['dt_sim'] = self.params['delay_range'][0] * 1 # [ms] time step for simulation
@@ -281,8 +282,9 @@ class parameter_storage(object):
 #                folder_name = 'AdEx_LargeScaleModel_'
             else:
 #                folder_name = 'TestModel_'
-                folder_name = 'SmallScale_noBlank_'
-#                folder_name = 'LargeScaleModel_noBlank_'
+#                folder_name = 'SLargeScaleModel_np192_noBlank_'
+                folder_name = 'SmallScale_'
+#                folder_name = 'LargeScaleModel_'
 
 
             connectivity_code = ''
@@ -327,9 +329,10 @@ class parameter_storage(object):
 #            folder_name += "_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e/" % \
 #                        (self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
 #                     self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'])
+#            folder_name += "_scaleLatency%.2f_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delayScale%d_tblank%d/" % \
             folder_name += "_scaleLatency%.2f_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delayScale%d/" % \
                         (self.params['scale_latency'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
-                     self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'])
+                     self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'])#, self.params['t_blank'])
             self.params['folder_name'] = folder_name 
         else:
             self.params['folder_name'] = folder_name
@@ -343,7 +346,7 @@ class parameter_storage(object):
         print 'Folder name:', self.params['folder_name']
 
 #        self.params['input_folder'] = "%sInputSpikeTrains/"   % self.params['folder_name']# folder containing the input spike trains for the network generated from a certain stimulus
-        self.params['input_folder'] = "InputSpikeTrains/"
+        self.params['input_folder'] = "InputSpikeTrains_tsim%d_tblank%d/" % (self.params['t_sim'], self.params['t_blank'])
         self.params['spiketimes_folder'] = "%sSpikes/" % self.params['folder_name']
         self.params['volt_folder'] = "%sVoltageTraces/" % self.params['folder_name']
         self.params['parameters_folder'] = "%sParameters/" % self.params['folder_name']
