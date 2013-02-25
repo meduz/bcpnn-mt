@@ -639,25 +639,25 @@ class NetworkModel(object):
 
 if __name__ == '__main__':
     
-    for delay_scale in [2]:
-        for scale_latency in [0.10, 0.20, 0.30, 0.40]:
+#    for delay_scale in [2]:
+#        for scale_latency in [0.10, 0.20, 0.30, 0.40]:
 #            for w_sigma_x in [0.05, 0.10, 015]:
 #                for w_sigma_v in [0.05, 0.10, 015]:
 #            ps.params['w_sigma_x'] = w_sigma_x
 #            ps.params['w_sigma_v'] = w_sigma_v
-            ps.params['scale_latency'] = scale_latency
-            ps.params['delay_scale'] = delay_scale
-            ps.set_filenames()
-            if pc_id == 0:
-                ps.create_folders()
-                ps.write_parameters_to_file()
-            if comm != None:
-                comm.Barrier()
-            sim_cnt = 0
-            NM = NetworkModel(ps.params, comm)
-            NM.setup(times=times)
-            NM.create()
-            NM.connect()
-            NM.run_sim(sim_cnt)
-            NM.print_results()
+#            ps.params['scale_latency'] = scale_latency
+#            ps.params['delay_scale'] = delay_scale
+#            ps.set_filenames()
+    if pc_id == 0:
+        ps.create_folders()
+        ps.write_parameters_to_file()
+    if comm != None:
+        comm.Barrier()
+    sim_cnt = 0
+    NM = NetworkModel(ps.params, comm)
+    NM.setup(times=times)
+    NM.create()
+    NM.connect()
+    NM.run_sim(sim_cnt)
+    NM.print_results()
 

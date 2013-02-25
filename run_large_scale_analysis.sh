@@ -1,11 +1,10 @@
 echo 'Starting at' `date`
 #echo 'Preparation stopped at' `date`
-python plot_prediction.py
+#python plot_prediction.py
 python prepare_tuning_prop.py
 python merge_connlists.py
 python analyse_simple.py
 #python analyse_input.py
-#python plot_connlist_as_colormap.py
 python merge_connlists.py
 python plot_weight_and_delay_histogram.py ee 
 python plot_weight_and_delay_histogram.py ei

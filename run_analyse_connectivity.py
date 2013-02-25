@@ -2,9 +2,8 @@ import os
 import re
 
 #to_match = '^LargeScaleModel_AIII_scaleLatency0\.15(.*)delayScale(\d+)$'
-to_match = '^LargeScaleModel_IIII_scaleLatency0\.15(.*)delayScale(\d+)$'
-script_name = 'plot_prediction.py'
-
+to_match = '^LargeScaleModel_AIII_(.*)delayScale(\d+)$'
+script_name = 'analyse_connectivity.py'
 
 for thing in os.listdir('.'):
 

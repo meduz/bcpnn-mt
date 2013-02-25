@@ -125,16 +125,18 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 if __name__ == '__main__':
 
 
-    try:
+    if len(sys.argv) > 1:
         param_fn = sys.argv[1]
         if os.path.isdir(param_fn):
             param_fn += '/Parameters/simulation_parameters.info'
         import NeuroTools.parameters as NTP
-        params = NTP.ParameterSet(utils.convert_to_url(param_fn))
+        fn_as_url = utils.convert_to_url(param_fn)
+        print 'debug ', fn_as_url
+        params = NTP.ParameterSet(fn_as_url)
         print 'Loading parameters from', param_fn
         plot_prediction(params=params)
 
-    except:
+    else:
         print '\nPlotting the default parameters give in simulation_parameters.py\n'
         plot_prediction()
 

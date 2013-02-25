@@ -1,8 +1,21 @@
-import simulation_parameters
 import os
+import utils
 import numpy as np
-PS = simulation_parameters.parameter_storage()
-params = PS.load_params()
+import sys
+
+
+if len(sys.argv) > 1:
+    param_fn = sys.argv[1]
+    if os.path.isdir(param_fn):
+        param_fn += '/Parameters/simulation_parameters.info'
+    print 'Trying to load parameters from', param_fn
+    import NeuroTools.parameters as NTP
+    params = NTP.ParameterSet(utils.convert_to_url(param_fn))
+else:
+    print '\n NOT successfull\nLoading the parameters currently in simulation_parameters.py\n'
+    import simulation_parameters
+    network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
+    params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
 # E -> E 
 tmp_fn = 'delme_tmp_%d' % (np.random.randint(0, 1e8))
