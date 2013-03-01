@@ -174,8 +174,8 @@ class NetworkModel(object):
             save_output = True
 
 #        self.connect_input_to_exc(load_files=False, save_output=save_output)
-        self.connect_input_to_exc(load_files=True, save_output=False)
-#        self.connect_input_to_exc(load_files=False, save_output=True)
+#        self.connect_input_to_exc(load_files=True, save_output=False)
+        self.connect_input_to_exc(load_files=False, save_output=False)
         self.connect_populations('ee')
         self.connect_populations('ei')
         self.connect_populations('ie')
@@ -411,8 +411,6 @@ class NetworkModel(object):
             conn_list_fn = self.params['conn_list_%s_fn_base' % conn_type] + '%d.dat' % (self.pc_id)
             conn_file = open(conn_list_fn, 'w')
             output = ''
-#            dist_list_fn = self.params['connections_folder'] + 'distances_%s_%d.dat' % (conn_type, self.pc_id)
-#            dist_file = open(dist_list_fn, 'w')
             output_dist = ''
 
         p_max = utils.get_pmax(self.params['p_%s' % conn_type], .5 * (self.params['w_sigma_x'] + self.params['w_sigma_v']))
@@ -421,14 +419,19 @@ class NetworkModel(object):
             w = np.zeros(n_src, dtype='float32') 
             delays = np.zeros(n_src, dtype='float32')
             for src in xrange(n_src):
-                if (src != tgt):
-#                    d_ij = np.sqrt((tp_src[src, 0] - tp_tgt[tgt, 0])**2 + (tp_src[src, 1] - tp_tgt[tgt, 1])**2)
+                if conn_type[0] == conn_type[1]:
+                    if (src != tgt): # no self-connections / autapses
+                        d_ij = utils.torus_distance2D(tp_src[src, 0], tp_tgt[tgt, 0], tp_src[src, 1], tp_tgt[tgt, 1])
+                        p_ij = p_max * np.exp(-d_ij**2 / (2 * params['w_sigma_x']**2))
+                        if np.random.rand() <= p_ij:
+                            w[src] = w_
+                            delays[src] = d_ij * params['delay_scale']
+                else:
                     d_ij = utils.torus_distance2D(tp_src[src, 0], tp_tgt[tgt, 0], tp_src[src, 1], tp_tgt[tgt, 1])
                     p_ij = p_max * np.exp(-d_ij**2 / (2 * params['w_sigma_x']**2))
                     if np.random.rand() <= p_ij:
                         w[src] = w_
                         delays[src] = d_ij * params['delay_scale']
-#                    output_dist += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, d_ij, p_ij)
             w *= w_tgt_in / w.sum()
             srcs = w.nonzero()[0]
             weights = w[srcs]
@@ -443,21 +446,6 @@ class NetworkModel(object):
                 print 'DEBUG writing to file:', conn_list_fn
             conn_file.write(output)
             conn_file.close()
-#            dist_file.write(output_dist)
-#            dist_file.close()
-
-#   isotropic nearest neighbour code:
-#        for tgt in tgt_cells:
-#            n_src_to_choose = int(round(p_max * n_src)) # guarantee that all cells have same number of connections
-#            dist = np.zeros(n_src, dtype='float32')
-#            for src in xrange(n_src):
-#                if (src != tgt):
-#                    dist[src] = np.sqrt((tp_src[src, 0] - tp_tgt[tgt, 0])**2 + (tp_src[src, 1] - tp_tgt[tgt, 1])**2)
-#            src_idx = dist.argsort()[:n_src_to_choose] # choose cells closest to the target
-#            for src in src_idx:
-#                connect(src_pop[int(src)], tgt_pop[int(tgt)], w_, delay=params['standard_delay'], synapse_type='excitatory')
-#                output += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, w_, params['standard_delay']) 
-
 
 
     def connect_random(self, conn_type):

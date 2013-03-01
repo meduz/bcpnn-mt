@@ -32,6 +32,7 @@ class ConnectivityAnalyser(object):
         self.markersize_min = 3
         self.markersize_max = 12
         self.shaft_width = 0.005
+        self.conn_type_dict = {'e' : 'excitatory', 'i' : 'inhibitory'}
 
     def load_tuning_prop(self):
         print 'Loading tuning properties'
@@ -62,6 +63,7 @@ class ConnectivityAnalyser(object):
 
 
     def plot_num_outgoing_connections(self, conn_type, fig_cnt=1):
+
         fn = self.params['merged_conn_list_%s' % conn_type]
         print 'Loading:', fn
         if not os.path.exists(fn):
@@ -78,21 +80,22 @@ class ConnectivityAnalyser(object):
         n_srcs = np.zeros(n_tgt)
         for i in xrange(conn_list[:, 0].size):
             src, tgt, w, delay = conn_list[i, :]
-            n_tgts[src] += 1
-            n_srcs[tgt] += 1
+            n_tgts[src] += 1 # count how often src connects to some other cell
+            n_srcs[tgt] += 1 # count how often tgt is the target cell
 
         n_out_mean = n_tgts.mean()
         n_out_sem = n_tgts.std() / np.sqrt(n_src)
         n_in_mean = n_srcs.mean()
         n_in_sem = n_srcs.std() / np.sqrt(n_tgt)
-        print 'number of cells that get no input ', (n_srcs == 0).nonzero()[0].size
-        print 'number of cells that have no target', (n_tgts == 0).nonzero()[0].size
+        print 'Convergence: Number of %s cells that get no %s input ' % (self.conn_type_dict[conn_type[1]], self.conn_type_dict[conn_type[0]]), (n_srcs == 0).nonzero()[0].size
+        print 'Divergence: Number of %s cells that have no %s target' % (self.conn_type_dict[conn_type[0]], self.conn_type_dict[conn_type[1]]), (n_tgts == 0).nonzero()[0].size
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.bar(range(n_src), n_tgts, width=1)
         ax.set_xlim((0, n_src))
         ax.set_xlabel('Source index')
         ax.set_ylabel('Number of outgoing connections')
-        title = 'Average num outgoing connections= %.2f +- %.2f (%.1f+-%.2f percent)' % (n_out_mean, n_out_sem, n_out_mean / n_tgt * 100., n_out_sem / n_tgt * 100.)
+        title = 'Every %s cell connects on average to $%.2f\pm%.2f \, (%.1f\pm%.2f\, \%% $ of the) %s cells' % (self.conn_type_dict[conn_type[0]], \
+                n_out_mean, n_out_sem, n_out_mean / n_tgt * 100., n_out_sem / n_tgt * 100.,  self.conn_type_dict[conn_type[1]])
         print title
         ax.set_title(title)
 
@@ -101,7 +104,8 @@ class ConnectivityAnalyser(object):
         ax.set_xlim((0, n_tgt))
         ax.set_xlabel('Target index')
         ax.set_ylabel('Number of incoming connections')
-        title = 'Average num incoming connections= %.2f +- %.2f (%.1f+-%.2f percent)' % (n_in_mean, n_in_sem, n_in_mean / n_src * 100., n_in_sem / n_src * 100.)
+        title = 'Every %s cell receives on average input from $ %.2f \pm %.2f \,(%.1f \pm %.2f \, \%% $ of the) %s cells' % (self.conn_type_dict[conn_type[1]], \
+                n_in_mean, n_in_sem, n_in_mean / n_tgt * 100., n_in_sem / n_tgt * 100.,  self.conn_type_dict[conn_type[0]])
         print title
         ax.set_title(title)
 
@@ -112,8 +116,11 @@ class ConnectivityAnalyser(object):
 
         tp_src, tp_tgt = self.get_tp(conn_type)
         if gids_to_plot == None:
-            gids_to_plot = np.loadtxt(self.params['gids_to_record_fn'], dtype=np.int)
-            gids_to_plot = [gids_to_plot[0]]
+            if conn_type[0] == 'e':
+                gids_to_plot = np.loadtxt(self.params['gids_to_record_fn'], dtype=np.int)
+                gids_to_plot = [gids_to_plot[0]]
+            else:
+                gids_to_plot = np.random.randint(0, tp_src[:, 0].size, 1)
         
         fn = self.params['merged_conn_list_%s' % conn_type]
         print 'Loading:', fn
@@ -394,12 +401,16 @@ if __name__ == '__main__':
     conn_types = ['ee', 'ei', 'ie', 'ii']
         
     # CHECK IF PARAMETER FILE WAS PASSED
-
     conn_type = None
     if len(sys.argv) > 1:
         if len(sys.argv[1]) == 2:
             conn_type = sys.argv[1]
             assert (conn_type in conn_types), 'Non-existant conn_type %s' % conn_type
+            try:
+                param_fn = sys.argv[2]
+            except:
+                network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
+                params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
         else:
             param_fn = sys.argv[1]
             if os.path.isdir(param_fn):
@@ -408,31 +419,34 @@ if __name__ == '__main__':
             import NeuroTools.parameters as NTP
             params = NTP.ParameterSet(utils.convert_to_url(param_fn))
     else:
-        print '\n NOT successfull\nLoading the parameters currently in simulation_parameters.py\n'
+        print '\nLoading the parameters currently in simulation_parameters.py\n'
         network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
         params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
     # get the connection type either from sys.argv[1] or [2]
     if conn_type == None:
-        conn_type = 'ee'
-    print 'Processing conn_type', conn_type
+        conn_types = ['ee', 'ei', 'ie', 'ii']
+    else:
+        conn_types = [conn_type]
+    print 'Processing conn_types', conn_types
     CA = ConnectivityAnalyser(params, comm)
 
 
-    def plot_outgoing_connections():
+    def plot_outgoing_connections(conn_type):
         CA.load_tuning_prop()
-        conn_type = 'ee'
         CA.n_fig_x = 1
         CA.n_fig_y = 3
         CA.create_fig()
         CA.plot_tgt_connections(conn_type, fig_cnt=1)
         CA.plot_num_outgoing_connections(conn_type, fig_cnt=2)
 
-    plot_outgoing_connections()    
-    output_fn = params['figures_folder'] + 'connectivity_analysis_%s.png' % conn_type
-    print 'Saving to', output_fn
-    pylab.savefig(output_fn)
-    pylab.show()
+    for conn_type in conn_types:
+        plot_outgoing_connections(conn_type)
+        output_fn = params['figures_folder'] + 'connectivity_analysis_%s.png' % conn_type
+        print 'Saving to', output_fn
+        pylab.savefig(output_fn)
+
+#    pylab.show()
 
 #    CA.create_connectivity(conn_type)
 #    CA.plot_src_tgt_position_scatter(conn_type)

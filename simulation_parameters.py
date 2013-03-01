@@ -23,10 +23,10 @@ class parameter_storage(object):
         # HEXGRID PARAMETERS
         # ###################
         # Large-scale system
-        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 10, 10# resolution in velocity norm and direction
+#        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#        self.params['N_V'], self.params['N_theta'] = 10, 10# resolution in velocity norm and direction
 
 
 #         Medium-large system
@@ -131,7 +131,7 @@ class parameter_storage(object):
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
         self.params['scale_latency'] = 0.15 # this determines how much the directional tuning of the src is considered when drawing connections
-        self.params['delay_scale'] = 10.     # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
+        self.params['delay_scale'] = 20.     # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 10.)
         self.params['w_sigma_x'] = 0.10  # width of connectivity profile for pre-computed weights
         self.params['w_sigma_v'] = 0.10 # small w_sigma: tuning_properties get stronger weight when deciding on connection
@@ -145,25 +145,25 @@ class parameter_storage(object):
         self.params['w_tgt_in_per_cell_ie'] = 0.06 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.01 # [uS] how much input should an inh cell get from its source cells?
 
-        self.params['p_ee'] = 0.005# fraction of network cells allowed to connect to each target cell, used in CreateConnections
+        self.params['p_ee'] = 0.01# fraction of network cells allowed to connect to each target cell, used in CreateConnections
         self.params['w_thresh_connection'] = 1e-5 # connections with a weight less then this value will be discarded
         self.params['w_min'] = 5e-4             # When probabilities are transformed to weights, they are scaled so that the map into this range
         self.params['w_max'] = 4e-3
         self.params['n_src_cells_per_neuron'] = round(self.params['p_ee'] * self.params['n_exc']) # only excitatory sources
 
         # exc - inh
-        self.params['p_ei'] = 0.005 #self.params['p_ee']
+        self.params['p_ei'] = 0.01 #self.params['p_ee']
         self.params['w_ei_mean'] = 0.005
         self.params['w_ei_sigma'] = 0.001          
 
         # inh - exc
 #        self.params['p_ie'] = 1.
-        self.params['p_ie'] = 0.005 #self.params['p_ee']
+        self.params['p_ie'] = 0.01 #self.params['p_ee']
         self.params['w_ie_mean'] = 0.005
         self.params['w_ie_sigma'] = 0.001          
 
         # inh - inh
-        self.params['p_ii'] = 0.005
+        self.params['p_ii'] = 0.01
         self.params['w_ii_mean'] = 0.003
         self.params['w_ii_sigma'] = 0.001          
 
@@ -348,7 +348,7 @@ class parameter_storage(object):
         print 'Folder name:', self.params['folder_name']
 
 #        self.params['input_folder'] = "%sInputSpikeTrains/"   % self.params['folder_name']# folder containing the input spike trains for the network generated from a certain stimulus
-        self.params['input_folder'] = "InputSpikeTrains_tsim%d_tblank%d/" % (self.params['t_sim'], self.params['t_blank'])
+        self.params['input_folder'] = "InputSpikeTrains_tsim%d_tblank%d_tbeforeblank%d/" % (self.params['t_sim'], self.params['t_blank'], self.params['t_before_blank'])
         self.params['spiketimes_folder'] = "%sSpikes/" % self.params['folder_name']
         self.params['volt_folder'] = "%sVoltageTraces/" % self.params['folder_name']
         self.params['parameters_folder'] = "%sParameters/" % self.params['folder_name']
