@@ -474,13 +474,33 @@ class PlotPrediction(object):
             self.plot_blank(ax)
 
     def plot_network_activity(self, cell_type, fig_cnt=1):
-        fn = self.params['%s_spiketimes_fn_merged' % cell_type] + '.ras'
-        spiketimes = np.loadtxt(fn)[:, 0]
-        n, bins = np.histogram(spiketimes, bins=100)
+
+        if cell_type == 'exc':
+            n_cells = self.params['n_exc']
+            spiketimes = self.spiketrains
+        else:
+            n_cells = self.params['n_inh']
+            spiketimes = utils.get_spiketrains(self.params['inh_spiketimes_fn_merged'] + '.ras', n_cells)
+
+        n_bins = int(round(self.params['t_sim'] / self.time_binsize))
+        binned_spiketimes = [[] for i in xrange(n_cells)]
+        avg_activity = np.zeros(n_bins)
+        n_active = 0
+        for cell in xrange(n_cells):
+            if len(spiketimes[cell]) > 0:
+                binned_spiketimes[cell], bins = np.histogram(spiketimes[cell], n_bins, range=(0, self.params['t_sim']))
+                n_active += 1
+        for time_bin in xrange(n_bins):
+            for cell in xrange(n_cells):
+                if len(spiketimes[cell]) > 0:
+                    avg_activity[time_bin] += binned_spiketimes[cell][time_bin]
+            avg_activity[time_bin] /= n_active
+        avg_activity /= (self.time_binsize / 1000.)
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
-        ax.bar(bins[:-1], n, width=bins[1]-bins[0])
+        bins = np.linspace(0, self.params['t_sim'], n_bins, endpoint=True)
+        ax.bar(bins, avg_activity, width=bins[1]-bins[0])
         ax.set_xlabel('Time [ms]')
-        ax.set_ylabel('Num spikes')
+        ax.set_ylabel('Average firing rate [Hz]')
         ax.set_title('Activity of %s cells' % cell_type)
 
 

@@ -61,6 +61,50 @@ class ConnectivityAnalyser(object):
             return (self.tp_inh, self.tp_inh)
 
 
+    def plot_num_outgoing_connections(self, conn_type, fig_cnt=1):
+        fn = self.params['merged_conn_list_%s' % conn_type]
+        print 'Loading:', fn
+        if not os.path.exists(fn):
+            print 'Merging connlists ...'
+            cmd = 'python merge_connlists.py %s' % self.params['params_fn']
+            os.system(cmd)
+
+        if not self.conn_lists.has_key(conn_type):
+            self.load_connlist(conn_type)
+        conn_list = self.conn_lists[conn_type]
+
+        (n_src, n_tgt, syn_type) = utils.resolve_src_tgt(conn_type, self.params)
+        n_tgts = np.zeros(n_src)
+        n_srcs = np.zeros(n_tgt)
+        for i in xrange(conn_list[:, 0].size):
+            src, tgt, w, delay = conn_list[i, :]
+            n_tgts[src] += 1
+            n_srcs[tgt] += 1
+
+        n_out_mean = n_tgts.mean()
+        n_out_sem = n_tgts.std() / np.sqrt(n_src)
+        n_in_mean = n_srcs.mean()
+        n_in_sem = n_srcs.std() / np.sqrt(n_tgt)
+        print 'number of cells that get no input ', (n_srcs == 0).nonzero()[0].size
+        print 'number of cells that have no target', (n_tgts == 0).nonzero()[0].size
+        ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
+        ax.bar(range(n_src), n_tgts, width=1)
+        ax.set_xlim((0, n_src))
+        ax.set_xlabel('Source index')
+        ax.set_ylabel('Number of outgoing connections')
+        title = 'Average num outgoing connections= %.2f +- %.2f (%.1f+-%.2f percent)' % (n_out_mean, n_out_sem, n_out_mean / n_tgt * 100., n_out_sem / n_tgt * 100.)
+        print title
+        ax.set_title(title)
+
+        ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt + 1)
+        ax.bar(range(n_tgt), n_srcs, width=1)
+        ax.set_xlim((0, n_tgt))
+        ax.set_xlabel('Target index')
+        ax.set_ylabel('Number of incoming connections')
+        title = 'Average num incoming connections= %.2f +- %.2f (%.1f+-%.2f percent)' % (n_in_mean, n_in_sem, n_in_mean / n_src * 100., n_in_sem / n_src * 100.)
+        print title
+        ax.set_title(title)
+
     def plot_tgt_connections(self, conn_type, gids_to_plot=None, fig_cnt=1):
         """
         conn_type = ['ee', 'ei', 'ie', 'ii']
@@ -90,12 +134,17 @@ class ConnectivityAnalyser(object):
             tgt_ids = np.array(tgts[:, 1], dtype=np.int)
             weights = tgts[:, 2]
             delays = tgts[:, 3]
-            c_x, c_v = self.get_cg_vec(tp_src[src_gid, :], tp_tgt[tgt_ids, :], weights)
+            print 'weights size', weights.size
+            if weights.size > 0:
+                c_x, c_v = self.get_cg_vec(tp_src[src_gid, :], tp_tgt[tgt_ids, :], weights)
+                markersizes = utils.linear_transformation(weights, self.markersize_min, self.markersize_max)
+            else:
+                print '\n WARNING: Cell %d has no outgoing connections!\n' % src_gid
+                c_x, c_v = [(0, 0), (0, 0)]
+                markersizes = []
+
             vector_conn_centroid_x_minus_vsrc = (c_x[0] - u, c_x[1] - v)
-            print 'debug c_x', c_x[0], c_x[1]
-            print 'debug c_v', c_v[0], c_v[1]
 #            c_x *= 100.
-            markersizes = utils.linear_transformation(weights, self.markersize_min, self.markersize_max)
             for j_, tgt_gid in enumerate(tgts[:, 1]):
                 (x_tgt, y_tgt, u_tgt, v_tgt) = tp_tgt[tgt_gid, :]
                 xdiff = (x_tgt - x)
@@ -110,8 +159,8 @@ class ConnectivityAnalyser(object):
             ax.plot((0, 0), (ylim[0], ylim[1]), 'k--')
             ax.plot((xlim[0], xlim[1]), (0, 0), 'k--')
             quiverkey_length = .05 * (xlim[1] - xlim[0] + ylim[1] - ylim[0])
-            ax.quiverkey(preferred_direction, .8, .85, quiverkey_length, 'Preferred direction')
-            ax.quiverkey(connection_centroid, .8, .75, quiverkey_length, 'Connection centroid')
+            ax.quiverkey(preferred_direction, .1, .85, quiverkey_length, 'Preferred direction')
+            ax.quiverkey(connection_centroid, .1, .75, quiverkey_length, 'Connection centroid')
             ax.quiverkey(diff_v, .8, .95, quiverkey_length, 'Difference vector')
 #            ax.plot((0, 0), (-.2, .2), 'k--')
 #            ax.plot((-.2, .2), (0, 0), 'k--')
@@ -251,8 +300,10 @@ class ConnectivityAnalyser(object):
             c_x += weights[tgt] * np.array( (x_tgt - x_src) % 1., (y_tgt - y_src) % 1.)
             c_v += weights[tgt] * np.array(vx_tgt - vx_src, vy_tgt - vy_src)
 
-        c_x *= self.params['scale_latency']
-        c_v *= self.params['scale_latency']
+        c_x /= n_tgt
+        c_v /= n_tgt
+#        c_x *= self.params['scale_latency']
+#        c_v *= self.params['scale_latency']
         return c_x, c_v
 #        n_tgt = 
 
@@ -344,29 +395,26 @@ if __name__ == '__main__':
         
     # CHECK IF PARAMETER FILE WAS PASSED
 
+    conn_type = None
     if len(sys.argv) > 1:
-        param_fn = sys.argv[1]
-        if os.path.isdir(param_fn):
-            param_fn += '/Parameters/simulation_parameters.info'
-        print 'Trying to load parameters from', param_fn
-        import NeuroTools.parameters as NTP
-        params = NTP.ParameterSet(utils.convert_to_url(param_fn))
+        if len(sys.argv[1]) == 2:
+            conn_type = sys.argv[1]
+            assert (conn_type in conn_types), 'Non-existant conn_type %s' % conn_type
+        else:
+            param_fn = sys.argv[1]
+            if os.path.isdir(param_fn):
+                param_fn += '/Parameters/simulation_parameters.info'
+            print 'Trying to load parameters from', param_fn
+            import NeuroTools.parameters as NTP
+            params = NTP.ParameterSet(utils.convert_to_url(param_fn))
     else:
         print '\n NOT successfull\nLoading the parameters currently in simulation_parameters.py\n'
         network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
         params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
     # get the connection type either from sys.argv[1] or [2]
-    try:
-        conn_type = sys.argv[1]
-        assert (conn_type in conn_types), 'Non-existant conn_type %s' % conn_type
-    except:
-        try:
-            conn_type = sys.argv[2]
-            assert (conn_type in conn_types), 'Non-existant conn_type %s' % conn_type
-        except:
-            conn_type = 'ee'
-
+    if conn_type == None:
+        conn_type = 'ee'
     print 'Processing conn_type', conn_type
     CA = ConnectivityAnalyser(params, comm)
 
@@ -374,17 +422,23 @@ if __name__ == '__main__':
     def plot_outgoing_connections():
         CA.load_tuning_prop()
         conn_type = 'ee'
+        CA.n_fig_x = 1
+        CA.n_fig_y = 3
         CA.create_fig()
-        CA.plot_tgt_connections(conn_type)
+        CA.plot_tgt_connections(conn_type, fig_cnt=1)
+        CA.plot_num_outgoing_connections(conn_type, fig_cnt=2)
 
-#    plot_outgoing_connections()    
-#    pylab.show()
+    plot_outgoing_connections()    
+    output_fn = params['figures_folder'] + 'connectivity_analysis_%s.png' % conn_type
+    print 'Saving to', output_fn
+    pylab.savefig(output_fn)
+    pylab.show()
 
 #    CA.create_connectivity(conn_type)
 #    CA.plot_src_tgt_position_scatter(conn_type)
 
 
-    CA.plot_tuning_vs_conn_cg(conn_type, show=False)
+#    CA.plot_tuning_vs_conn_cg(conn_type, show=False)
 
 
 

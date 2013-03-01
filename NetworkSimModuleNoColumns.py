@@ -57,6 +57,7 @@ class NetworkModel(object):
             self.pc_id, self.n_proc = 0, 1
             print "MPI not used"
 
+        np.random.seed(params['np_random_seed'] + self.pc_id)
 
     def import_pynn(self):
         """
@@ -209,7 +210,7 @@ class NetworkModel(object):
             nprnd.seed(self.params['input_spikes_seed'])
             dt = self.params['dt_rate'] # [ms] time step for the non-homogenous Poisson process 
             time = np.arange(0, self.params['t_sim'], dt)
-            blank_idx = np.arange(1./dt * self.params['t_stimulus'], 1. / dt * (self.params['t_stimulus'] + self.params['t_blank']))
+            blank_idx = np.arange(1./dt * self.params['t_before_blank'], 1. / dt * (self.params['t_before_blank'] + self.params['t_blank']))
 
             my_units = self.local_idx_exc
             n_cells = len(my_units)
@@ -241,61 +242,6 @@ class NetworkModel(object):
                     output_fn = params['input_st_fn_base'] + str(unit) + '.npy'
                     np.save(output_fn, np.array(spike_times))
         self.times['create_and_connect_input'] = self.timer.diff()
-
-
-    def connect_anisotropic(self, conn_type):
-        """
-        """
-        if self.pc_id == 0:
-            print 'Connect anisotropic %s - %s' % (conn_type[0].capitalize(), conn_type[1].capitalize())
-
-        (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells, syn_type) = self.resolve_src_tgt(conn_type)
-
-        if self.debug_connectivity:
-            conn_list_fn = self.params['conn_list_%s_fn_base' % conn_type] + '%d.dat' % (self.pc_id)
-            conn_file = open(conn_list_fn, 'w')
-            output = ''
-
-        n_src_cells_per_neuron = int(round(self.params['p_%s' % conn_type] * n_src))
-        (delay_min, delay_max) = self.params['delay_range']
-        for tgt in tgt_cells:
-            p = np.zeros(n_src)
-            latency = np.zeros(n_src)
-            for src in xrange(n_src):
-                if conn_type[0] == conn_type[1]: # no self-connection
-                    if (src != tgt):
-                        p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
-#                        p[src], latency[src] = CC.get_p_conn_no_xpred(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v']) #                            print 'debug pc_id src tgt ', self.pc_id, src, tgt#, int(ID) < self.params['n_exc']
-                else: # different populations --> same indices mean different cells, no check for src != tgt
-#                    p[src], latency[src] = CC.get_p_conn_no_xpred(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v']) #                            print 'debug pc_id src tgt ', self.pc_id, src, tgt#, int(ID) < self.params['n_exc']
-                    p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
-
-            sorted_indices = np.argsort(p)
-            if conn_type[0] == 'e':
-                sources = sorted_indices[-n_src_cells_per_neuron:] 
-            else:
-                if conn_type == 'ii':
-                    sources = sorted_indices[1:n_src_cells_per_neuron+1]  # shift indices to avoid self-connection, because p_ii = .0
-                else:
-                    sources = sorted_indices[:n_src_cells_per_neuron] 
-            w = (self.params['w_tgt_in_per_cell_%s' % conn_type] / p[sources].sum()) * p[sources]
-            for i in xrange(len(sources)):
-#                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
-                if w[i] > self.params['w_thresh_connection']:
-                    delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
-    #                print 'debug ', delay , ' latency', latency[sources[i]]
-    #                delay = min(max(latency[sources[i]], delay_min), delay_max)  # map the delay into the valid range
-                    connect(src_pop[sources[i]], tgt_pop[tgt], w[i], delay=delay, synapse_type=syn_type)
-                    if self.debug_connectivity:
-                        output += '%d\t%d\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay) #                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], latency[sources[i]], p[sources[i]])
-
-
-        if self.debug_connectivity:
-            if self.pc_id == 0:
-                print 'DEBUG writing to file:', conn_list_fn
-            conn_file.write(output)
-            conn_file.close()
-
 
 
     def resolve_src_tgt(self, conn_type):
@@ -338,7 +284,57 @@ class NetworkModel(object):
         return (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells, syn_type)
 
 
+    def connect_anisotropic(self, conn_type):
+        """
+        conn_type = ['ee', 'ei', 'ie', 'ii']
+        """
+        if self.pc_id == 0:
+            print 'Connect anisotropic %s - %s' % (conn_type[0].capitalize(), conn_type[1].capitalize())
 
+        (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells, syn_type) = self.resolve_src_tgt(conn_type)
+
+        if self.debug_connectivity:
+            conn_list_fn = self.params['conn_list_%s_fn_base' % conn_type] + '%d.dat' % (self.pc_id)
+            conn_file = open(conn_list_fn, 'w')
+            output = ''
+
+        n_src_cells_per_neuron = int(round(self.params['p_%s' % conn_type] * n_src))
+        (delay_min, delay_max) = self.params['delay_range']
+        for tgt in tgt_cells:
+            p = np.zeros(n_src)
+            latency = np.zeros(n_src)
+            for src in xrange(n_src):
+                if conn_type[0] == conn_type[1]: # no self-connection
+                    if (src != tgt):
+                        p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
+                else: # different populations --> same indices mean different cells, no check for src != tgt
+                    p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
+
+            sorted_indices = np.argsort(p)
+            if conn_type[0] == 'e':
+                sources = sorted_indices[-n_src_cells_per_neuron:] 
+            else:
+                if conn_type == 'ii':
+                    sources = sorted_indices[1:n_src_cells_per_neuron+1]  # shift indices to avoid self-connection, because p_ii = .0
+                else:
+                    sources = sorted_indices[:n_src_cells_per_neuron] 
+            w = (self.params['w_tgt_in_per_cell_%s' % conn_type] / p[sources].sum()) * p[sources]
+            for i in xrange(len(sources)):
+#                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
+                if w[i] > self.params['w_thresh_connection']:
+                    delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
+    #                delay = min(max(latency[sources[i]], delay_min), delay_max)  # map the delay into the valid range
+    #                print 'debug ', delay , ' latency', latency[sources[i]]
+                    connect(src_pop[sources[i]], tgt_pop[tgt], w[i], delay=delay, synapse_type=syn_type)
+                    if self.debug_connectivity:
+                        output += '%d\t%d\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay) #                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], latency[sources[i]], p[sources[i]])
+
+
+        if self.debug_connectivity:
+            if self.pc_id == 0:
+                print 'DEBUG writing to file:', conn_list_fn
+            conn_file.write(output)
+            conn_file.close()
 
 
     def connect_ee_random(self):
@@ -415,8 +411,12 @@ class NetworkModel(object):
             conn_list_fn = self.params['conn_list_%s_fn_base' % conn_type] + '%d.dat' % (self.pc_id)
             conn_file = open(conn_list_fn, 'w')
             output = ''
+#            dist_list_fn = self.params['connections_folder'] + 'distances_%s_%d.dat' % (conn_type, self.pc_id)
+#            dist_file = open(dist_list_fn, 'w')
+            output_dist = ''
 
-        p_max = utils.get_pmax(self.params['p_%s' % conn_type])
+        p_max = utils.get_pmax(self.params['p_%s' % conn_type], .5 * (self.params['w_sigma_x'] + self.params['w_sigma_v']))
+        print 'p_max', p_max
         for tgt in tgt_cells:
             w = np.zeros(n_src, dtype='float32') 
             delays = np.zeros(n_src, dtype='float32')
@@ -424,10 +424,11 @@ class NetworkModel(object):
                 if (src != tgt):
 #                    d_ij = np.sqrt((tp_src[src, 0] - tp_tgt[tgt, 0])**2 + (tp_src[src, 1] - tp_tgt[tgt, 1])**2)
                     d_ij = utils.torus_distance2D(tp_src[src, 0], tp_tgt[tgt, 0], tp_src[src, 1], tp_tgt[tgt, 1])
-                    p_ij = p_max * np.exp(-d_ij / (2 * params['w_sigma_x']**2))
+                    p_ij = p_max * np.exp(-d_ij**2 / (2 * params['w_sigma_x']**2))
                     if np.random.rand() <= p_ij:
                         w[src] = w_
                         delays[src] = d_ij * params['delay_scale']
+#                    output_dist += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, d_ij, p_ij)
             w *= w_tgt_in / w.sum()
             srcs = w.nonzero()[0]
             weights = w[srcs]
@@ -442,6 +443,8 @@ class NetworkModel(object):
                 print 'DEBUG writing to file:', conn_list_fn
             conn_file.write(output)
             conn_file.close()
+#            dist_file.write(output_dist)
+#            dist_file.close()
 
 #   isotropic nearest neighbour code:
 #        for tgt in tgt_cells:
@@ -639,15 +642,23 @@ class NetworkModel(object):
 
 if __name__ == '__main__':
     
-#    for delay_scale in [2]:
-#        for scale_latency in [0.10, 0.20, 0.30, 0.40]:
-#            for w_sigma_x in [0.05, 0.10, 015]:
-#                for w_sigma_v in [0.05, 0.10, 015]:
-#            ps.params['w_sigma_x'] = w_sigma_x
-#            ps.params['w_sigma_v'] = w_sigma_v
-#            ps.params['scale_latency'] = scale_latency
-#            ps.params['delay_scale'] = delay_scale
-#            ps.set_filenames()
+
+#    ps.params['connectivity_ee'] = 'anisotropic'
+#    ps.params['connectivity_ei'] = 'isotropic'
+#    ps.params['connectivity_ie'] = 'isotropic'
+#    ps.params['connectivity_ii'] = 'isotropic'
+#    for scale_latency in [0.15]:
+#        for delay_scale in [20]:
+#            w_sigma_x, w_sigma_v = 0.10, 0.10
+#            w_ee = 0.03
+#            for t_stimulus in [100, 300, 400, 500]:
+#                ps.params['scale_latency'] = scale_latency
+#                ps.params['w_sigma_x'] = w_sigma_x
+#                ps.params['w_sigma_v'] = w_sigma_v
+#                ps.params['w_tgt_in_per_cell_ee'] = w_ee
+#                ps.params['delay_scale'] = delay_scale
+#                ps.params['t_stimulus'] = t_stimulus
+#                ps.set_filenames()
     if pc_id == 0:
         ps.create_folders()
         ps.write_parameters_to_file()

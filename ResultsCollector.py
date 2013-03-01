@@ -23,7 +23,17 @@ class ResultsCollector(object):
         self.params = params
         self.param_space = {}
         self.dirs_to_process = []
-        pass
+
+        self.n_fig_x = 1
+        self.n_fig_y = 2
+#        self.fig_size = (11.69, 8.27) #A4
+        self.fig_size = (14, 10)
+
+    def create_fig(self, fig_size=None):
+        print "plotting ...."
+        if fig_size == None:
+            fig_size = self.fig_size
+        self.fig = pylab.figure(figsize=fig_size)
 
     def set_dirs_to_process(self, list_of_dir_names):
 
@@ -55,7 +65,13 @@ class ResultsCollector(object):
                 self.dirs_to_process.append((dir_name, sim_id, {}))
                 sim_id += 1
 
-    def get_xvdiff_integral(self):
+    def get_xvdiff_integral(self, t_range=None):
+        """
+        t_range is the limit for the integral
+        """
+        if t_range != None:
+            assert (len(t_range) == 2), 't_range has wrong length! Please give a tuple of len 2'
+            assert (t_range[1] > t_range[0]), 'Wrong order of integral limits'
 
         self.xdiff_integral = np.zeros(len(self.dirs_to_process))
         self.vdiff_integral = np.zeros(len(self.dirs_to_process))
@@ -71,8 +87,18 @@ class ResultsCollector(object):
             fn_v = folder + '/' + results_sub_folder + fn_base_v
             xdiff = np.loadtxt(fn_x)
             vdiff = np.loadtxt(fn_v)
-            self.xdiff_integral[i_] = xdiff[:, 1].sum()
-            self.vdiff_integral[i_] = vdiff[:, 1].sum()
+            if t_range == None:
+                self.xdiff_integral[i_] = xdiff[:, 1].sum()
+                self.vdiff_integral[i_] = vdiff[:, 1].sum()
+            else:
+                idx_0 = (xdiff[:, 0] == t_range[0]).nonzero()[0][0]
+                idx_1 = (xdiff[:, 0] == t_range[1]).nonzero()[0][0]
+                self.xdiff_integral[i_] = xdiff[idx_0:idx_1, 1].sum()
+
+                idx_0 = (vdiff[:, 0] == t_range[0]).nonzero()[0][0]
+                idx_1 = (vdiff[:, 0] == t_range[1]).nonzero()[0][0]
+                self.vdiff_integral[i_] = vdiff[idx_0:idx_1, 1].sum()
+
 
 
     def get_parameter(self, param_name):
@@ -87,17 +113,22 @@ class ResultsCollector(object):
             self.param_space[i_][param_name] = value
             
 
-    def plot_param_vs_xvdiff_integral(self, param_name, xv='x'):
+    def plot_param_vs_xvdiff_integral(self, param_name, xv='x', t_integral=None, fig_cnt=1):
 
-        fig = pylab.figure()
-        ax = fig.add_subplot(111)
-        
+        if t_integral == None:
+            t0 = '0'
+            t1 = 't_{sim}'
+        else:
+            t0 = 't=' + str(t_integral[0])
+            t1 = 't=' + str(t_integral[1])
+
+        ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         if xv == 'x':
             xvdiff_integral = self.xdiff_integral
-            title = '$\int_0^{t_{sim}} |\\vec{x}_{stim}(t) - \\vec{x}_{prediction}(t)| dt$ vs. %s' % param_name
+            title = '$\int_{%s}^{%s} |\\vec{x}_{stim}(t) - \\vec{x}_{prediction}(t)| dt$ vs. %s' % (t0, t1, param_name)
         else:
             xvdiff_integral = self.vdiff_integral
-            title = 'Integral of $|\\vec{v}_{stim}(t) - \\vec{v}_{prediction}(t)|$ vs. %s ' % param_name
+            title = '$\int_{%s}^{%s} |\\vec{v}_{stim}(t) - \\vec{v}_{prediction}(t)| dt$ vs. %s' % (t0, t1, param_name)
 
         x_data = np.zeros(len(self.dirs_to_process))
         y_data = xvdiff_integral
@@ -106,15 +137,14 @@ class ResultsCollector(object):
             param_value = self.param_space[i_][param_name]
             x_data[i_] = param_value
 
-        print 'debug x', x_data
-        print 'debug y', y_data
+        print ' Integral %s minimal diff:' % (xv), y_data.min()
         ax.plot(x_data, y_data, 'o')
         ax.set_xlim((x_data.min() * .9, x_data.max() * 1.1))
         ax.set_ylim((y_data.min() * .9, y_data.max() * 1.1))
         ax.set_xlabel(param_name, fontsize=18)
         ax.set_ylabel('Integral %s' % xv)
         ax.set_title(title)
-        pylab.show()
+#        pylab.show()
             
 
 

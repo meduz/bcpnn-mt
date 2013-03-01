@@ -63,10 +63,12 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     plotter.plot_x_estimates(4)
     plotter.plot_y_estimates(5) 
     plotter.plot_xdiff(6)
-#    plotter.plot_theta_estimates(5)
     output_fn = output_fn_base + '_1.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
+
+#    plotter.plot_theta_estimates(5)
+
 
     # fig 3
     # population level, long time-scale
@@ -83,12 +85,14 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
 
+    # fig 4
     plotter.n_fig_x = 1
     plotter.n_fig_y = 2
     output_fn = output_fn_base + '_4.png'
     plotter.create_fig()  # create an empty figure
     plotter.plot_network_activity('exc', 1)
     plotter.plot_network_activity('inh', 2)
+    print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
 
     plotter.n_fig_x = 1
