@@ -1,11 +1,9 @@
 import os
 import re
 
-#to_match = '^LargeScaleModel_AIII_scaleLatency0\.15(.*)delayScale(\d+)$'
-to_match = '^LargeScaleModel_AIII_scaleLatency0\.15(.*)tstim(\d+)$'
-#to_match = '^LargeScaleModel_IIII_scaleLatency0\.15(.*)delayScale(\d+)$'
-#to_match = '^LargeScaleModel_RRRR_(.*)'
-#to_match = '^LargeScaleModel_AAAA_(.*)'
+conn_code = 'AIII'
+to_match = '^LargeScaleModel_%s_scaleLatency0\.15(.*)wee(.*)tblank(\d+)$' % (conn_code)
+to_match = '^LargeScaleModel_(.*)$'
 script_name = 'plot_prediction.py'
 
 

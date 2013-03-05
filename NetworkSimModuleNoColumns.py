@@ -173,9 +173,9 @@ class NetworkModel(object):
         else:
             save_output = True
 
-#        self.connect_input_to_exc(load_files=False, save_output=save_output)
+        self.connect_input_to_exc(load_files=False, save_output=save_output)
 #        self.connect_input_to_exc(load_files=True, save_output=False)
-        self.connect_input_to_exc(load_files=False, save_output=False)
+#        self.connect_input_to_exc(load_files=False, save_output=False)
         self.connect_populations('ee')
         self.connect_populations('ei')
         self.connect_populations('ie')
@@ -638,15 +638,16 @@ if __name__ == '__main__':
 #    for scale_latency in [0.15]:
 #        for delay_scale in [20]:
 #            w_sigma_x, w_sigma_v = 0.10, 0.10
-#            w_ee = 0.03
-#            for t_stimulus in [100, 300, 400, 500]:
-#                ps.params['scale_latency'] = scale_latency
-#                ps.params['w_sigma_x'] = w_sigma_x
-#                ps.params['w_sigma_v'] = w_sigma_v
-#                ps.params['w_tgt_in_per_cell_ee'] = w_ee
-#                ps.params['delay_scale'] = delay_scale
-#                ps.params['t_stimulus'] = t_stimulus
-#                ps.set_filenames()
+#            for w_ee in [0.02, 0.025, 0.03, 0.035]:
+#                for t_blank in [150, 200, 250, 300]:
+#                    ps.params['scale_latency'] = scale_latency
+#                    ps.params['w_sigma_x'] = w_sigma_x
+#                    ps.params['w_sigma_v'] = w_sigma_v
+#                    ps.params['w_tgt_in_per_cell_ee'] = w_ee
+#                    ps.params['delay_scale'] = delay_scale
+#                    ps.params['t_blank'] = t_blank
+#                    ps.set_filenames()
+
     if pc_id == 0:
         ps.create_folders()
         ps.write_parameters_to_file()

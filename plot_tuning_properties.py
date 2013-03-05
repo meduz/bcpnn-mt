@@ -117,8 +117,8 @@ q = ax1.quiver(d[:, 0], d[:, 1], d[:, 2], d[:, 3], \
 ax1.set_xlabel('$x$', fontsize=16)
 ax1.set_ylabel('$y$', fontsize=16)
 ax1.set_title('Spatial receptive fields for %s cells\n n_rf=%d, n_units=%d' % (cell_type, n_rf, n_units))
-ax1.set_xlim((-.05, 1.15))
-ax1.set_ylim((-.05, 1.15))
+ax1.set_xlim((-.1, 1.1))
+ax1.set_ylim((-.1, 1.1))
 fig.colorbar(m, ax=ax1)
 
 ax2.set_xlabel('$u$', fontsize=16)

@@ -31,10 +31,10 @@ class ConnectionPlotter(object):
         self.fig = pylab.figure(figsize=(14, 10))
         self.ax = self.fig.add_subplot(n_plots_y, n_plots_x, 1)
         self.ax.set_title('Outgoing connections')
-        self.ax.set_xlabel('x position')
-        self.ax.set_ylabel('y position')
-        self.ax.set_xlim((-0.1, 1.1))
-        self.ax.set_ylim((-0.1, 1.1))
+        self.ax.set_xlabel('$x$-position')
+        self.ax.set_ylabel('$y$-position')
+        self.ax.set_xlim((0.1, 0.75))
+        self.ax.set_ylim((0.25, 0.75))
         self.legends = []
         self.quivers = {}
         self.directions = {}
@@ -401,11 +401,14 @@ if __name__ == '__main__':
 #        print 'gid, tp_tgt, p', tgt, tp_tgt[tgt, :], p[tgt]
 #    print 'tp_src', tp_src[src, :]
 #    gid = targets[0]
-    P.make_legend()
+#    P.make_legend()
 
     output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.png' % (gid, params['w_sigma_x'], params['w_sigma_v'])
     print 'Saving figure to', output_fig
     pylab.savefig(output_fig)
+    output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.eps' % (gid, params['w_sigma_x'], params['w_sigma_v'])
+    print 'Saving figure to', output_fig
+    pylab.savefig(output_fig, dpi=200)
 
     pylab.show()
 

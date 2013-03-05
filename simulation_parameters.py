@@ -30,16 +30,16 @@ class parameter_storage(object):
 
 
 #         Medium-large system
-        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 6, 6# resolution in velocity norm and direction
-
-#         Medium-scale system
-#        self.params['N_RF'] = 60# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#        self.params['N_V'], self.params['N_theta'] = 3, 6# resolution in velocity norm and direction
+#        self.params['N_V'], self.params['N_theta'] = 6, 6# resolution in velocity norm and direction
+
+#         Medium-scale system
+        self.params['N_RF'] = 60# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+        self.params['N_V'], self.params['N_theta'] = 4, 6# resolution in velocity norm and direction
 
 #         Small-scale system
 #        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
@@ -196,7 +196,7 @@ class parameter_storage(object):
         # ###################### 
         self.params['seed'] = 12345
         self.params['np_random_seed'] = 0
-        self.params['t_sim'] = 3000.                 # [ms] total simulation time
+        self.params['t_sim'] = 1000.                 # [ms] total simulation time
         self.params['t_stimulus'] = 200.            # [ms] time when stimulus ends, i.e. before the stimulus disappears
         self.params['t_blank'] = 200.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
         self.params['t_before_blank'] = 200.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
@@ -283,9 +283,9 @@ class parameter_storage(object):
                 folder_name = 'AdEx_SmallSpikingModel_'
 #                folder_name = 'AdEx_LargeScaleModel_'
             else:
-                folder_name = 'TestModel_'
+#                folder_name = 'TestModel_'
 #                folder_name = 'SLargeScaleModel_np192_noBlank_'
-#                folder_name = 'SmallScale_'
+                folder_name = 'SmallScale_'
 #                folder_name = 'LargeScaleModel_'
 
 
@@ -331,10 +331,10 @@ class parameter_storage(object):
 #            folder_name += "_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e/" % \
 #                        (self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
 #                     self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'])
-#            folder_name += "_scaleLatency%.2f_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delayScale%d_tblank%d/" % \
-            folder_name += "_scaleLatency%.2f_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delayScale%d/" % \
+#            folder_name += "_scaleLatency%.2f_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delayScale%d/" % \
+            folder_name += "_scaleLatency%.2f_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delayScale%d_tblank%d/" % \
                         (self.params['scale_latency'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
-                     self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'])#, self.params['t_blank'])
+                     self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'], self.params['t_blank'])
             self.params['folder_name'] = folder_name 
         else:
             self.params['folder_name'] = folder_name

@@ -99,6 +99,15 @@ class ResultsCollector(object):
                 idx_1 = (vdiff[:, 0] == t_range[1]).nonzero()[0][0]
                 self.vdiff_integral[i_] = vdiff[idx_0:idx_1, 1].sum()
 
+            print fn_x, self.xdiff_integral[i_], self.vdiff_integral[i_]
+
+        output_data = np.array((np.zeros(self.xdiff_integral.size), self.xdiff_integral, self.vdiff_integral))
+        self.output_data = output_data.transpose()
+
+
+    def save_output_data(self, output_fn):
+        print 'Saving xdiff and vdiff integral to:', output_fn
+        np.savetxt(output_fn, self.output_data)
 
 
     def get_parameter(self, param_name):
@@ -137,13 +146,14 @@ class ResultsCollector(object):
             param_value = self.param_space[i_][param_name]
             x_data[i_] = param_value
 
-        print ' Integral %s minimal diff:' % (xv), y_data.min()
+        print ' Data %s - prediction:\n' % (xv), x_data, '\n', y_data
         ax.plot(x_data, y_data, 'o')
         ax.set_xlim((x_data.min() * .9, x_data.max() * 1.1))
         ax.set_ylim((y_data.min() * .9, y_data.max() * 1.1))
         ax.set_xlabel(param_name, fontsize=18)
         ax.set_ylabel('Integral %s' % xv)
         ax.set_title(title)
+        self.output_data[:, 0] = x_data
 #        pylab.show()
             
 
