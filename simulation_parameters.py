@@ -39,14 +39,13 @@ class parameter_storage(object):
         self.params['N_RF'] = 60# np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 4, 6# resolution in velocity norm and direction
+        self.params['N_V'], self.params['N_theta'] = 4, 5# resolution in velocity norm and direction
 
 #         Small-scale system
 #        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 3, 3# resolution in velocity norm and direction
-
 
         # Minimum sized system
 #        self.params['N_RF'] = 9# np.int(n_cells/N_V/N_theta)
@@ -77,8 +76,8 @@ class parameter_storage(object):
         print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
         self.params['abstract_input_scaling_factor'] = 1.
         self.params['log_scale'] = 2 # base of the logarithmic tiling of particle_grid; linear if equal to one
-        self.params['sigma_RF_pos'] = .05 # some variability in the position of RFs
-        self.params['sigma_RF_speed'] = .3 # some variability in the speed of RFs
+        self.params['sigma_RF_pos'] = .02 # some variability in the position of RFs
+        self.params['sigma_RF_speed'] = .30 # some variability in the speed of RFs
         self.params['sigma_RF_direction'] = .25 * 2 * np.pi # some variability in the direction of RFs
         self.params['sigma_theta_training'] = 2 * np.pi * 0.00
 
@@ -104,6 +103,27 @@ class parameter_storage(object):
                 self.params['n_inh'] / float(self.params['n_exc']), self.params['n_inh'] / float(self.params['n_cells']))
 
         self.params['tau_prediction'] = .10        # when reading out the network prediction, each cell predicts the stimulus to be at position: x_pred = x_i + tau_prediction * v_i
+
+        # ###################
+        # CELL PARAMETERS   #
+        # ###################
+        # TODO: distribution of parameters (e.g. tau_m)
+        self.params['neuron_model'] = 'IF_cond_exp'
+#        self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
+        self.params['tau_syn_exc'] = 40.0 
+        self.params['tau_syn_inh'] = 30.0
+        if self.params['neuron_model'] == 'IF_cond_exp':
+            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
+            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
+        elif self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
+            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70, \
+                    'b' : 0.5, 'a':4.}
+            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70, \
+                    'b' : 0.5, 'a':4.}
+        # default parameters: /usr/local/lib/python2.6/dist-packages/pyNN/standardmodels/cells.py
+        self.params['v_init'] = -65                 # [mV]
+        self.params['v_init_sigma'] = 0.001             # [mV]
+
 
         # #######################
         # CONNECTIVITY PARAMETERS
@@ -144,6 +164,11 @@ class parameter_storage(object):
         self.params['w_tgt_in_per_cell_ei'] = 0.04 # [uS] how much input should an inh cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ie'] = 0.06 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.01 # [uS] how much input should an inh cell get from its source cells?
+        self.params['w_tgt_in_per_cell_ee'] *= 20. / self.params['tau_syn_exc']
+        self.params['w_tgt_in_per_cell_ei'] *= 20. / self.params['tau_syn_exc']
+        self.params['w_tgt_in_per_cell_ie'] *= 30. / self.params['tau_syn_inh']
+        self.params['w_tgt_in_per_cell_ii'] *= 30. / self.params['tau_syn_inh']
+        self.params['conn_types'] = ['ee', 'ei', 'ie', 'ii']
 
         self.params['p_ee'] = 0.01# fraction of network cells allowed to connect to each target cell, used in CreateConnections
         self.params['w_thresh_connection'] = 1e-5 # connections with a weight less then this value will be discarded
@@ -170,26 +195,6 @@ class parameter_storage(object):
         # for random connections only:
         self.params['standard_delay'] = 5           # [ms]
         self.params['standard_delay_sigma'] = 2           # [ms]
-
-        # ###################
-        # CELL PARAMETERS   #
-        # ###################
-        # TODO: distribution of parameters (e.g. tau_m)
-        self.params['neuron_model'] = 'IF_cond_exp'
-#        self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
-        if self.params['neuron_model'] == 'IF_cond_exp':
-            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':20.0, 'tau_syn_I':30.0, 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
-            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':20.0, 'tau_syn_I':30.0, 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
-        elif self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
-            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':20.0, 'tau_syn_I':30.0, 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70, \
-                    'b' : 0.5, 'a':4.}
-            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':20.0, 'tau_syn_I':30.0, 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70, \
-                    'b' : 0.5, 'a':4.}
-        self.params['tau_syn_exc'] = self.params['cell_params_exc']['tau_syn_E']
-        self.params['tau_syn_inh'] = self.params['cell_params_inh']['tau_syn_I']
-        # default parameters: /usr/local/lib/python2.6/dist-packages/pyNN/standardmodels/cells.py
-        self.params['v_init'] = -65                 # [mV]
-        self.params['v_init_sigma'] = 0.001             # [mV]
 
         # ######################
         # SIMULATION PARAMETERS 
@@ -283,7 +288,7 @@ class parameter_storage(object):
                 folder_name = 'AdEx_SmallSpikingModel_'
 #                folder_name = 'AdEx_LargeScaleModel_'
             else:
-#                folder_name = 'TestModel_'
+#                folder_name = 'TuningProp_'
 #                folder_name = 'SLargeScaleModel_np192_noBlank_'
                 folder_name = 'SmallScale_'
 #                folder_name = 'LargeScaleModel_'
@@ -328,12 +333,11 @@ class parameter_storage(object):
 
             self.params['connectivity_code'] = connectivity_code
             folder_name += connectivity_code
-#            folder_name += "_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e/" % \
-#                        (self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
-#                     self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'])
-#            folder_name += "_scaleLatency%.2f_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delayScale%d/" % \
-            folder_name += "_scaleLatency%.2f_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delayScale%d_tblank%d/" % \
-                        (self.params['scale_latency'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
+#            folder_name += "_scaleLatency%.2f_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delayScale%d_tblank%d/" % \
+#                        (self.params['scale_latency'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
+#                     self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'], self.params['t_blank'])
+            folder_name += "_scaleLatency%.2f_tauSynE%d_tauSynI%d_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delayScale%d_tblank%d/" % \
+                        (self.params['scale_latency'], self.params['tau_syn_exc'], self.params['tau_syn_inh'], self.params['w_tgt_in_per_cell_ee'], \
                      self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'], self.params['t_blank'])
             self.params['folder_name'] = folder_name 
         else:
@@ -421,7 +425,6 @@ class parameter_storage(object):
         self.params['bias_values_fn_base'] = '%sbias_values_' % (self.params['bias_folder'])
 
         # CONNECTION FILES
-        self.params['conn_types'] = ['ee', 'ei', 'ie', 'ii']
         self.params['weight_and_delay_fig'] = '%sweights_and_delays.png' % (self.params['figures_folder'])
 
         # connection lists have the following format: src_gid  tgt_gid  weight  delay

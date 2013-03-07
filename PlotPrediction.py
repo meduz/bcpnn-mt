@@ -38,6 +38,7 @@ class PlotPrediction(object):
         self.t_axis = np.arange(0, self.n_bins * self.time_binsize, self.time_binsize)
         self.n_vx_bins, self.n_vy_bins = 30, 30     # colormap grid dimensions for predicted direction
         self.n_x_bins, self.n_y_bins = 50, 50       # colormap grid dimensions for predicted position
+        self.t_ticks = np.linspace(0, self.params['t_sim'], 6)
 
         self.tuning_prop = np.loadtxt(self.params['tuning_prop_means_fn'])
         self.n_cells = self.tuning_prop[:, 0].size #self.params['n_exc']
@@ -182,6 +183,12 @@ class PlotPrediction(object):
 
 
     def get_average_of_circular_quantity(self, confidence_vec, tuning_vec, xv='x'):
+        """
+        Computes the population average of a circular quantity.
+        This is done by 1) mapping the quantity onto a circle
+        2) weighting the single quantities on the circle
+        3) getting the average by using arctan2 giving the 'directed' angle
+        """
 
         if xv == 'x':
             range_0_1 = True
@@ -340,10 +347,13 @@ class PlotPrediction(object):
             x_exp = np.exp(x_shifted)
             y_exp = np.exp(y_shifted)
             # normalize and vote
-            x_votes = (x_exp / x_exp.sum()) * self.x_tuning
-            y_votes = (y_exp / y_exp.sum()) * self.y_tuning
-            self.x_non_linear[i] = x_votes.sum()
-            self.y_non_linear[i] = y_votes.sum()
+#            x_votes = (x_exp / x_exp.sum()) * self.x_tuning
+#            y_votes = (y_exp / y_exp.sum()) * self.y_tuning
+#            self.x_non_linear[i] = x_votes.sum()
+#            self.y_non_linear[i] = y_votes.sum()
+#            self.xdiff_non_linear[i] = np.sqrt((stim_pos_x - self.x_non_linear[i])**2 + (stim_pos_y - self.y_non_linear[i])**2)
+            self.x_non_linear[i] = self.get_average_of_circular_quantity(x_exp, self.x_tuning, xv='x')
+            self.y_non_linear[i] = self.get_average_of_circular_quantity(y_exp, self.x_tuning, xv='x')
             self.xdiff_non_linear[i] = np.sqrt((stim_pos_x - self.x_non_linear[i])**2 + (stim_pos_y - self.y_non_linear[i])**2)
 
             # v
@@ -354,11 +364,15 @@ class PlotPrediction(object):
             vx_exp = np.exp(vx_shifted)
             vy_exp = np.exp(vy_shifted)
             # normalize and vote
-            vx_votes = (vx_exp / vx_exp.sum()) * self.vx_tuning
-            vy_votes = (vy_exp / vy_exp.sum()) * self.vy_tuning
-            self.vx_non_linear[i] = vx_votes.sum()
-            self.vy_non_linear[i] = vy_votes.sum()
-            self.vdiff_non_linear[i] = np.sqrt((mp[2] - self.vx_non_linear[i])**2 + (mp[3] - self.vy_non_linear[i])**2)
+#            vx_votes = (vx_exp / vx_exp.sum()) * self.vx_tuning
+#            vy_votes = (vy_exp / vy_exp.sum()) * self.vy_tuning
+#            self.vx_non_linear[i] = vx_votes.sum()
+#            self.vy_non_linear[i] = vy_votes.sum()
+#            self.vdiff_non_linear[i] = np.sqrt((mp[2] - self.vx_non_linear[i])**2 + (mp[3] - self.vy_non_linear[i])**2)
+
+            self.vx_non_linear[i] = self.get_average_of_circular_quantity(vx_exp, self.vx_tuning, xv='v')
+            self.vy_non_linear[i] = self.get_average_of_circular_quantity(vy_exp, self.vy_tuning, xv='v')
+            self.vdiff_non_linear[i] = np.sqrt((mp[2]- self.vx_non_linear[i])**2 + (mp[3]- self.vy_non_linear[i])**2)
 
         # in the first step the trace can not have a standard deviation --> avoid NANs 
         self.x_moving_avg[0, 0] = np.sum(self.x_confidence_binned[self.sorted_indices_x, 0] * self.x_tuning)
@@ -566,10 +580,13 @@ class PlotPrediction(object):
         ax.set_yticks(y_ticks)
         ax.set_yticklabels(['%.2f' %i for i in yticks[::5]])
 
-        n_x_bins = 11
-        x_bin_labels = np.linspace(0, self.time_bins[-1], n_x_bins)
+        n_x_bins = len(self.t_ticks)
+        x_bin_labels = ['%d' % i for i in self.t_ticks]
         ax.set_xticks(np.linspace(0, self.n_bins, n_x_bins))#range(self.n_bins)[::4])
-        ax.set_xticklabels(['%d' %i for i in x_bin_labels])
+        ax.set_xticklabels(x_bin_labels)
+#        print  '\nDEBUG\n\t ticks', self.t_ticks
+#        ax.set_xticks(self.t_ticks)
+#        ax.set_xticklabels(['%d' %i for i in self.t_ticks])
 #        color_boundaries = (0., .5)
         max_conf = min(0.5, data.max())
         norm = matplotlib.mpl.colors.Normalize(vmin=0, vmax=max_conf)
@@ -587,17 +604,17 @@ class PlotPrediction(object):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title('Position prediction error: \n $|\\vec{x}_{diff}(t)| = |\\vec{x}_{stim}(t) - \\vec{x}_{predicted}(t)|$')#, fontsize=self.plot_params['title_fs'])
         ax.plot(self.t_axis, self.xdiff_avg, ls='-', lw=2, label='linear')
-        ax.plot(self.t_axis, self.xdiff_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
+#        ax.plot(self.t_axis, self.xdiff_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
 #        ax.errorbar(self.t_axis, self.xdiff_moving_avg[:, 0], yerr=self.xdiff_moving_avg[:, 1], ls='--', lw=2, label='moving avg')
         ax.plot(self.t_axis, self.xdiff_non_linear, ls=':', lw=2, label='soft-max')
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$|\\vec{x}_{diff}|$')
         ax.legend()#loc='upper right')
         ny = self.t_axis.size
-        n_ticks = min(10, int(round(self.params['t_sim'] / 100.)))
-        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
-        t_labels= ['%d' % i for i in t_ticks]
-        ax.set_xticks(t_ticks)
+        n_ticks = min(11, int(round(self.params['t_sim'] / 100.)))
+#        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
+        t_labels= ['%d' % i for i in self.t_ticks]
+        ax.set_xticks(self.t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
         if show_blank:
@@ -619,17 +636,17 @@ class PlotPrediction(object):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title('Velocity prediction error: \n $|\\vec{v}_{diff}(t)| = |\\vec{v}_{stim}-\\vec{v}_{predicted}(t)|$')#, fontsize=self.plot_params['title_fs'])
         ax.plot(self.t_axis, self.vdiff_avg, ls='-', lw=2, label='linear')
-        ax.plot(self.t_axis, self.vdiff_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
+#        ax.plot(self.t_axis, self.vdiff_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
 #        ax.errorbar(self.t_axis, self.vdiff_moving_avg[:, 0], yerr=self.vdiff_moving_avg[:, 1], ls='--', lw=2, label='moving avg')
         ax.plot(self.t_axis, self.vdiff_non_linear, ls=':', lw=2, label='soft-max')
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$|\\vec{v}_{diff}|$')
         ax.legend()#loc='upper right')
         ny = self.t_axis.size
-        n_ticks = min(10, int(round(self.params['t_sim'] / 100.)))
-        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
-        t_labels= ['%d' % i for i in t_ticks]
-        ax.set_xticks(t_ticks)
+#        n_ticks = min(11, int(round(self.params['t_sim'] / 100.)))
+#        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
+        t_labels= ['%d' % i for i in self.t_ticks]
+        ax.set_xticks(self.t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
         if show_blank:
@@ -683,7 +700,7 @@ class PlotPrediction(object):
         ax.set_xticks(range(self.n_bins)[::2])
         ax.set_xticklabels(['%d' %i for i in self.time_bins[::2]])
         ny = self.vx_tuning.size
-        n_ticks = min(10, int(round(self.params['t_sim'] / 100.)))
+        n_ticks = min(11, int(round(self.params['t_sim'] / 100.)))
         yticks = [self.vx_tuning[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
         ylabels = ['%.1e' % i for i in yticks]
         ax.set_yticks([int(i * ny/n_ticks) for i in xrange(n_ticks)])
@@ -706,7 +723,7 @@ class PlotPrediction(object):
         ax.set_xticks(range(self.n_bins)[::2])
         ax.set_xticklabels(['%d' %i for i in self.time_bins[::2]])
         ny = self.vy_tuning.size
-        n_ticks = min(10, int(round(self.params['t_sim'] / 100.)))
+        n_ticks = min(11, int(round(self.params['t_sim'] / 100.)))
         yticks = [self.vy_tuning[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
         ylabels = ['%.1e' % i for i in yticks]
         ax.set_yticks([int(i * ny/n_ticks) for i in xrange(n_ticks)])
@@ -722,7 +739,7 @@ class PlotPrediction(object):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title('$x$-predictions')#: avg, moving_avg, nonlinear')
         ax.plot(self.t_axis, self.x_avg, ls='-', lw=2, label='linear')
-        ax.plot(self.t_axis, self.x_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
+#        ax.plot(self.t_axis, self.x_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
 #        ax.errorbar(self.t_axis, self.x_moving_avg[:, 0], yerr=self.x_moving_avg[:, 1], ls='--', lw=2, label='moving avg')
         ax.plot(self.t_axis, self.x_non_linear, ls=':', lw=2, label='soft-max')
         ax.plot(self.t_axis, self.x_stim, ls='-', c='k', lw=2, label='$x_{stim}$')
@@ -730,10 +747,10 @@ class PlotPrediction(object):
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$x$ position [a.u.]')
         ny = self.t_axis.size
-        n_ticks = min(10, int(round(self.params['t_sim'] / 100.)))
-        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
-        t_labels= ['%d' % i for i in t_ticks]
-        ax.set_xticks(t_ticks)
+        n_ticks = min(11, int(round(self.params['t_sim'] / 100.)))
+#        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
+        t_labels= ['%d' % i for i in self.t_ticks]
+        ax.set_xticks(self.t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
         if show_blank:
@@ -746,7 +763,7 @@ class PlotPrediction(object):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title('$y$-predictions')#: avg, moving_avg, nonlinear')
         ax.plot(self.t_axis, self.y_avg, ls='-', lw=2, label='linear')
-        ax.plot(self.t_axis, self.y_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
+#        ax.plot(self.t_axis, self.y_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
 #        ax.errorbar(self.t_axis, self.y_moving_avg[:, 0], yerr=self.y_moving_avg[:, 1], ls='--', lw=2, label='moving avg')
         ax.plot(self.t_axis, self.y_non_linear, ls=':', lw=2, label='soft-max')
         ax.plot(self.t_axis, self.y_stim, ls='-', c='k', lw=2, label='$y_{stim}$')
@@ -755,10 +772,10 @@ class PlotPrediction(object):
 #        ax.legend()
         ax.legend()#loc='lower right')
         ny = self.t_axis.size
-        n_ticks = min(10, int(round(self.params['t_sim'] / 100.)))
-        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
-        t_labels= ['%d' % i for i in t_ticks]
-        ax.set_xticks(t_ticks)
+        n_ticks = min(11, int(round(self.params['t_sim'] / 100.)))
+#        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
+        t_labels= ['%d' % i for i in self.t_ticks]
+        ax.set_xticks(self.t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
         if show_blank:
@@ -772,7 +789,7 @@ class PlotPrediction(object):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title('$v_{x}$-predictions')#: avg, moving_avg, nonlinear')
         ax.plot(self.t_axis, self.vx_avg, ls='-', lw=2, label='linear')
-        ax.plot(self.t_axis, self.vx_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
+#        ax.plot(self.t_axis, self.vx_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
 #        ax.errorbar(self.t_axis, self.vx_moving_avg[:, 0], yerr=self.vx_moving_avg[:, 1], ls='--', lw=2, label='moving avg')
         ax.plot(self.t_axis, self.vx_non_linear, ls=':', lw=2, label='soft-max')
         vx = self.params['motion_params'][2] * np.ones(self.t_axis.size)
@@ -781,10 +798,10 @@ class PlotPrediction(object):
         ax.set_ylabel('$v_x$')
         ax.legend()#loc='lower right')
         ny = self.t_axis.size
-        n_ticks = min(10, int(round(self.params['t_sim'] / 100.)))
-        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
-        t_labels= ['%d' % i for i in t_ticks]
-        ax.set_xticks(t_ticks)
+        n_ticks = min(11, int(round(self.params['t_sim'] / 100.)))
+#        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
+        t_labels= ['%d' % i for i in self.t_ticks]
+        ax.set_xticks(self.t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
         if show_blank:
@@ -799,7 +816,7 @@ class PlotPrediction(object):
             show_blank = self.show_blank
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.plot(self.t_axis, self.vy_avg, ls='-', lw=2, label='linear')
-        ax.plot(self.t_axis, self.vy_moving_avg[:, 0], lw=2, ls='--', label='moving avg')
+#        ax.plot(self.t_axis, self.vy_moving_avg[:, 0], lw=2, ls='--', label='moving avg')
 #        ax.errorbar(self.t_axis, self.vy_moving_avg[:, 0], yerr=self.vy_moving_avg[:, 1], lw=2, ls='--', label='moving avg')
         ax.plot(self.t_axis, self.vy_non_linear, ls=':', lw=2, label='soft-max')
         vy = self.params['motion_params'][3] * np.ones(self.t_axis.size)
@@ -809,10 +826,10 @@ class PlotPrediction(object):
         ax.set_title('$v_{y}$-predictions')#: avg, moving_avg, nonlinear')
         ax.legend()#loc='lower right')
         ny = self.t_axis.size
-        n_ticks = min(10, int(round(self.params['t_sim'] / 100.)))
-        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
-        t_labels= ['%d' % i for i in t_ticks]
-        ax.set_xticks(t_ticks)
+        n_ticks = min(11, int(round(self.params['t_sim'] / 100.)))
+#        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
+        t_labels= ['%d' % i for i in self.t_ticks]
+        ax.set_xticks(self.t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
         if show_blank:
@@ -827,16 +844,16 @@ class PlotPrediction(object):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title('$\Theta$-predictions: avg, moving_avg, nonlinear')
         ax.plot(self.t_axis, self.theta_avg, ls='-')
-        ax.plot(self.t_axis, self.theta_moving_avg[:, 0], ls='--')
+#        ax.plot(self.t_axis, self.theta_moving_avg[:, 0], ls='--')
 #        ax.errorbar(self.t_axis, self.theta_moving_avg[:, 0], yerr=self.theta_moving_avg[:, 1], ls='--')
         ax.plot(self.t_axis, self.theta_non_linear, ls=':')
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$\Theta$')
         ny = self.t_axis.size
-        n_ticks = min(10, int(round(self.params['t_sim'] / 100.)))
-        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
-        t_labels= ['%d' % i for i in t_ticks]
-        ax.set_xticks(t_ticks)
+        n_ticks = min(11, int(round(self.params['t_sim'] / 100.)))
+#        t_ticks = [self.t_axis[int(i * ny/n_ticks)] for i in xrange(n_ticks)]
+        t_labels= ['%d' % i for i in self.t_ticks]
+        ax.set_xticks(self.t_ticks)
         ax.set_xticklabels(t_labels)
         ax.set_xlim((0, self.params['t_sim']))
         if show_blank:
@@ -964,14 +981,14 @@ class PlotPrediction(object):
 
     def plot_blank(self, ax, c='k'):
         ylim = ax.get_ylim()
-        ax.plot((self.params['t_stimulus'], self.params['t_stimulus']), (ylim[0], ylim[1]), ls='--', c=c, lw=2)
-        ax.plot((self.params['t_stimulus'] + self.params['t_blank'], self.params['t_stimulus'] + self.params['t_blank']), (ylim[0], ylim[1]), ls='--', c=c, lw=2)
+        ax.plot((self.params['t_before_blank'], self.params['t_before_blank']), (ylim[0], ylim[1]), ls='--', c=c, lw=2)
+        ax.plot((self.params['t_before_blank'] + self.params['t_blank'], self.params['t_before_blank'] + self.params['t_blank']), (ylim[0], ylim[1]), ls='--', c=c, lw=2)
         ax.set_ylim(ylim)
 
     def plot_blank_on_cmap(self, cax, c='w', txt=''):
         ax = cax.axes
-        ax.axvline(self.params['t_stimulus'] / self.time_binsize, ls='--', color=c, lw=3)
-        ax.axvline((self.params['t_stimulus'] + self.params['t_blank']) / self.time_binsize, ls='--', color=c, lw=3)
+        ax.axvline(self.params['t_before_blank'] / self.time_binsize, ls='--', color=c, lw=3)
+        ax.axvline((self.params['t_before_blank'] + self.params['t_blank']) / self.time_binsize, ls='--', color=c, lw=3)
 
         if txt != '':
             txt_pos_x = (self.params['t_stimulus'] + .25 * self.params['t_blank']) / self.time_binsize

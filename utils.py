@@ -447,11 +447,14 @@ def set_tuning_prop(params, mode='hexgrid', cell_type='exc'):
         parity = np.arange(params['N_V']) % 2
 
         RF = np.zeros((2, n_rf_x * n_rf_y))
+#        RF = np.zeros((2, (n_rf_x + 1) * (n_rf_y + 1)))
         X, Y = np.mgrid[0:1:1j*(n_rf_x+1), 0:1:1j*(n_rf_y+1)]
+#        X, Y = np.mgrid[0:1:1j*(n_rf_x), 0:1:1j*(n_rf_y)]
     
         # It's a torus, so we remove the first row and column to avoid redundancy (would in principle not harm)
         X, Y = X[1:, 1:], Y[1:, 1:]
         # Add to every even Y a half RF width to generate hex grid
+#        Y[1::2, :] += (Y[0, 0] - Y[0, 1])/2 # 1./N_RF
         Y[::2, :] += (Y[0, 0] - Y[0, 1])/2 # 1./N_RF
         RF[0, :] = X.ravel()
         RF[1, :] = Y.ravel()
@@ -463,8 +466,11 @@ def set_tuning_prop(params, mode='hexgrid', cell_type='exc'):
         for i_RF in xrange(n_rf_x * n_rf_y):
             for i_v_rho, rho in enumerate(v_rho):
                 for i_theta, theta in enumerate(v_theta):
-                    tuning_prop[index, 0] = (RF[0, i_RF] + params['sigma_RF_pos'] * rnd.randn()) % 1.
-                    tuning_prop[index, 1] = (RF[1, i_RF] + params['sigma_RF_pos'] * rnd.randn()) % 1.
+#                    tuning_prop[index, 0] = (RF[0, i_RF] + params['sigma_RF_pos'] * rnd.randn()) % 1.
+#                    tuning_prop[index, 1] = (RF[1, i_RF] + params['sigma_RF_pos'] * rnd.randn()) % 1.
+                    # for plotting this looks nicer, and due to the torus property it doesn't make a difference
+                    tuning_prop[index, 0] = (RF[0, i_RF] + params['sigma_RF_pos'] * rnd.randn())
+                    tuning_prop[index, 1] = (RF[1, i_RF] + params['sigma_RF_pos'] * rnd.randn())
                     tuning_prop[index, 2] = np.cos(theta + random_rotation[i_RF] + parity[i_v_rho] * np.pi / n_theta) \
                             * rho * (1. + params['sigma_RF_speed'] * rnd.randn())
                     tuning_prop[index, 3] = np.sin(theta + random_rotation[i_RF] + parity[i_v_rho] * np.pi / n_theta) \

@@ -74,7 +74,7 @@ class NetworkModel(object):
 
         if not load_tuning_prop:
             self.tuning_prop_exc = utils.set_tuning_prop(self.params, mode='hexgrid', cell_type='exc')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
-            self.tuning_prop_inh= utils.set_tuning_prop(self.params, mode='hexgrid', cell_type='inh')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+            self.tuning_prop_inh = utils.set_tuning_prop(self.params, mode='hexgrid', cell_type='inh')        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
         else:
             self.tuning_prop_exc = np.loadtxt(self.params['tuning_prop_means_fn'])
             self.tuning_prop_inh = np.loadtxt(self.params['tuning_prop_inh_fn'])
@@ -545,7 +545,7 @@ class NetworkModel(object):
 
 
 
-    def run_sim(self, sim_cnt): # this function expects a parameter dictionary
+    def run_sim(self, sim_cnt, record_v=True): # this function expects a parameter dictionary
         # # # # # # # # # # # # # # # # # # # #
         #     P R I N T    W E I G H T S      # 
         # # # # # # # # # # # # # # # # # # # #
@@ -569,10 +569,11 @@ class NetworkModel(object):
             n_cells_to_record = 5# self.params['n_exc'] * 0.02
             gids_to_record = np.random.randint(0, self.params['n_exc'], n_cells_to_record)
 
-        self.exc_pop_view = PopulationView(self.exc_pop, gids_to_record, label='good_exc_neurons')
-        self.exc_pop_view.record_v()
-        self.inh_pop_view = PopulationView(self.inh_pop, np.random.randint(0, self.params['n_inh'], self.params['n_gids_to_record']), label='random_inh_neurons')
-        self.inh_pop_view.record_v()
+        if record_v:
+            self.exc_pop_view = PopulationView(self.exc_pop, gids_to_record, label='good_exc_neurons')
+            self.exc_pop_view.record_v()
+            self.inh_pop_view = PopulationView(self.inh_pop, np.random.randint(0, self.params['n_inh'], self.params['n_gids_to_record']), label='random_inh_neurons')
+            self.inh_pop_view.record_v()
 
         self.inh_pop.record()
         self.exc_pop.record()
@@ -585,27 +586,26 @@ class NetworkModel(object):
 
 
 
-    def print_results(self):
+    def print_results(self, print_v=True):
         """
             # # # # # # # # # # # # # # # # #
             #     P R I N T    R E S U L T S 
             # # # # # # # # # # # # # # # # #
         """
-        if self.pc_id == 0:
-            print 'print_v to file: %s.v' % (self.params['exc_volt_fn_base'])
-        self.exc_pop_view.print_v("%s.v" % (self.params['exc_volt_fn_base']), compatible_output=False)
+        if print_v:
+            if self.pc_id == 0:
+                print 'print_v to file: %s.v' % (self.params['exc_volt_fn_base'])
+            self.exc_pop_view.print_v("%s.v" % (self.params['exc_volt_fn_base']), compatible_output=False)
+            if self.pc_id == 0:
+                print "Printing inhibitory membrane potentials"
+            self.inh_pop_view.print_v("%s.v" % (self.params['inh_volt_fn_base']), compatible_output=False)
+
         if self.pc_id == 0:
             print "Printing excitatory spikes"
         self.exc_pop.printSpikes(self.params['exc_spiketimes_fn_merged'] + '.ras')
-    #    nspikes = self.exc_pop.get_spike_counts(gather=False)
-    #    print '%d get spike counts:', nspikes
-
         if self.pc_id == 0:
             print "Printing inhibitory spikes"
         self.inh_pop.printSpikes(self.params['inh_spiketimes_fn_merged'] + '.ras')
-        if self.pc_id == 0:
-            print "Printing inhibitory membrane potentials"
-        self.inh_pop_view.print_v("%s.v" % (self.params['inh_volt_fn_base']), compatible_output=False)
 
         self.times['t_print'] = self.timer.diff()
         if self.pc_id == 0:
@@ -636,28 +636,41 @@ if __name__ == '__main__':
 #    ps.params['connectivity_ie'] = 'isotropic'
 #    ps.params['connectivity_ii'] = 'isotropic'
 #    for scale_latency in [0.15]:
-#        for delay_scale in [20]:
+#        for delay_scale in [5, 10, 30, 40, 50, 75, 100]:
 #            w_sigma_x, w_sigma_v = 0.10, 0.10
-#            for w_ee in [0.02, 0.025, 0.03, 0.035]:
-#                for t_blank in [150, 200, 250, 300]:
+#            for w_ee in [0.03]:
+#                for t_blank in [200]:#, 250, 300]:
 #                    ps.params['scale_latency'] = scale_latency
 #                    ps.params['w_sigma_x'] = w_sigma_x
 #                    ps.params['w_sigma_v'] = w_sigma_v
 #                    ps.params['w_tgt_in_per_cell_ee'] = w_ee
 #                    ps.params['delay_scale'] = delay_scale
-#                    ps.params['t_blank'] = t_blank
-#                    ps.set_filenames()
 
-    if pc_id == 0:
-        ps.create_folders()
-        ps.write_parameters_to_file()
-    if comm != None:
-        comm.Barrier()
-    sim_cnt = 0
-    NM = NetworkModel(ps.params, comm)
-    NM.setup(times=times)
-    NM.create()
-    NM.connect()
-    NM.run_sim(sim_cnt)
-    NM.print_results()
+    t_exc = [40, 60, 80, 100]
+    t_inh = [60, 90, 120, 150]
+    for tau_syn_exc in t_exc:
+        for tau_syn_inh in t_inh:
+            ps.params['tau_syn_exc'] = tau_syn_exc
+            ps.params['tau_syn_inh'] = tau_syn_inh
+            ps.params['w_tgt_in_per_cell_ee'] *= 20. / ps.params['tau_syn_exc']
+            ps.params['w_tgt_in_per_cell_ei'] *= 20. / ps.params['tau_syn_exc']
+            ps.params['w_tgt_in_per_cell_ie'] *= 30. / ps.params['tau_syn_inh']
+            ps.params['w_tgt_in_per_cell_ii'] *= 30. / ps.params['tau_syn_inh']
+            ps.params['t_blank'] = 300
+
+            ps.set_filenames()
+
+            if pc_id == 0:
+                ps.create_folders()
+                ps.write_parameters_to_file()
+            if comm != None:
+                comm.Barrier()
+            sim_cnt = 0
+            record = False
+            NM = NetworkModel(ps.params, comm)
+            NM.setup(times=times)
+            NM.create()
+            NM.connect()
+            NM.run_sim(sim_cnt, record_v=record)
+            NM.print_results(print_v=record)
 

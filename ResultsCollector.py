@@ -87,16 +87,17 @@ class ResultsCollector(object):
             fn_v = folder + '/' + results_sub_folder + fn_base_v
             xdiff = np.loadtxt(fn_x)
             vdiff = np.loadtxt(fn_v)
+            time_binsize = xdiff[1, 0] - xdiff[0, 0]
             if t_range == None:
                 self.xdiff_integral[i_] = xdiff[:, 1].sum()
                 self.vdiff_integral[i_] = vdiff[:, 1].sum()
             else:
                 idx_0 = (xdiff[:, 0] == t_range[0]).nonzero()[0][0]
-                idx_1 = (xdiff[:, 0] == t_range[1]).nonzero()[0][0]
+                idx_1 = (xdiff[:, 0] == t_range[1] - time_binsize).nonzero()[0][0]
                 self.xdiff_integral[i_] = xdiff[idx_0:idx_1, 1].sum()
 
                 idx_0 = (vdiff[:, 0] == t_range[0]).nonzero()[0][0]
-                idx_1 = (vdiff[:, 0] == t_range[1]).nonzero()[0][0]
+                idx_1 = (vdiff[:, 0] == t_range[1] - time_binsize).nonzero()[0][0]
                 self.vdiff_integral[i_] = vdiff[idx_0:idx_1, 1].sum()
 
             print fn_x, self.xdiff_integral[i_], self.vdiff_integral[i_]
@@ -107,7 +108,10 @@ class ResultsCollector(object):
 
     def save_output_data(self, output_fn):
         print 'Saving xdiff and vdiff integral to:', output_fn
-        np.savetxt(output_fn, self.output_data)
+        idx = self.output_data.argsort(0)
+#        print 'idx', idx
+#        print 'data[idx]', self.output_data[idx[:, 0]]
+        np.savetxt(output_fn, self.output_data[idx[:, 0]])
 
 
     def get_parameter(self, param_name):

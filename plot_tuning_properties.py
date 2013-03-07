@@ -50,6 +50,8 @@ def plot_scatter_with_histograms(x, y):
     axHistx.hist(x, bins=bins)
     axHisty.hist(y, bins=bins, orientation='horizontal')
 
+#    print 'xlim', axScatter.get_xlim(), axScatter.get_ylim()
+    print 'xymax', xymax, np.max(np.fabs(x)), np.max(np.fabs(y))
     axHistx.set_xlim( axScatter.get_xlim() )
     axHisty.set_ylim( axScatter.get_ylim() )
 
@@ -57,20 +59,30 @@ def plot_scatter_with_histograms(x, y):
 
 
 # load simulation parameters
-network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
-params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
-pylab.rcParams['lines.markeredgewidth'] = 0
+ps = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
+params = ps.load_params()                       # params stores cell numbers, etc as a dictionary
+rcParams = { 'axes.labelsize' : 18,
+            'label.fontsize': 20,
+            'xtick.labelsize' : 16, 
+            'ytick.labelsize' : 16, 
+            'axes.titlesize'  : 20,
+            'legend.fontsize': 9, 
+            'lines.markeredgewidth' : 0}
+pylab.rcParams.update(rcParams)
 
 
-print 'Computing the tuning properties'
+
 try:
     cell_type = sys.argv[1]
 except:
     cell_type = 'exc'
 
 fn = params['tuning_prop_means_fn']
-d = np.loadtxt(fn)
-#d = utils.set_tuning_prop(params, mode='hexgrid', cell_type=cell_type)        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+#print '\nLoading from', fn
+#d = np.loadtxt(fn)
+print '\nCalculating the tuning prop'
+ps.create_folders()
+d = utils.set_tuning_prop(params, mode='hexgrid', cell_type=cell_type)        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
 
 n_cells = d[:, 0].size
 if cell_type == 'exc':
@@ -92,7 +104,7 @@ ax1 = fig.add_subplot(121)
 ax2 = fig.add_subplot(122)
 
 
-scale = 4. # scale of the quivers / arrows
+scale = 6. # scale of the quivers / arrows
 # set the colorscale for directions
 o_min = 0.
 o_max = 360.
@@ -111,21 +123,23 @@ for i in xrange(n_cells):
     angle = ((thetas[i] + np.pi) / (2 * np.pi)) * 360. # theta determines h, h must be [0, 360)
     rgba_colors.append(m.to_rgba(angle))
     ax2.plot(u, v, 'o', color='k', markersize=ms)#, edgecolors=None)
+    ax1.plot(x, y, 'o', color='k', markersize=2)
 
 q = ax1.quiver(d[:, 0], d[:, 1], d[:, 2], d[:, 3], \
           angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4, pivot='tail')
-ax1.set_xlabel('$x$', fontsize=16)
-ax1.set_ylabel('$y$', fontsize=16)
-ax1.set_title('Spatial receptive fields for %s cells\n n_rf=%d, n_units=%d' % (cell_type, n_rf, n_units))
-ax1.set_xlim((-.1, 1.1))
-ax1.set_ylim((-.1, 1.1))
-fig.colorbar(m, ax=ax1)
+ax1.set_xlabel('$x$')#, fontsize=20)
+ax1.set_ylabel('$y$')#, fontsize=16)
+ax1.set_title('Spatial receptive fields')# for %s cells\n n_rf=%d, n_units=%d' % (cell_type, n_rf, n_units))
+ax1.set_xlim((-.05, 1.1))
+ax1.set_ylim((-.05, 1.1))
+cb = fig.colorbar(m, ax=ax1)
+cb.set_label('Preferred angle of motion')
 
-ax2.set_xlabel('$u$', fontsize=16)
-ax2.set_ylabel('$v$', fontsize=16)
+ax2.set_xlabel('$u$')#, fontsize=16)
+ax2.set_ylabel('$v$')#, fontsize=16)
 ax2.set_ylim((d[:, 3].min() * 1.05, d[:, 3].max() * 1.05))
 ax2.set_xlim((d[:, 2].min() * 1.05, d[:, 2].max() * 1.05))
-ax2.set_title('Receptive fields for speed')
+ax2.set_title('Distribution of preferred directions')
 
 
 
@@ -146,8 +160,9 @@ ax2.set_title('Receptive fields for speed')
 
 output_fn = params['tuning_prop_fig_%s_fn' % cell_type]
 print "Saving to ... ", output_fn
-pylab.savefig(output_fn)
+pylab.savefig(output_fn, dpi=200)
 
+plot_scatter_with_histograms(d[:, 0], d[:, 1])
 
 plot_scatter_with_histograms(d[:, 2], d[:, 3])
 output_fn = params['figures_folder'] + 'v_tuning_histogram.png'
