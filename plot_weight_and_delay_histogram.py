@@ -8,14 +8,33 @@ from scipy.optimize import leastsq
 import os
 import utils
 
-# load simulation parameters
-network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
-params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
+# parse command line arguments (conn_type and folder
+conn_types = ['ee', 'ei', 'ie', 'ii']
+conn_type = None
+params = None
+for arg in sys.argv:
+    try: 
+        param_fn = arg
+        if os.path.isdir(param_fn):
+            param_fn += '/Parameters/simulation_parameters.info'
+        import NeuroTools.parameters as NTP
+        fn_as_url = utils.convert_to_url(param_fn)
+        params = NTP.ParameterSet(fn_as_url)
+        print 'Loading parameters from', param_fn
+    except:
+        params = None
 
-if (len(sys.argv) < 2):
+    print arg
+    if arg in conn_types:
+        conn_type = arg
+
+# if not set yet, set to defaults
+if params == None:
+    # load simulation parameters
+    network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
+    params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
+if conn_type == None:
     conn_type = 'ee'
-else:
-    conn_type = sys.argv[1]
 
 
 def get_incoming_connection_numbers(conn_data, n_tgt):
@@ -29,7 +48,7 @@ def get_incoming_connection_numbers(conn_data, n_tgt):
 
 fn = params['merged_conn_list_%s' % conn_type] 
 if not os.path.exists(fn):
-    os.system('python merge_connlists.py')
+    os.system('python merge_connlists.py %s' % params['folder_name'])
 output_fn = params['figures_folder'] + 'weights_and_delays_%s.png' % (conn_type)
 
 d = np.loadtxt(fn)
@@ -54,7 +73,7 @@ d_mean, d_std = delays.mean(), delays.std()
 n_weights = weights.size
 n_possible = params['n_exc']**2
 
-n_bins = 50
+n_bins = 100
 n_w, bins_w = np.histogram(weights, bins=n_bins, normed=True)
 #n_w = n_w / float(n_w.sum())
 
@@ -135,6 +154,7 @@ ax2.set_xlim((0. - .5 * bin_width, delays.max() + 2 * bin_width))
 #ax2.set_xlim((0. - .5 * bin_width, 20))
 #ax2.set_xlim((delays.min()-.5*bin_width, delays.max()))
 ax2.legend()
+
 
 print "Saving to:", output_fn
 pylab.savefig(output_fn)

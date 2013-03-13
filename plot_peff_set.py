@@ -40,12 +40,12 @@ def peval_function_exp_decay(x, p):
 fig = pylab.figure()
 ax = fig.add_subplot(111)
 
-w_sigma_range = np.arange(0.01, 0.50, 0.01)
+w_sigma_range = np.arange(0.01, 0.38, 0.01)
 
 opt_params_array = np.zeros((w_sigma_range.size, 3))
 
 for i_, w_sigma_x in enumerate(w_sigma_range):
-    fn = 'peff_wsigma%.3f.dat' % w_sigma_x
+    fn = 'p_effective/peff_wsigma%.3f_large.dat' % w_sigma_x
     d = np.loadtxt(fn)
     p_max = d[:, 0]
     p_eff = d[:, 1]
@@ -60,7 +60,6 @@ for i_, w_sigma_x in enumerate(w_sigma_range):
     pylab.plot(p_eff, opt_func, lw=2, c='k', ls='--')#, label='fit w_sigma_x=%.2f' % w_sigma_x)
     pylab.xlabel('p_eff')
     pylab.ylabel('p_max')
-
     
     opt_params_array[i_, 0] = w_sigma_x
     opt_params_array[i_, 1] = opt_params[0][0]
@@ -93,7 +92,5 @@ ax.set_xlabel('w_sigma_x')
 #ax2.set_xlabel('w_sigma_x')
 #ax2.set_ylabel('offset')
 pylab.legend()
-
-
 
 pylab.show()

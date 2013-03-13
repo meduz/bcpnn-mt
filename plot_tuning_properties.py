@@ -6,6 +6,9 @@ import utils
 import matplotlib
 import sys
 from matplotlib import cm
+import plot_hexgrid
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 
 def plot_scatter_with_histograms(x, y):
 #    from matplotlib.ticker import NullFormatter
@@ -58,31 +61,46 @@ def plot_scatter_with_histograms(x, y):
 
 
 
-# load simulation parameters
-ps = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
-params = ps.load_params()                       # params stores cell numbers, etc as a dictionary
 rcParams = { 'axes.labelsize' : 18,
             'label.fontsize': 20,
             'xtick.labelsize' : 16, 
             'ytick.labelsize' : 16, 
-            'axes.titlesize'  : 20,
+            'axes.titlesize'  : 16,
             'legend.fontsize': 9, 
             'lines.markeredgewidth' : 0}
 pylab.rcParams.update(rcParams)
 
 
+if len(sys.argv) > 1:
+    param_fn = sys.argv[1]
+    if os.path.isdir(param_fn):
+        param_fn += '/Parameters/simulation_parameters.info'
+    import NeuroTools.parameters as NTP
+    fn_as_url = utils.convert_to_url(param_fn)
+    params = NTP.ParameterSet(fn_as_url)
+    print 'Loading parameters from', param_fn
+    re_calculate = False
 
-try:
-    cell_type = sys.argv[1]
-except:
-    cell_type = 'exc'
+else:
+    print '\nPlotting the default parameters give in simulation_parameters.py\n'
+    # load simulation parameters
+    ps = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
+    params = ps.load_params()                       # params stores cell numbers, etc as a dictionary
+    re_calculate = True # could be False, too, if you want
 
-fn = params['tuning_prop_means_fn']
-#print '\nLoading from', fn
-#d = np.loadtxt(fn)
-print '\nCalculating the tuning prop'
-ps.create_folders()
-d = utils.set_tuning_prop(params, mode='hexgrid', cell_type=cell_type)        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+
+cell_type = 'exc'
+
+if re_calculate: # load 
+    print '\nCalculating the tuning prop'
+    ps.create_folders()
+    d = utils.set_tuning_prop(params, mode='hexgrid', cell_type=cell_type)        # set the tuning properties of exc cells: space (x, y) and velocity (u, v)
+else:
+    fn = params['tuning_prop_means_fn']
+    print '\nLoading from', fn
+    d = np.loadtxt(fn)
+
+
 
 n_cells = d[:, 0].size
 if cell_type == 'exc':
@@ -92,18 +110,23 @@ else:
     n_rf = params['N_RF_X_INH'] * params['N_RF_Y_INH']
     n_units = params['N_RF_X_INH'] * params['N_RF_Y_INH'] * params['N_theta_inh'] * params['N_V_INH']
 
-ms = 5 # markersize for scatterplots
+ms = 2 # markersize for scatterplots
 
-fig = pylab.figure(figsize=(16, 8))
-pylab.subplots_adjust(hspace=.6)
-pylab.subplots_adjust(wspace=.15)
-pylab.subplots_adjust(left=.05)
-pylab.subplots_adjust(right=.95)
+width = 12
 
-ax1 = fig.add_subplot(121)
-ax2 = fig.add_subplot(122)
+fig = plt.figure(figsize=(width,  1.2 * width/ np.sqrt(3)))
+plt.subplots_adjust(wspace=.3)
+gs = gridspec.GridSpec(1, 2, width_ratios=[2, 1])
+#ax1 = fig.add_subplot(111, autoscale_on=False, aspect='equal')
+#ax1 = fig.add_subplot(121, aspect='equal', autoscale_on=False)
+#ax1 = fig.add_subplot(121, aspect='equal')#, autoscale_on=False)
+ax1 = plt.subplot(gs[0], aspect='equal')#, autoscale_on=False)
+ax2 = plt.subplot(gs[1], aspect='equal')#, autoscale_on=False)
 
-
+#fig2 = pylab.figure(figsize=(width, width))
+#ax2 = fig2.add_subplot(111, autoscale_on=False, aspect='equal')
+#ax2 = fig.add_subplot(122, aspect='equal')
+#ax2 = pylab.axes()
 scale = 6. # scale of the quivers / arrows
 # set the colorscale for directions
 o_min = 0.
@@ -123,17 +146,30 @@ for i in xrange(n_cells):
     angle = ((thetas[i] + np.pi) / (2 * np.pi)) * 360. # theta determines h, h must be [0, 360)
     rgba_colors.append(m.to_rgba(angle))
     ax2.plot(u, v, 'o', color='k', markersize=ms)#, edgecolors=None)
-    ax1.plot(x, y, 'o', color='k', markersize=2)
+    ax1.plot(x, y, 'o', color='k', markersize=ms)
+
+# plot the hexgrid 
+hexgrid_edge_lw = 2
+N_RF = params['N_RF']
+RF = plot_hexgrid.get_hexgridcell_midpoints(N_RF)
+X = np.unique(RF[0, :])
+#xdiff 
+# plot the hexgrid edges
+xdiff = X[1] - X[0]  # midpoitns x-difference 
+edges = plot_hexgrid.get_hexgrid_edges(RF, xdiff)
+for i_, edge in enumerate(edges):
+    ax1.plot((edge[0][0], edge[0][1]), (edge[1][0], edge[1][1]), c='k', lw=hexgrid_edge_lw)
+
 
 q = ax1.quiver(d[:, 0], d[:, 1], d[:, 2], d[:, 3], \
           angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4, pivot='tail')
-ax1.set_xlabel('$x$')#, fontsize=20)
-ax1.set_ylabel('$y$')#, fontsize=16)
+ax1.set_xlabel('$x$-position')#, fontsize=20)
+ax1.set_ylabel('$y$-position')#, fontsize=16)
 ax1.set_title('Spatial receptive fields')# for %s cells\n n_rf=%d, n_units=%d' % (cell_type, n_rf, n_units))
 ax1.set_xlim((-.05, 1.1))
-ax1.set_ylim((-.05, 1.1))
-cb = fig.colorbar(m, ax=ax1)
-cb.set_label('Preferred angle of motion')
+ax1.set_ylim((-.05, .7))
+cb = fig.colorbar(m, ax=ax1, shrink=.43)
+cb.set_label('Preferred angle of motion', fontsize=14)
 
 ax2.set_xlabel('$u$')#, fontsize=16)
 ax2.set_ylabel('$v$')#, fontsize=16)
@@ -141,16 +177,48 @@ ax2.set_ylim((d[:, 3].min() * 1.05, d[:, 3].max() * 1.05))
 ax2.set_xlim((d[:, 2].min() * 1.05, d[:, 2].max() * 1.05))
 ax2.set_title('Distribution of preferred directions')
 
+#xticks = np.arange(-.5, .75, 0.25)
+xticks = [-.5, 0., .5]
+xtick_labels = ['%.2f' % xticks[i] for i in xrange(len(xticks))]
+print 'xtick_labels', xtick_labels
+ax2.set_xticks(xticks)
+ax2.set_xticklabels(xtick_labels)
+
+yticks = [-.5, 0., .5]
+ax2.set_yticks(yticks)
+ax2.set_yticklabels(['%.2f' % yticks[i] for i in xrange(len(yticks))])
 
 
+"""
+bbax1=ax1.get_position()
+bbax2=ax2.get_position()
+posax1 = bbax1.get_points()
+posax2 = bbax2.get_points()
+# change height
+#posax2[0][1]=posax1[0][1]
+posax2[0][1]=posax1[0][1]
+posax2[1][1]=posax1[1][1]
+# change width
+#posax1[1][0]=posax1[1][0]
+#posax2[1][0]=posax2[1][0]
+
+bbax1.set_points(posax1)
+bbax2.set_points(posax2)
+
+print 'posax1', posax1
+print 'posax2', posax2
+#! Update axes with new position
+posax1=ax1.set_position(bbax1)
+posax2=ax2.set_position(bbax2)
+"""
 
 #ax3.set_xlabel('$x$')
 #ax3.set_ylabel('$y$')
 #ax3.set_title('Preferred directions')
 #yticks = ax3.get_yticks()
 #xticks = ax3.get_xticks()
-#yticks_rescaled = []
-#xticks_rescaled = []
+#yticks = np.arange(
+#xticks = []
 #for i in xrange(len(yticks)):
 #    yticks_rescaled.append(yticks[i] / scale)
 #for i in xrange(len(xticks)):
@@ -160,13 +228,17 @@ ax2.set_title('Distribution of preferred directions')
 
 output_fn = params['tuning_prop_fig_%s_fn' % cell_type]
 print "Saving to ... ", output_fn
-pylab.savefig(output_fn, dpi=200)
+fig.savefig(output_fn, dpi=200)
 
-plot_scatter_with_histograms(d[:, 0], d[:, 1])
 
-plot_scatter_with_histograms(d[:, 2], d[:, 3])
-output_fn = params['figures_folder'] + 'v_tuning_histogram.png'
-print 'Saving to', output_fn
-pylab.savefig(output_fn)
+#plot_scatter_with_histograms(d[:, 0], d[:, 1])
+#plot_scatter_with_histograms(d[:, 2], d[:, 3])
+#output_fn = params['figures_folder'] + 'v_tuning_histogram.png'
+#print 'Saving to', output_fn
+#fig2.savefig(output_fn, dpi=200)
+
+
+
+
 
 pylab.show()

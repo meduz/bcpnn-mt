@@ -30,7 +30,7 @@ class PlotPrediction(object):
         self.tau_prediction = self.params['tau_prediction']
         # define parameters
         self.time_binsize = int(round(self.params['t_sim'] / 20))
-        self.time_binsize = 25# [ms] 
+        self.time_binsize = 50# [ms] 
 
         self.trace_length = 6 * self.time_binsize # [ms] window length for moving average 
         self.n_bins = int((self.params['t_sim'] / self.time_binsize) )
@@ -56,7 +56,7 @@ class PlotPrediction(object):
         self.vx_tuning = self.tuning_prop[:, 2].copy()
         self.vx_tuning.sort()
         self.sorted_indices_vx = self.tuning_prop[:, 2].argsort()
-        self.vx_min, self.vx_max = self.params['v_min_tp'], self.params['v_max_tp']
+        self.vx_min, self.vx_max = self.tuning_prop[:, 2].min(), self.tuning_prop[:, 2].max()
         # maximal range of vx_speeds
 #        self.vx_min, self.vx_max = np.min(self.vx_tuning), np.max(self.vx_tuning)
         self.vx_grid = np.linspace(self.vx_min, self.vx_max, self.n_vx_bins, endpoint=True)
@@ -67,7 +67,8 @@ class PlotPrediction(object):
         self.vy_tuning = self.tuning_prop[:, 3].copy()
         self.vy_tuning.sort()
         self.sorted_indices_vy = self.tuning_prop[:, 3].argsort()
-        self.vy_min, self.vy_max = -0.5, 0.5
+#        self.vy_min, self.vy_max = -0.5, 0.5
+        self.vy_min, self.vy_max = self.tuning_prop[:, 3].min(), self.tuning_prop[:, 3].max()
 #        self.vy_min, self.vy_max = np.min(self.vy_tuning), np.max(self.vy_tuning)
         self.vy_grid = np.linspace(self.vy_min, self.vy_max, self.n_vy_bins, endpoint=True)
 
@@ -162,17 +163,19 @@ class PlotPrediction(object):
                     time_bins
 
         """
+        # torus dimensions
+        w, h = 1., 1. / np.sqrt(3)
         
         output_data = np.zeros((len(grid_edges), self.n_bins))
         for gid in xrange(self.n_cells):
             xyuv_predicted = self.tuning_prop[gid, index] # cell tuning properties
             if (index == 0):
                 xyuv_predicted += self.tau_prediction * self.tuning_prop[gid, 2]
-                xyuv_predicted = xyuv_predicted % 1.
+                xyuv_predicted = xyuv_predicted % w
 
             elif (index == 1):
                 xyuv_predicted += self.tau_prediction * self.tuning_prop[gid, 3]
-                xyuv_predicted = xyuv_predicted % 1.
+                xyuv_predicted = xyuv_predicted % h
             y_pos_grid = utils.get_grid_pos_1d(xyuv_predicted, grid_edges)
             output_data[y_pos_grid, :] += self.nspikes_binned_normalized[gid, :]
         return output_data, grid_edges
@@ -275,6 +278,8 @@ class PlotPrediction(object):
         vx_prediction_trace = np.zeros((self.n_cells, self.n_bins, 2))    # _trace: prediction based on the momentary and past activity (moving average, and std) --> trace_length
         vy_prediction_trace = np.zeros((self.n_cells, self.n_bins, 2))    # _trace: prediction based on the momentary and past activity (moving average, and std) --> trace_length
 
+        # torus dimensions
+        w, h = 1., 1. / np.sqrt(3)
         for i in xrange(self.n_bins):
 
             # 1) momentary vote
@@ -290,8 +295,8 @@ class PlotPrediction(object):
 
             # position
             t = i * self.time_binsize + .5 * self.time_binsize
-            stim_pos_x = (mp[0] + mp[2] * t / self.params['t_stimulus']) % 1.# be sure that this works the same as utils.get_input is called!
-            stim_pos_y = (mp[1] + mp[3] * t / self.params['t_stimulus']) % 1. # be sure that this works the same as utils.get_input is called!
+            stim_pos_x = (mp[0] + mp[2] * t / self.params['t_stimulus']) % w# be sure that this works the same as utils.get_input is called!
+            stim_pos_y = (mp[1] + mp[3] * t / self.params['t_stimulus']) % h # be sure that this works the same as utils.get_input is called!
             self.x_stim[i] = stim_pos_x
             self.y_stim[i] = stim_pos_y
             x_pred = self.x_confidence_binned[:, i] * self.x_tuning
@@ -478,7 +483,11 @@ class PlotPrediction(object):
             ax.plot(spiketimes[cell], cell * np.ones(nspikes[cell]), 'o', color='k', markersize=1)
             
         ylim = ax.get_ylim()
-        ax.set_ylim((ylim[0] - 1, ylim[1] + 1))
+        if cell_type == 'exc':
+            ax.set_ylim((0, self.params['n_exc']))
+        else:
+            ax.set_ylim((0, self.params['n_inh']))
+#        ax.set_ylim((ylim[0] - 1, ylim[1] + 1))
         ax.set_xlim(0, self.params['t_sim'])
         ax.set_title('Rasterplot of %s neurons' % cell_type)
         ax.set_xlabel('Time [ms]')
@@ -569,7 +578,6 @@ class PlotPrediction(object):
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.set_title(title)
         cax = ax.pcolormesh(data)
-#        cax = ax.imshow(data)
 
         ax.set_ylim((0, data[:, 0].size))
         ax.set_xlim((0, data[0, :].size))
@@ -588,11 +596,22 @@ class PlotPrediction(object):
 #        ax.set_xticks(self.t_ticks)
 #        ax.set_xticklabels(['%d' %i for i in self.t_ticks])
 #        color_boundaries = (0., .5)
-        max_conf = min(0.5, data.max())
+
+        max_conf = min(data.mean() + data.std(), data.max())
         norm = matplotlib.mpl.colors.Normalize(vmin=0, vmax=max_conf)
         m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cm.jet)#jet)
         m.set_array(np.arange(0., max_conf, 0.01))
         cb = pylab.colorbar(m, orientation='horizontal', aspect=40, anchor=(.5, .0))
+        ticklabels = cb.ax.get_xticklabels()
+#        print 'ticklabels', ticklabels, type(ticklabels)
+#        ticklabels = list(ticklabels)
+        ticklabel_texts = []
+        for text in ticklabels:
+            ticklabel_texts.append('%s' % text.get_text())
+        ticklabel_texts[-1] = '> %.1f' % max_conf
+        for i_, text in enumerate(ticklabels):
+            text.set_text(ticklabel_texts[i_])
+        cb.ax.set_xticklabels(ticklabel_texts)
         cb.set_label('Prediction confidence')
         if show_blank:
             self.plot_blank_on_cmap(cax, txt='blank')
@@ -606,7 +625,7 @@ class PlotPrediction(object):
         ax.plot(self.t_axis, self.xdiff_avg, ls='-', lw=2, label='linear')
 #        ax.plot(self.t_axis, self.xdiff_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
 #        ax.errorbar(self.t_axis, self.xdiff_moving_avg[:, 0], yerr=self.xdiff_moving_avg[:, 1], ls='--', lw=2, label='moving avg')
-        ax.plot(self.t_axis, self.xdiff_non_linear, ls=':', lw=2, label='soft-max')
+#        ax.plot(self.t_axis, self.xdiff_non_linear, ls=':', lw=2, label='soft-max')
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$|\\vec{x}_{diff}|$')
         ax.legend()#loc='upper right')
@@ -638,7 +657,7 @@ class PlotPrediction(object):
         ax.plot(self.t_axis, self.vdiff_avg, ls='-', lw=2, label='linear')
 #        ax.plot(self.t_axis, self.vdiff_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
 #        ax.errorbar(self.t_axis, self.vdiff_moving_avg[:, 0], yerr=self.vdiff_moving_avg[:, 1], ls='--', lw=2, label='moving avg')
-        ax.plot(self.t_axis, self.vdiff_non_linear, ls=':', lw=2, label='soft-max')
+#        ax.plot(self.t_axis, self.vdiff_non_linear, ls=':', lw=2, label='soft-max')
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$|\\vec{v}_{diff}|$')
         ax.legend()#loc='upper right')
@@ -741,7 +760,7 @@ class PlotPrediction(object):
         ax.plot(self.t_axis, self.x_avg, ls='-', lw=2, label='linear')
 #        ax.plot(self.t_axis, self.x_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
 #        ax.errorbar(self.t_axis, self.x_moving_avg[:, 0], yerr=self.x_moving_avg[:, 1], ls='--', lw=2, label='moving avg')
-        ax.plot(self.t_axis, self.x_non_linear, ls=':', lw=2, label='soft-max')
+#        ax.plot(self.t_axis, self.x_non_linear, ls=':', lw=2, label='soft-max')
         ax.plot(self.t_axis, self.x_stim, ls='-', c='k', lw=2, label='$x_{stim}$')
         ax.legend()#loc='upper left')
         ax.set_xlabel('Time [ms]')
@@ -765,7 +784,7 @@ class PlotPrediction(object):
         ax.plot(self.t_axis, self.y_avg, ls='-', lw=2, label='linear')
 #        ax.plot(self.t_axis, self.y_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
 #        ax.errorbar(self.t_axis, self.y_moving_avg[:, 0], yerr=self.y_moving_avg[:, 1], ls='--', lw=2, label='moving avg')
-        ax.plot(self.t_axis, self.y_non_linear, ls=':', lw=2, label='soft-max')
+#        ax.plot(self.t_axis, self.y_non_linear, ls=':', lw=2, label='soft-max')
         ax.plot(self.t_axis, self.y_stim, ls='-', c='k', lw=2, label='$y_{stim}$')
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$y$ position [a.u.]')
@@ -791,7 +810,7 @@ class PlotPrediction(object):
         ax.plot(self.t_axis, self.vx_avg, ls='-', lw=2, label='linear')
 #        ax.plot(self.t_axis, self.vx_moving_avg[:, 0], ls='--', lw=2, label='moving avg')
 #        ax.errorbar(self.t_axis, self.vx_moving_avg[:, 0], yerr=self.vx_moving_avg[:, 1], ls='--', lw=2, label='moving avg')
-        ax.plot(self.t_axis, self.vx_non_linear, ls=':', lw=2, label='soft-max')
+#        ax.plot(self.t_axis, self.vx_non_linear, ls=':', lw=2, label='soft-max')
         vx = self.params['motion_params'][2] * np.ones(self.t_axis.size)
         ax.plot(self.t_axis, vx, ls='-', c='k', lw=2, label='$v_{y, stim}$')
         ax.set_xlabel('Time [ms]')
@@ -818,7 +837,7 @@ class PlotPrediction(object):
         ax.plot(self.t_axis, self.vy_avg, ls='-', lw=2, label='linear')
 #        ax.plot(self.t_axis, self.vy_moving_avg[:, 0], lw=2, ls='--', label='moving avg')
 #        ax.errorbar(self.t_axis, self.vy_moving_avg[:, 0], yerr=self.vy_moving_avg[:, 1], lw=2, ls='--', label='moving avg')
-        ax.plot(self.t_axis, self.vy_non_linear, ls=':', lw=2, label='soft-max')
+#        ax.plot(self.t_axis, self.vy_non_linear, ls=':', lw=2, label='soft-max')
         vy = self.params['motion_params'][3] * np.ones(self.t_axis.size)
         ax.plot(self.t_axis, vy, ls='-', c='k', lw=2, label='$v_{y, stim}$')
         ax.set_xlabel('Time [ms]')
@@ -846,7 +865,7 @@ class PlotPrediction(object):
         ax.plot(self.t_axis, self.theta_avg, ls='-')
 #        ax.plot(self.t_axis, self.theta_moving_avg[:, 0], ls='--')
 #        ax.errorbar(self.t_axis, self.theta_moving_avg[:, 0], yerr=self.theta_moving_avg[:, 1], ls='--')
-        ax.plot(self.t_axis, self.theta_non_linear, ls=':')
+#        ax.plot(self.t_axis, self.theta_non_linear, ls=':')
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('$\Theta$')
         ny = self.t_axis.size

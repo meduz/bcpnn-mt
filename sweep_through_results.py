@@ -5,6 +5,7 @@ import NeuroTools.parameters as NTP
 import ResultsCollector
 import re
 import pylab
+import json
 
 """
 This script requires that plot_prediction.py has been called for all folders that 
@@ -29,42 +30,58 @@ params = network_params.params
 
 RC = ResultsCollector.ResultsCollector(params)
 
-w_ee = 0.030
+#w_ee = 0.030
 #t_blank = 200
-conn_code = 'AAAA'
+conn_code = 'AIII'
 # the parameter to sweep for
-#param_name = 'w_tgt_in_per_cell_ee'
-param_name = 't_blank'
-#param_name = 'delay_scale'
+#param_name = 'blur_X'
+param_name = 'w_tgt_in_per_cell_ee'
+#param_name = 't_blank'
 #param_name = 'scale_latency'
-t_range=(0, 1000)
-#t_range=(0, 3000)
+#t_range=(0, 1000)
+#param_name = 'delay_scale'
+t_range=(0, 3000)
+fmaxstim = 1000.
 
-output_fn = 'xvdiff_%s_wee%.2e_tblankSweep_t%d-%d.dat' % (conn_code, w_ee, t_range[0], t_range[1])
+blur_v = 0.05
+tbb = 400
+#to_match = '^LargeScaleModel_(.*)_blur(.*)_blurV%.2e_(.*)' % (blur_v)
+to_match = '^LargeScaleModel_%s_fmaxstim1\.50e\+03_scaleLatency0\.15_tbb400_(.*)' % (conn_code)
+#to_match = '^LargeScaleModel_%s_fmaxstim(.*)' % (conn_code)
+#to_match = '^LargeScaleModel_%s_fmaxstim%.2e(.*)' % (conn_code,fmaxstim)
+print 'to_match', to_match
+#to_match = '^LargeScaleModel_%s_fmaxstim%.2e_(.*)' % (conn_code, fmaxstim)
+#to_match = '^LargeScaleModel_%s_fmaxstim(.*)_tbb%d$' % (conn_code, tbb)
+scale_latency = 0.15
+output_fn = 'xvdiff_%s_tbb%d_fmaxstim%.1e_scaleLatency%.2f_weeSweep_t%d-%d.dat' % (conn_code, tbb, fmaxstim, scale_latency, t_range[0], t_range[1])
 print 'output_fn', output_fn
-
-#to_match = '^LargeScaleModel_%s_scaleLatency0\.15(.*)delayScale20_tblank%d$' % (conn_code, t_blank)
-#to_match = '^LargeScaleModel_%s_scaleLatency0\.15(.*)wee(.*)_wei4.00e-02_wie6.00e-02_wii1.00e-02_delayScale20_tblank200' % (conn_code)
-#to_match = '^LargeScaleModel_%s_scaleLatency(.*)wee%.2e(.*)delayScale10_tblank%d$' % (conn_code, w_ee, t_blank)
-#to_match = '^LargeScaleModel_%s_scaleLatency0\.15(.*)wee2\.(\d\d)e(.*)tblank(\d+)$' % (conn_code)
-#to_match = '^LargeScaleModel_%s_scaleLatency0\.15(.*)wee3.00e-02_wei4.00e-02_wie6.00e-02_wii1.00e-02_delayScale20_tblank(\d+)$' % (conn_code)
-to_match = '^LargeScaleModel_%s_scaleLatency0\.15(.*)wee(.*)delayScale20_tblank(\d+)$' % (conn_code)
 
 dir_names = []
 for thing in os.listdir('.'):
-    m = re.search('%s' % to_match, thing)
-    if m:
-        dir_names.append(thing)
+    if os.path.isdir(thing):
+        m = re.search('%s' % to_match, thing)
+        if m:
+            dir_names.append(thing)
 
-print 'dirnames:'
+missing_dirs = []
 for name in dir_names:
-    print name, os.path.exists(name + '/Data/vx_grid.dat')
-#exit(1)
+    if not os.path.exists(name + '/Data/vx_grid.dat'):
+        missing_dirs.append(name)
+
+print 'dirnames', dir_names
+if len(missing_dirs) > 0:
+    fn_out = 'missing_data_dirs.json'
+    output_file = file(fn_out, 'w')
+    d = json.dump(missing_dirs, output_file)
+    
+    print '\nData files missing in the following dirs:\n', missing_dirs
+    print 'please run:\n python run_plot_prediction.py %s' % fn_out
+    exit(1)
 
 
 RC.set_dirs_to_process(dir_names)
 #print "RC.dirs_to_process", RC.dirs_to_process
-RC.get_xvdiff_integral(t_range=t_range)
+RC.get_xvdiff_integral()#t_range=t_range)
 RC.get_parameter(param_name)
 #RC.get_parameter('w_sigma_x')
 #RC.get_parameter('w_sigma_v')

@@ -79,6 +79,7 @@ class ResultsCollector(object):
         fn_base_x = self.params['xdiff_vs_time_fn']
         fn_base_v = self.params['vdiff_vs_time_fn']
 
+        time_bin_size = np.zeros(len(self.dirs_to_process))
         for i_, folder in enumerate(self.dirs_to_process):
             # if self.dirs_to_process has been created by collect_files()
 #            fn_x = folder[0] + '/' + results_sub_folder + fn_base_x
@@ -87,21 +88,30 @@ class ResultsCollector(object):
             fn_v = folder + '/' + results_sub_folder + fn_base_v
             xdiff = np.loadtxt(fn_x)
             vdiff = np.loadtxt(fn_v)
+            n_bins = xdiff[:, 0].size
+            assert n_bins == vdiff[:, 0].size, "ERROR in x/v diff integrals!\n%s and %s have different sizes!" % (fn_x, fn_v)
             time_binsize = xdiff[1, 0] - xdiff[0, 0]
+            time_bin_size[i_] = time_binsize
             if t_range == None:
                 self.xdiff_integral[i_] = xdiff[:, 1].sum()
                 self.vdiff_integral[i_] = vdiff[:, 1].sum()
+                self.xdiff_integral[i_] = np.sqrt((xdiff[:, 1]**2).sum() / n_bins)
+                self.vdiff_integral[i_] = np.sqrt((vdiff[:, 1]**2).sum() / n_bins)
             else:
                 idx_0 = (xdiff[:, 0] == t_range[0]).nonzero()[0][0]
+                print xdiff[:, 0].max()
+                print 'debug', t_range[1] - time_binsize, fn_x
                 idx_1 = (xdiff[:, 0] == t_range[1] - time_binsize).nonzero()[0][0]
-                self.xdiff_integral[i_] = xdiff[idx_0:idx_1, 1].sum()
 
-                idx_0 = (vdiff[:, 0] == t_range[0]).nonzero()[0][0]
-                idx_1 = (vdiff[:, 0] == t_range[1] - time_binsize).nonzero()[0][0]
-                self.vdiff_integral[i_] = vdiff[idx_0:idx_1, 1].sum()
+                self.xdiff_integral[i_] = np.sqrt((xdiff[idx_0:idx_1, 1]**2).sum() / (idx_1 - idx_0))
+                self.vdiff_integral[i_] = np.sqrt((vdiff[idx_0:idx_1, 1]**2).sum() / (idx_1 - idx_0))
+#                self.vdiff_integral[i_] = vdiff[idx_0:idx_1, 1].sum()
 
-            print fn_x, self.xdiff_integral[i_], self.vdiff_integral[i_]
-
+            print 'folder, self.xdiff_integral[i_], self.vdiff_integral[i_]'
+            print time_binsize, folder, self.xdiff_integral[i_], self.vdiff_integral[i_]
+#            print fn_x, 
+        print 'All folders were analysed with the same time bin size:\n', (time_bin_size == time_bin_size.mean()).all()
+#        print time_bin_size, time_bin_size.mean()
         output_data = np.array((np.zeros(self.xdiff_integral.size), self.xdiff_integral, self.vdiff_integral))
         self.output_data = output_data.transpose()
 
@@ -232,7 +242,7 @@ if __name__ == '__main__':
     params = network_params.params
     RC = ResultsCollector(params)
     RC.collect_files()
-    RC.get_xvdiff_integral()
+    RC.get_xvdiff_integral() # RMSE
     RC.get_cgxv()
 
 #print "RC.dirs_to_process", RC.dirs_to_process

@@ -194,8 +194,7 @@ def get_input(tuning_prop, params, t, motion_params=None, contrast=.9, motion='d
         x, y = (x0 + u0*t) % 1., (y0 + v0*t) % 1. # current position of the blob at time t assuming a perfect translation
 
     for cell in xrange(n_cells): # todo: vectorize
-        L[cell] = np.exp( -.5 * (torus_distance(tuning_prop[cell, 0], x))**2/blur_X**2
-                          -.5 * (torus_distance(tuning_prop[cell, 1], y))**2/blur_X**2
+        L[cell] = np.exp( -.5 * (torus_distance2D(tuning_prop[cell, 0], x, tuning_prop[cell, 1], y)**2 / blur_X**2)
                           -.5 * (tuning_prop[cell, 2] - u0)**2/blur_V**2
                           -.5 * (tuning_prop[cell, 3] - v0)**2/blur_V**2
                           )
@@ -457,7 +456,9 @@ def set_tuning_prop(params, mode='hexgrid', cell_type='exc'):
 #        Y[1::2, :] += (Y[0, 0] - Y[0, 1])/2 # 1./N_RF
         Y[::2, :] += (Y[0, 0] - Y[0, 1])/2 # 1./N_RF
         RF[0, :] = X.ravel()
-        RF[1, :] = Y.ravel()
+        RF[1, :] = Y.ravel() 
+        RF[1, :] /= np.sqrt(3)
+
     
         # wrapping up:
         index = 0
@@ -793,21 +794,13 @@ def torus_distance(x0, x1):
 def torus_distance(x0, x1):
     return min(abs(x0 - x1), 1. - abs(x0 - x1))
 
-def torus_distance2D(x1, x2, y1, y2):
-    return np.sqrt(min(abs(x1 - x2), abs(1. - abs(x1 - x2)))**2 + min(abs(y1 - y2), abs(1. - abs(y1-y2)))**2)
+def torus_distance2D(x1, x2, y1, y2, w=1., h=1./np.sqrt(3)):
+    """
+    w and h are the width (x) and height (y) of the grid, respectively.
+    """
+    return np.sqrt(min(abs(x1 - x2), abs(w - abs(x1 - x2)))**2 + min(abs(y1 - y2), abs(h - abs(y1-y2)))**2)
     # if not on a torus:
 #    return np.sqrt( (x1 - x2)**2 + (y1 - y2)**2)
-
-#def torus_distance(x0, x1):
-#    x_lim =  1
-#    dx = np.abs(x0 - x1) % x_lim
-#    increasing = (np.int(2. * dx) / x_lim) % 2
-#    decreasing = (np.int(2. * dx) / x_lim + 1) % 2
-#    b = dx % x_lim
-#    c = x_lim - increasing * b
-#    dx = (increasing * c + decreasing * b) % x_lim
-#    return dx
-
 
 
 def gather_conn_list(comm, data, n_total, output_fn):
@@ -991,8 +984,8 @@ def get_pmax(p_effective, w_sigma):
     p_effective vs p_max has been simulated for different w_sigma values
     --> p_max is linearly dependent on p_effective, and the gradient is dependent on w_sigma (exponential decay works ok)
     """
-
-    fit_wsigma = [  8.95125352e+16,   2.39952941e-02,   1.24175654e+00,   6.00227030e-02]
+#[  8.95125352e+16,   2.39952941e-02,   1.24175654e+00,   6.00227030e-02]
+    fit_wsigma = [4.99190053e+17,   2.26167398e-02,   1.37350638e+00,   5.74608862e-02]
     gradient  = fit_wsigma[0] * np.exp( - w_sigma**fit_wsigma[3] / fit_wsigma[1]) + fit_wsigma[2]
     p_max = gradient * p_effective
     return p_max

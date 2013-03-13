@@ -29,12 +29,12 @@ class ConnectionPlotter(object):
         pylab.rcParams['xtick.labelsize'] = 24
         pylab.rcParams['ytick.labelsize'] = 24
         self.fig = pylab.figure(figsize=(14, 10))
-        self.ax = self.fig.add_subplot(n_plots_y, n_plots_x, 1)
+        self.ax = self.fig.add_subplot(n_plots_y, n_plots_x, 1, aspect='equal')
         self.ax.set_title('Outgoing connections')
         self.ax.set_xlabel('$x$-position')
         self.ax.set_ylabel('$y$-position')
-        self.ax.set_xlim((0.1, 0.75))
-        self.ax.set_ylim((0.25, 0.75))
+#        self.ax.set_xlim((0.1, 0.75))
+#        self.ax.set_ylim((0.25, 0.75))
         self.legends = []
         self.quivers = {}
         self.directions = {}
@@ -42,6 +42,8 @@ class ConnectionPlotter(object):
         self.conn_list_loaded = [False, False, False, False]
         self.conn_mat_loaded = [False, False, False, False]
         self.delay_colorbar_set = False
+        self.x_min, self.x_max = 1.0, .0
+        self.y_min, self.y_max = 1.0, .0
 
 
 
@@ -62,7 +64,9 @@ class ConnectionPlotter(object):
 #            color = 'b'
             tp = self.tp_inh
 
-        x0, y0, u0, v0 = tp[cell_id, 0] % 1, tp[cell_id, 1] % 1, tp[cell_id, 2], tp[cell_id, 3]
+        # torus dimensions
+        w, h = 1., 1. / np.sqrt(3)
+        x0, y0, u0, v0 = tp[cell_id, 0] % w, tp[cell_id, 1] % h, tp[cell_id, 2], tp[cell_id, 3]
 #        x0, y0, u0, v0 = tp[cell_id, 0], tp[cell_id, 1], tp[cell_id, 2], tp[cell_id, 3]
         self.ax.plot(x0, y0, marker, c=color, markersize=self.markersize_cell)
 
@@ -82,14 +86,20 @@ class ConnectionPlotter(object):
         markersizes = utils.linear_transformation(weights, self.markersize_min, self.markersize_max)
         direction_color = (.5, .5, .5)
         for i_, tgt in enumerate(tgt_ids):
-            x_tgt = tgt_tp[tgt, 0] #% 1
-            y_tgt = tgt_tp[tgt, 1] #% 1
+            x_tgt = tgt_tp[tgt, 0] % self.params['torus_width']#% 1
+            y_tgt = tgt_tp[tgt, 1] % self.params['torus_height']#% 1
+            self.x_min = min(x_tgt, self.x_min)
+            self.y_min = min(y_tgt, self.y_min)
+            self.x_max = max(x_tgt, self.x_max)
+            self.y_max = max(y_tgt, self.y_max)
+#            print 'debug', tgt, x_tgt, y_tgt
             w = weights[i_]
-            plot = self.ax.plot(x_tgt, y_tgt, marker, c=color, markersize=markersizes[i_])
+            plot = self.ax.plot(x_tgt, y_tgt, marker, c=color, markersize=markersizes[i_], zorder=1000)
             if with_directions:
                 self.directions[tgt] = (x_tgt, y_tgt, tgt_tp[tgt, 2], tgt_tp[tgt, 3], direction_color, self.shaft_width)
             if annotate:
                 self.ax.annotate('%d' % tgt, (x_tgt + 0.01, y_tgt + 0.01), fontsize=12)
+
         return plot
 
     
@@ -214,8 +224,16 @@ class ConnectionPlotter(object):
         for i_, key in enumerate(self.directions.keys()):
             (x, y, u, v, c, shaft_width) = self.directions[key]
             data[i_, :] = np.array([x, y, u, v])
-            self.ax.quiver(data[i_, 0], data[i_, 1], data[i_, 2], data[i_, 3], angles='xy', scale_units='xy', scale=1, color=c, headwidth=3, width=shaft_width, alpha=alpha)
+            self.ax.quiver(data[i_, 0], data[i_, 1], data[i_, 2], data[i_, 3], angles='xy', scale_units='xy', scale=1, color=c, headwidth=3, width=shaft_width, alpha=alpha)#, zorder=1)
 #        self.ax.quiver(data[:, 0], data[:, 1], data[:, 2], data[:, 3], angles='xy', scale_units='xy', scale=1, color=c, headwidth=3)
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
+        self.ax.set_xlim((xlim[0] - 0.02, xlim[1] + 0.25))
+        self.ax.set_ylim((ylim[0] - 0.10, ylim[1] + 0.10))
+#        print 'x_min, x_max', self.x_min, self.x_max
+#        print 'y_min, y_max', self.y_min, self.y_max
+#        self.ax.set_xlim((self.x_min - 0.05, self.x_max + 0.05))
+#        self.ax.set_ylim((self.y_min - 0.05, self.y_max + 0.05))
 
 
     def load_connection_list(self, conn_type):
@@ -237,8 +255,10 @@ class ConnectionPlotter(object):
             return
 
         conn_list_fn = self.params['merged_conn_list_%s' % conn_type]
+        print 'Trying to load', conn_list_fn
         if not os.path.exists(conn_list_fn):
-            print '\n%s NOT FOUND\n Calling python merge_connlists.py\n' % conn_list_fn
+            print '\n%s NOT FOUND:' % conn_list_fn
+            print '\n Calling python merge_connlists.py\n'
             os.system('python merge_connlists.py')
         self.connection_lists[conn_type] = np.loadtxt(conn_list_fn)
             
@@ -322,9 +342,8 @@ class ConnectionPlotter(object):
 if __name__ == '__main__':
 
 
-    print 'Running merge_connlists.py...'
-    os.system('python merge_connlists.py')
-
+#    print 'Running merge_connlists.py...'
+#    os.system('python merge_connlists.py')
 
     network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
     params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
@@ -345,6 +364,8 @@ if __name__ == '__main__':
         gid = np.loadtxt(params['gids_to_record_fn'])[0]
 #        gid = P.find_exc_gid_to_plot()
         
+    print 'plotting gid', gid
+
 #    exc_color = (.5, .5, .5)
     ee_targets = P.plot_connection_type(gid, 'ee', 'o', 'r', with_directions, plot_delays=with_delays, with_histogram=with_histogram)
 #    ei_targets = P.plot_connection_type(gid, 'ei', 'x', 'r', with_directions, plot_delays=with_delays)#, annotate=True)

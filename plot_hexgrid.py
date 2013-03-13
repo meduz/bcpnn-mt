@@ -1,60 +1,91 @@
+import pylab
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
-from matplotlib.collections import PatchCollection
-import matplotlib.path as mpath
-import matplotlib.patches as mpatches
-import matplotlib.lines as mlines
 
-"""
-Works only for square grids, i.e. n_x = n_y
-"""
-import simulation_parameters
-network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
-params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
+def get_hexgrid_edges(midpoints, midpoints_x_difference):
+    """
+    plots the edges around the given midpoints as in a 'east-west' hexgrid
+    assume midpoints[0, :] gives the x-coordinates
+    assume midpoints[1, :] gives the y-coordinates
 
-N_RF_X = np.int(np.sqrt(params['N_RF']*np.sqrt(3)))
-N_RF_Y = np.int(np.sqrt(params['N_RF']/np.sqrt(3)))
-#N_RF_X = 8
-#N_RF_Y = N_RF_X
-n_cells = N_RF_X * N_RF_Y
+    Definitions:
+    C = 2 * A           # the grid constant (length of an edge)
+    A = B / sqrt(3)
 
-RF = np.zeros((2, N_RF_X*N_RF_Y))
-X, Y = np.mgrid[0:1:1j*(N_RF_X + 1), 0:1:1j*(N_RF_Y + 1)]
-Y[::2, :] += (Y[0, 0] - Y[0, 1])/2
-#X += (Y[0, 1] - Y[0, 0])/2
+    """
 
-# It's a torus, so we remove the first row and column to avoid redundancy (would in principle not harm)
-X, Y = X[1:, 1:], Y[1:, 1:]
+    # get the grid constant from the first two midpoints being at the same x-position
+    B = (midpoints[1, 1] - midpoints[1, 0]) / 2. # 
+    
+    A = midpoints_x_difference / 3. # because it's math ... 
+    print 'B:', B
+    print 'A:', A
 
-RF[0, :] = X.ravel()
-RF[1, :] = Y.ravel()
-RF[0, :] *= np.sqrt(3.) # don't know why but it fits
-scale =  (RF[1, 1] - RF[1, 0]) * 2./3#/ (np.sqrt(3))
-#r_i = scale
-r_i = (np.sqrt(3) / 2) * scale
+    hexgrid_edges = []
+    for i in xrange(midpoints[0, :].size):
+        x, y = midpoints[0, i], midpoints[1, i]
+        # calculate the six points marking the edges
+        p1 = (x - 2 * A,    y)
+        p2 = (x - A,        y - B)
+        p3 = (x + A,        y - B)
+        p4 = (x + 2 * A,    y)
+        p5 = (x + A,        y + B)
+        p6 = (x - A,        y + B)
+
+        edgepoints = [p1, p2, p3, p4, p5, p6]
+
+        # calculate the lines connecting 1 - 2, 2 - 3, 3 - 4, 4 - 5, 5 - 6, 6 - 1
+        for i in xrange(len(edgepoints)):
+            x1, y1 = edgepoints[i]
+            x2, y2 = edgepoints[(i + 1) % len(edgepoints)]
+            hexgrid_edges.append(((x1, x2), (y1, y2)))
+
+    return hexgrid_edges
 
 
+def get_hexgridcell_midpoints(N_RF):
+    # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of N_RF**2 dots?"
+    N_RF_X = np.int(np.sqrt(N_RF*np.sqrt(3)))
+    N_RF_Y = np.int(np.sqrt(N_RF/np.sqrt(3)))
+    print 'N_RF_X, Y:', N_RF_X, N_RF_Y
+    RF = np.zeros((2, N_RF_X*N_RF_Y))
+    X, Y = np.mgrid[0:1:1j*(N_RF_X+1), 0:1:1j*(N_RF_Y+1)]
+
+    # It's a torus, so we remove the first row and column to avoid redundancy (would in principle not harm)
+    X, Y = X[1:, 1:], Y[1:, 1:]
+    # Add to every even Y a half RF width to generate hex grid
+    Y[::2, :] += (Y[0, 0] - Y[0, 1])/2
+
+    # some modification to fix the grid
+    Y /= np.sqrt(3)
+
+    width = 2.
+    # finalize the vecvtor of RF coordinates
+    RF[0, :] = X.ravel() * width / 2.
+    RF[1, :] = Y.ravel() * width / 2.
+    return RF
 
 
+if __name__ == '__main__':
 
+    N_RF = 100
+    RF = get_hexgridcell_midpoints(N_RF)
 
+    x_size = 10
+    fig = pylab.figure(figsize=(x_size, x_size))
 
-angle_in_radian = 30 * np.pi / 180
-patches = []
-for i in xrange(N_RF_X * N_RF_Y):
-    pos = (RF[0, i], RF[1, i])
-#    print "i, pos", i, pos
-    polygon = mpatches.RegularPolygon(pos, 6, r_i, orientation=angle_in_radian, lw=0.001)#, edgecolor='none')
-    patches.append(polygon)
+    ax = fig.add_subplot(111, autoscale_on=False, aspect='equal')
 
-collection = PatchCollection(patches, cmap=matplotlib.cm.jet)#, alpha=0.4)
-colors = np.random.rand(len(patches))
-collection.set_array(colors)
-fig = plt.figure(figsize=(5,5))
-ax = plt.axes([0,0,1,1])
-ax.add_collection(collection)
-plt.show()
+    for i in xrange(RF[0, :].size):
+        ax.plot(RF[0, i], RF[1, i], 'o', c='k')
+        ax.annotate('%d' % i, (RF[0, i], RF[1, i]))
 
-#plt.text(pos[0,3], pos[1,3]-0.15, "Polygon", ha="center",
-#        family=font, size=14)
+    X = np.unique(RF[0, :])
+    #xdiff 
+    # plot the hexgrid edges
+    xdiff = X[1] - X[0]  # midpoitns x-difference 
+    edges = get_hexgrid_edges(RF, xdiff)
+    for i_, edge in enumerate(edges):
+
+        ax.plot((edge[0][0], edge[0][1]), (edge[1][0], edge[1][1]), c='k')
+
+    pylab.show()

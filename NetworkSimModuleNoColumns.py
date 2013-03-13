@@ -414,7 +414,6 @@ class NetworkModel(object):
             output_dist = ''
 
         p_max = utils.get_pmax(self.params['p_%s' % conn_type], .5 * (self.params['w_sigma_x'] + self.params['w_sigma_v']))
-        print 'p_max', p_max
         for tgt in tgt_cells:
             w = np.zeros(n_src, dtype='float32') 
             delays = np.zeros(n_src, dtype='float32')
@@ -565,9 +564,11 @@ class NetworkModel(object):
         if os.path.exists(self.params['gids_to_record_fn']):
             gids_to_record = np.loadtxt(self.params['gids_to_record_fn'], dtype='int')[:self.params['n_gids_to_record']]
             record_exc = True
+            n_rnd_cells_to_record = 2
         else:
             n_cells_to_record = 5# self.params['n_exc'] * 0.02
             gids_to_record = np.random.randint(0, self.params['n_exc'], n_cells_to_record)
+
 
         if record_v:
             self.exc_pop_view = PopulationView(self.exc_pop, gids_to_record, label='good_exc_neurons')
@@ -631,46 +632,29 @@ class NetworkModel(object):
 if __name__ == '__main__':
     
 
-#    ps.params['connectivity_ee'] = 'anisotropic'
-#    ps.params['connectivity_ei'] = 'isotropic'
-#    ps.params['connectivity_ie'] = 'isotropic'
-#    ps.params['connectivity_ii'] = 'isotropic'
-#    for scale_latency in [0.15]:
-#        for delay_scale in [5, 10, 30, 40, 50, 75, 100]:
-#            w_sigma_x, w_sigma_v = 0.10, 0.10
-#            for w_ee in [0.03]:
-#                for t_blank in [200]:#, 250, 300]:
-#                    ps.params['scale_latency'] = scale_latency
-#                    ps.params['w_sigma_x'] = w_sigma_x
-#                    ps.params['w_sigma_v'] = w_sigma_v
-#                    ps.params['w_tgt_in_per_cell_ee'] = w_ee
-#                    ps.params['delay_scale'] = delay_scale
-
-    t_exc = [40, 60, 80, 100]
-    t_inh = [60, 90, 120, 150]
-    for tau_syn_exc in t_exc:
-        for tau_syn_inh in t_inh:
-            ps.params['tau_syn_exc'] = tau_syn_exc
-            ps.params['tau_syn_inh'] = tau_syn_inh
-            ps.params['w_tgt_in_per_cell_ee'] *= 20. / ps.params['tau_syn_exc']
-            ps.params['w_tgt_in_per_cell_ei'] *= 20. / ps.params['tau_syn_exc']
-            ps.params['w_tgt_in_per_cell_ie'] *= 30. / ps.params['tau_syn_inh']
-            ps.params['w_tgt_in_per_cell_ii'] *= 30. / ps.params['tau_syn_inh']
-            ps.params['t_blank'] = 300
-
-            ps.set_filenames()
-
-            if pc_id == 0:
-                ps.create_folders()
-                ps.write_parameters_to_file()
-            if comm != None:
-                comm.Barrier()
-            sim_cnt = 0
-            record = False
-            NM = NetworkModel(ps.params, comm)
-            NM.setup(times=times)
-            NM.create()
-            NM.connect()
-            NM.run_sim(sim_cnt, record_v=record)
-            NM.print_results(print_v=record)
+    ps.params['connectivity_ee'] = 'anisotropic'
+    ps.params['connectivity_ei'] = 'isotropic'
+    ps.params['connectivity_ie'] = 'isotropic'
+    ps.params['connectivity_ii'] = 'isotropic'
+#    for blur_x in [0.05, 0.075, 0.10, 0.125, 0.15]:
+#        for blur_v in [0.05, 0.075, 0.10, 0.125, 0.15]:
+#    for fmaxstim in [800, 1000, 1200, 1400, 1600, 1800]:
+    fmaxstim = 1000
+    ps.params['f_max_stim'] = fmaxstim
+#                ps.params['blur_X'] = blur_x
+#                ps.params['blur_V'] = blur_v
+    ps.set_filenames()
+    if pc_id == 0:
+        ps.create_folders()
+        ps.write_parameters_to_file()
+    if comm != None:
+        comm.Barrier()
+    sim_cnt = 0
+    record = True
+    NM = NetworkModel(ps.params, comm)
+    NM.setup(times=times)
+    NM.create()
+    NM.connect()
+    NM.run_sim(sim_cnt, record_v=record)
+    NM.print_results(print_v=record)
 

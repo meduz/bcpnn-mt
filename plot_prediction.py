@@ -1,5 +1,5 @@
-#import matplotlib
-#matplotlib.use('Agg')
+import matplotlib
+matplotlib.use('Agg')
 import pylab
 import PlotPrediction as P
 import sys
@@ -20,6 +20,8 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
 #    if inh_spikes == None:
 #        inh_spikes = params['inh_spiketimes_fn_merged'] + '.ras'
+
+#    params['t_sim'] = 1200
 
     plotter = P.PlotPrediction(params, data_fn)
     pylab.rcParams['axes.labelsize'] = 14
