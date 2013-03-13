@@ -140,7 +140,7 @@ class NetworkModel(object):
         self.times['t_create'] = self.timer.diff()
 
 
-    def create(self):
+    def create(self, input_created):
         """
             # # # # # # # # # # # # 
             #     C R E A T E     #
@@ -156,6 +156,8 @@ class NetworkModel(object):
             print '\n\nUnknown neuron model:\n\t', self.params['neuron_model']
         self.local_idx_exc = get_local_indices(self.exc_pop, offset=0)
 
+        if not input_created:
+            self.spike_times_container = [ [] for i in xrange(len(self.local_idx_exc))]
 
         print 'Pc_id %d has local %d exc indices:' % (self.pc_id, len(self.local_idx_exc)), self.local_idx_exc
         self.exc_pop.initialize('v', self.v_init_dist)
@@ -173,7 +175,7 @@ class NetworkModel(object):
         else:
             save_output = True
 
-        self.connect_input_to_exc(load_files=False, save_output=save_output)
+        self.connect_input_to_exc()
 #        self.connect_input_to_exc(load_files=True, save_output=False)
 #        self.connect_input_to_exc(load_files=False, save_output=False)
         self.connect_populations('ee')
@@ -181,32 +183,28 @@ class NetworkModel(object):
         self.connect_populations('ie')
         self.connect_populations('ii')
         self.connect_noise()
-        self.times['t_connect'] = self.timer.diff()
+        self.times['t_calc_conns'] = self.timer.diff()
         if self.comm != None:
             self.comm.Barrier()
 
 
-    def connect_input_to_exc(self, load_files=False, save_output=False):
-        """
-            # # # # # # # # # # # # # # # # # # # # # # 
-            #     C O N N E C T    I N P U T - E X C  #
-            # # # # # # # # # # # # # # # # # # # # # # 
-        """
+    def create_input(self, load_files=False, save_output=False):
 
-        if self.pc_id == 0:
-            print "Loading and connecting input spiketrains..."
+
         if load_files:
-            for tgt in self.local_idx_exc:
+            if self.pc_id == 0:
+                print "Loading input spiketrains..."
+            for i_, tgt in enumerate(self.local_idx_exc):
                 try:
                     fn = self.params['input_st_fn_base'] + str(tgt) + '.npy'
                     spike_times = np.load(fn)
                 except: # this cell does not get any input
                     print "Missing file: ", fn
                     spike_times = []
-                ssa = create(SpikeSourceArray, {'spike_times': spike_times})
-                connect(ssa, self.exc_pop[tgt], self.params['w_input_exc'], synapse_type='excitatory')
-
+                self.spike_times_container[i_] = spike_times
         else:
+            if self.pc_id == 0:
+                print "Computing input spiketrains..."
             nprnd.seed(self.params['input_spikes_seed'])
             dt = self.params['dt_rate'] # [ms] time step for the non-homogenous Poisson process 
             time = np.arange(0, self.params['t_sim'], dt)
@@ -215,33 +213,49 @@ class NetworkModel(object):
             my_units = self.local_idx_exc
             n_cells = len(my_units)
             L_input = np.zeros((n_cells, time.shape[0]))
+            # get the input signal
             for i_time, time_ in enumerate(time):
                 if (i_time % 500 == 0):
                     print "t:", time_
-                L_input[:, i_time] = utils.get_input(self.tuning_prop_exc[my_units, :], self.params, time_/self.params['t_stimulus'])
+                L_input[:, i_time] = utils.get_input(self.tuning_prop_exc[my_units, :], self.params, time_/1000.)
+#                L_input[:, i_time] = utils.get_input(self.tuning_prop_exc[my_units, :], self.params, time_/self.params['t_stimulus'])
                 L_input[:, i_time] *= self.params['f_max_stim']
-
+            # blanking 
             for i_time in blank_idx:
                 L_input[:, i_time] = 0.
 
-
+            # create the spike trains
             for i_, unit in enumerate(my_units):
                 rate_of_t = np.array(L_input[i_, :]) 
                 # each cell will get its own spike train stored in the following file + cell gid
                 n_steps = rate_of_t.size
-                spike_times= []
+                spike_times = []
                 for i in xrange(n_steps):
                     r = nprnd.rand()
                     if (r <= ((rate_of_t[i]/1000.) * dt)): # rate is given in Hz -> 1/1000.
                         spike_times.append(i * dt) 
-                ssa = create(SpikeSourceArray, {'spike_times': spike_times})
-                connect(ssa, self.exc_pop[unit], self.params['w_input_exc'], synapse_type='excitatory')
+                self.spike_times_container[i_] = spike_times
                 if save_output:
                     output_fn = self.params['input_rate_fn_base'] + str(unit) + '.npy'
                     np.save(output_fn, rate_of_t)
-                    output_fn = params['input_st_fn_base'] + str(unit) + '.npy'
+                    output_fn = self.params['input_st_fn_base'] + str(unit) + '.npy'
                     np.save(output_fn, np.array(spike_times))
-        self.times['create_and_connect_input'] = self.timer.diff()
+        self.times['create_input'] = self.timer.diff()
+        return self.spike_times_container
+
+    def connect_input_to_exc(self):
+        """
+            # # # # # # # # # # # # # # # # # # # # # # 
+            #     C O N N E C T    I N P U T - E X C  #
+            # # # # # # # # # # # # # # # # # # # # # # 
+        """
+        if self.pc_id == 0:
+            print "Connecting input spiketrains..."
+        for i_, unit in enumerate(self.local_idx_exc):
+            spike_times = self.spike_times_container[i_]
+            ssa = create(SpikeSourceArray, {'spike_times': spike_times})
+            connect(ssa, self.exc_pop[unit], self.params['w_input_exc'], synapse_type='excitatory')
+        self.times['connect_input'] = self.timer.diff()
 
 
     def resolve_src_tgt(self, conn_type):
@@ -504,7 +518,6 @@ class NetworkModel(object):
             self.connect_random(conn_type)
         else: # populations do not get connected
             pass
-        self.times['t_calc_conns'] = self.timer.diff()
 
 
     def connect_noise(self):
@@ -618,15 +631,18 @@ class NetworkModel(object):
             self.times['t_all'] = 0.
             for k in self.times.keys():
                 self.times['t_all'] += self.times[k]
-            self.times['n_exc'] = self.params['n_exc']
-            self.times['n_inh'] = self.params['n_inh']
-            self.times['n_cells'] = self.params['n_cells']
-            self.times['n_proc'] = self.n_proc
-            self.times = ntp.ParameterSet(self.times)
+
+            self.n_cells = {}
+            self.n_cells['n_exc'] = self.params['n_exc']
+            self.n_cells['n_inh'] = self.params['n_inh']
+            self.n_cells['n_cells'] = self.params['n_cells']
+            self.n_cells['n_proc'] = self.n_proc
+            output = {'times' : self.times, 'n_cells_proc' : self.n_cells}
             print "Proc %d Simulation time: %d sec or %.1f min for %d cells (%d exc %d inh)" % (self.pc_id, self.times['t_sim'], (self.times['t_sim'])/60., self.params['n_cells'], self.params['n_exc'], self.params['n_inh'])
             print "Proc %d Full pyNN run time: %d sec or %.1f min for %d cells (%d exc %d inh)" % (self.pc_id, self.times['t_all'], (self.times['t_all'])/60., self.params['n_cells'], self.params['n_exc'], self.params['n_inh'])
             fn = utils.convert_to_url(params['folder_name'] + 'times_dict_np%d.py' % self.n_proc)
-            self.times.save(fn)
+            output = ntp.ParameterSet(output)
+            output.save(fn)
 
 
 if __name__ == '__main__':
@@ -636,25 +652,31 @@ if __name__ == '__main__':
     ps.params['connectivity_ei'] = 'isotropic'
     ps.params['connectivity_ie'] = 'isotropic'
     ps.params['connectivity_ii'] = 'isotropic'
-#    for blur_x in [0.05, 0.075, 0.10, 0.125, 0.15]:
-#        for blur_v in [0.05, 0.075, 0.10, 0.125, 0.15]:
-#    for fmaxstim in [800, 1000, 1200, 1400, 1600, 1800]:
-    fmaxstim = 1000
-    ps.params['f_max_stim'] = fmaxstim
-#                ps.params['blur_X'] = blur_x
-#                ps.params['blur_V'] = blur_v
-    ps.set_filenames()
-    if pc_id == 0:
-        ps.create_folders()
-        ps.write_parameters_to_file()
-    if comm != None:
-        comm.Barrier()
-    sim_cnt = 0
-    record = True
-    NM = NetworkModel(ps.params, comm)
-    NM.setup(times=times)
-    NM.create()
-    NM.connect()
-    NM.run_sim(sim_cnt, record_v=record)
-    NM.print_results(print_v=record)
+    input_created = False
+    for w_ee in [0.032, 0.035, 0.04]:
+        for w_ei in [0.05, 0.06, 0.07]:
+            for w_ie in [0.06, 0.07, 0.08]:
+                ps.params['w_tgt_in_per_cell_ee'] = w_ee
+                ps.params['w_tgt_in_per_cell_ei'] = w_ei
+                ps.params['w_tgt_in_per_cell_ie'] = w_ie
+                ps.set_filenames()
+                if pc_id == 0:
+                    ps.create_folders()
+                    ps.write_parameters_to_file()
+                if comm != None:
+                    comm.Barrier()
+                sim_cnt = 0
+                record = True
+                NM = NetworkModel(ps.params, comm)
+                NM.setup(times=times)
+                NM.create(input_created)
+                if not input_created:
+                    spike_times_container = NM.create_input(load_files=False, save_output=True)
+                    input_created = True # this can be set True ONLY if the parameter does not affect the input
+                    # i.e. set this to false when sweeping f_max_stim, or blur_X/V!
+                else:
+                    NM.spike_times_container = spike_times_container
+                NM.connect()
+                NM.run_sim(sim_cnt, record_v=record)
+                NM.print_results(print_v=record)
 
