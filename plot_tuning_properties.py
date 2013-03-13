@@ -178,15 +178,15 @@ ax2.set_xlim((d[:, 2].min() * 1.05, d[:, 2].max() * 1.05))
 ax2.set_title('Distribution of preferred directions')
 
 #xticks = np.arange(-.5, .75, 0.25)
-xticks = [-.5, 0., .5]
-xtick_labels = ['%.2f' % xticks[i] for i in xrange(len(xticks))]
-print 'xtick_labels', xtick_labels
-ax2.set_xticks(xticks)
-ax2.set_xticklabels(xtick_labels)
+#xticks = [-.5, 0., .5]
+#xtick_labels = ['%.2f' % xticks[i] for i in xrange(len(xticks))]
+#print 'xtick_labels', xtick_labels
+#ax2.set_xticks(xticks)
+#ax2.set_xticklabels(xtick_labels)
 
-yticks = [-.5, 0., .5]
-ax2.set_yticks(yticks)
-ax2.set_yticklabels(['%.2f' % yticks[i] for i in xrange(len(yticks))])
+#yticks = [-.5, 0., .5]
+#ax2.set_yticks(yticks)
+#ax2.set_yticklabels(['%.2f' % yticks[i] for i in xrange(len(yticks))])
 
 
 """

@@ -22,7 +22,8 @@ n_cells = nspikes.nonzero()[0].size
 idx = np.argsort(nspikes)
 print 'GID\tnspikes'
 print '----------------'
-for i in xrange(1, int(round(.2 *(n_cells + 1)))):
+#for i in xrange(1, int(round(.2 *(n_cells + 1)))):
+for i in xrange(1, n_cells + 1):
     print '%d\t%d' % (idx[-i], nspikes[idx[-i]])
 
 fig = pylab.figure(figsize=(16, 10))
@@ -45,6 +46,6 @@ output_fig = params['figures_folder'] + 'nspike_histogram_%s.png' % cell_type
 print 'Saving to:', output_fig
 pylab.savefig(output_fig)
 
-#pylab.show()
+pylab.show()
 
 

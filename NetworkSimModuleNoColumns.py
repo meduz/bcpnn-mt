@@ -131,6 +131,10 @@ class NetworkModel(object):
         else:
             print '\n\nUnknown neuron model:\n\t', self.params['neuron_model']
         self.local_idx_exc = get_local_indices(self.exc_pop, offset=0)
+
+        if not input_created:
+            self.spike_times_container = [ [] for i in xrange(len(self.local_idx_exc))]
+            self.spike_times_container = [ [] for i in xrange(len(self.local_idx_exc))]
         print 'Debug, pc_id %d has local %d exc indices:' % (self.pc_id, len(self.local_idx_exc)), self.local_idx_exc
         self.exc_pop.initialize('v', self.v_init_dist)
 
@@ -140,7 +144,7 @@ class NetworkModel(object):
         self.times['t_create'] = self.timer.diff()
 
 
-    def create(self, input_created):
+    def create(self, input_created=False):
         """
             # # # # # # # # # # # # 
             #     C R E A T E     #
@@ -159,11 +163,9 @@ class NetworkModel(object):
         if not input_created:
             self.spike_times_container = [ [] for i in xrange(len(self.local_idx_exc))]
 
-        print 'Pc_id %d has local %d exc indices:' % (self.pc_id, len(self.local_idx_exc)), self.local_idx_exc
         self.exc_pop.initialize('v', self.v_init_dist)
 
         self.local_idx_inh = get_local_indices(self.inh_pop, offset=self.params['n_exc'])
-        print 'Pc_id %d has local %d inh indices:' % (self.pc_id, len(self.local_idx_inh)), self.local_idx_inh
         self.inh_pop.initialize('v', self.v_init_dist)
 
         self.times['t_create'] = self.timer.diff()
@@ -217,8 +219,7 @@ class NetworkModel(object):
             for i_time, time_ in enumerate(time):
                 if (i_time % 500 == 0):
                     print "t:", time_
-                L_input[:, i_time] = utils.get_input(self.tuning_prop_exc[my_units, :], self.params, time_/1000.)
-#                L_input[:, i_time] = utils.get_input(self.tuning_prop_exc[my_units, :], self.params, time_/self.params['t_stimulus'])
+                L_input[:, i_time] = utils.get_input(self.tuning_prop_exc[my_units, :], self.params, time_/self.params['t_stimulus'])
                 L_input[:, i_time] *= self.params['f_max_stim']
             # blanking 
             for i_time in blank_idx:
@@ -338,11 +339,10 @@ class NetworkModel(object):
                 if w[i] > self.params['w_thresh_connection']:
                     delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
     #                delay = min(max(latency[sources[i]], delay_min), delay_max)  # map the delay into the valid range
-    #                print 'debug ', delay , ' latency', latency[sources[i]]
+#                    print 'debug ', delay , ' latency', latency[sources[i]]
                     connect(src_pop[sources[i]], tgt_pop[tgt], w[i], delay=delay, synapse_type=syn_type)
                     if self.debug_connectivity:
                         output += '%d\t%d\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay) #                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], latency[sources[i]], p[sources[i]])
-
 
         if self.debug_connectivity:
             if self.pc_id == 0:
@@ -557,7 +557,7 @@ class NetworkModel(object):
 
 
 
-    def run_sim(self, sim_cnt, record_v=True): # this function expects a parameter dictionary
+    def run_sim(self, sim_cnt, record_v=True):
         # # # # # # # # # # # # # # # # # # # #
         #     P R I N T    W E I G H T S      # 
         # # # # # # # # # # # # # # # # # # # #
@@ -648,35 +648,37 @@ class NetworkModel(object):
 if __name__ == '__main__':
     
 
-    ps.params['connectivity_ee'] = 'anisotropic'
-    ps.params['connectivity_ei'] = 'isotropic'
-    ps.params['connectivity_ie'] = 'isotropic'
-    ps.params['connectivity_ii'] = 'isotropic'
     input_created = False
-    for w_ee in [0.032, 0.035, 0.04]:
+    for w_ie in [0.06, 0.07, 0.08]:
         for w_ei in [0.05, 0.06, 0.07]:
-            for w_ie in [0.06, 0.07, 0.08]:
-                ps.params['w_tgt_in_per_cell_ee'] = w_ee
-                ps.params['w_tgt_in_per_cell_ei'] = w_ei
-                ps.params['w_tgt_in_per_cell_ie'] = w_ie
-                ps.set_filenames()
-                if pc_id == 0:
-                    ps.create_folders()
-                    ps.write_parameters_to_file()
-                if comm != None:
-                    comm.Barrier()
-                sim_cnt = 0
-                record = True
-                NM = NetworkModel(ps.params, comm)
-                NM.setup(times=times)
-                NM.create(input_created)
-                if not input_created:
-                    spike_times_container = NM.create_input(load_files=False, save_output=True)
-                    input_created = True # this can be set True ONLY if the parameter does not affect the input
-                    # i.e. set this to false when sweeping f_max_stim, or blur_X/V!
-                else:
-                    NM.spike_times_container = spike_times_container
-                NM.connect()
-                NM.run_sim(sim_cnt, record_v=record)
-                NM.print_results(print_v=record)
+            for w_sigma_x in [0.05, 0.10, 0.15]:
+                for w_sigma_v in [0.05, 0.10, 0.15]:
+                    for w_ee in [0.032, 0.035, 0.04]:
+                        ps.params['w_tgt_in_per_cell_ee'] = w_ee
+                        ps.params['w_tgt_in_per_cell_ei'] = w_ei
+                        ps.params['w_tgt_in_per_cell_ie'] = w_ie
+                        ps.params['w_sigma_x'] = w_sigma_x
+                        ps.params['w_sigma_v'] = w_sigma_v
+                        ps.set_filenames()
+                        if pc_id == 0:
+                            ps.create_folders()
+                            ps.write_parameters_to_file()
+                        if comm != None:
+                            comm.Barrier()
+                        sim_cnt = 0
+                        record = True
+                        load_files = False
+                        save_input_files = False#not load_files
+                        NM = NetworkModel(ps.params, comm)
+                        NM.setup(times=times)
+                        NM.create(input_created)
+                        if not input_created:
+                            spike_times_container = NM.create_input(load_files=load_files, save_output=save_input_files)
+                            input_created = True # this can be set True ONLY if the parameter does not affect the input
+                            # i.e. set this to false when sweeping f_max_stim, or blur_X/V!
+                        else:
+                            NM.spike_times_container = spike_times_container
+                        NM.connect()
+                        NM.run_sim(sim_cnt, record_v=record)
+                        NM.print_results(print_v=record)
 

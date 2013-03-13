@@ -101,11 +101,10 @@ ax.set_xlim((0, params['t_sim']))
 ax.set_ylabel('Number of input spikes')
 ax.set_xlabel('Times [ms]')
 
-if params_loaded:
-    output_fn = params['figures_folder'] + 'input_%d.png' % (gid)
+#if params_loaded:
 #    output_fn = params['figures_folder'] + 'input_%d.png' % (gid)
-    print 'Saving to', output_fn
-    pylab.savefig(output_fn)
+#    print 'Saving to', output_fn
+#    pylab.savefig(output_fn)
 
 #output_fn = 'delme.dat'
 #np.savetxt(output_fn, data)

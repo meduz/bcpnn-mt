@@ -615,10 +615,14 @@ def get_nspikes(spiketimes_fn_merged, n_cells=0, get_spiketrains=False):
         else:
             return spiketrains
     # seperate spike trains for all the cells
-    for i in xrange(d[:, 0].size):
-        spiketrains[int(d[i, 1])].append(d[i, 0])
-    for gid in xrange(n_cells):
-        nspikes[gid] = len(spiketrains[gid])
+    if d.shape == (2,):
+        nspikes[int(d[1])] = 1
+        spiketrains[int(d[1])] = [d[0]]
+    else:
+        for i in xrange(d[:, 0].size):
+            spiketrains[int(d[i, 1])].append(d[i, 0])
+        for gid in xrange(n_cells):
+            nspikes[gid] = len(spiketrains[gid])
     if get_spiketrains:
         return nspikes, spiketrains
     else:

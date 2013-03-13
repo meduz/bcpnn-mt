@@ -30,9 +30,9 @@ class PlotPrediction(object):
         self.tau_prediction = self.params['tau_prediction']
         # define parameters
         self.time_binsize = int(round(self.params['t_sim'] / 20))
-        self.time_binsize = 50# [ms] 
+        self.time_binsize = 25# [ms] 
 
-        self.trace_length = 6 * self.time_binsize # [ms] window length for moving average 
+        self.trace_length = 4 * self.time_binsize # [ms] window length for moving average 
         self.n_bins = int((self.params['t_sim'] / self.time_binsize) )
         self.time_bins = [self.time_binsize * i for i in xrange(self.n_bins)]
         self.t_axis = np.arange(0, self.n_bins * self.time_binsize, self.time_binsize)
@@ -56,7 +56,7 @@ class PlotPrediction(object):
         self.vx_tuning = self.tuning_prop[:, 2].copy()
         self.vx_tuning.sort()
         self.sorted_indices_vx = self.tuning_prop[:, 2].argsort()
-        self.vx_min, self.vx_max = self.tuning_prop[:, 2].min(), self.tuning_prop[:, 2].max()
+        self.vx_min, self.vx_max = .7 * self.tuning_prop[:, 2].min(), .7 * self.tuning_prop[:, 2].max()
         # maximal range of vx_speeds
 #        self.vx_min, self.vx_max = np.min(self.vx_tuning), np.max(self.vx_tuning)
         self.vx_grid = np.linspace(self.vx_min, self.vx_max, self.n_vx_bins, endpoint=True)
@@ -76,14 +76,14 @@ class PlotPrediction(object):
         self.sorted_indices_x = self.tuning_prop[:, 0].argsort()
         self.x_tuning = self.tuning_prop[:, 0].copy()
         self.x_tuning.sort()
-        self.x_min, self.x_max = .0, 1.
+        self.x_min, self.x_max = .0, self.params['torus_width']
         self.x_grid = np.linspace(self.x_min, self.x_max, self.n_x_bins, endpoint=True)
 
         # y
         self.y_tuning = self.tuning_prop[:, 1].copy()
         self.y_tuning.sort()
         self.sorted_indices_y = self.tuning_prop[:, 1].argsort()
-        self.y_min, self.y_max = .0, 1.
+        self.y_min, self.y_max = .0, self.params['torus_height']
         self.y_grid = np.linspace(self.y_min, self.y_max, self.n_y_bins, endpoint=True)
 
 
