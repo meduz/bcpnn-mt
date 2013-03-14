@@ -448,6 +448,7 @@ if __name__ == '__main__':
 
 #    pylab.show()
 
+
 #    CA.create_connectivity(conn_type)
 #    CA.plot_src_tgt_position_scatter(conn_type)
 

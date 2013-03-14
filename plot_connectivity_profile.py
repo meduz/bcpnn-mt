@@ -430,6 +430,9 @@ if __name__ == '__main__':
     output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.eps' % (gid, params['w_sigma_x'], params['w_sigma_v'])
     print 'Saving figure to', output_fig
     pylab.savefig(output_fig, dpi=200)
+    output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.pdf' % (gid, params['w_sigma_x'], params['w_sigma_v'])
+    print 'Saving figure to', output_fig
+    pylab.savefig(output_fig, dpi=200)
 
     pylab.show()
 

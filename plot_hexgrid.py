@@ -45,10 +45,13 @@ def get_hexgrid_edges(midpoints, midpoints_x_difference):
 def get_hexgridcell_midpoints(N_RF):
     # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of N_RF**2 dots?"
     N_RF_X = np.int(np.sqrt(N_RF*np.sqrt(3)))
-    N_RF_Y = np.int(np.sqrt(N_RF/np.sqrt(3)))
+    N_RF_Y = np.int(np.sqrt(N_RF))#/np.sqrt(3)))
     print 'N_RF_X, Y:', N_RF_X, N_RF_Y
     RF = np.zeros((2, N_RF_X*N_RF_Y))
-    X, Y = np.mgrid[0:1:1j*(N_RF_X+1), 0:1:1j*(N_RF_Y+1)]
+    xlim = (0, 1)
+    ylim = (0, np.sqrt(3))
+    X, Y = np.mgrid[xlim[0]:xlim[1]:1j*(N_RF_X+1), ylim[0]:ylim[1]:1j*(N_RF_Y+1)]
+#    X, Y = np.mgrid[0:1:1j*(N_RF_X+1), 0:1:1j*(N_RF_Y+1)]
 
     # It's a torus, so we remove the first row and column to avoid redundancy (would in principle not harm)
     X, Y = X[1:, 1:], Y[1:, 1:]

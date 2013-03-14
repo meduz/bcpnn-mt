@@ -322,6 +322,7 @@ class NetworkModel(object):
                 if conn_type[0] == conn_type[1]: # no self-connection
                     if (src != tgt):
                         p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
+
                 else: # different populations --> same indices mean different cells, no check for src != tgt
                     p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
 
@@ -406,19 +407,19 @@ class NetworkModel(object):
 
         (n_src, n_tgt, src_pop, tgt_pop, tp_src, tp_tgt, tgt_cells, syn_type) = self.resolve_src_tgt(conn_type)
         if conn_type == 'ee':
-            w_= self.params['w_max']
+            w_ = self.params['w_max']
             w_tgt_in = params['w_tgt_in_per_cell_%s' % conn_type]
 
         elif conn_type == 'ei':
-            w_= self.params['w_ie_mean']
+            w_ = self.params['w_ie_mean']
             w_tgt_in = params['w_tgt_in_per_cell_%s' % conn_type]
 
         elif conn_type == 'ie':
-            w_= self.params['w_ie_mean']
+            w_ = self.params['w_ie_mean']
             w_tgt_in = params['w_tgt_in_per_cell_%s' % conn_type]
 
         elif conn_type == 'ii':
-            w_= self.params['w_ii_mean']
+            w_ = self.params['w_ii_mean']
             w_tgt_in = params['w_tgt_in_per_cell_%s' % conn_type]
 
         if self.debug_connectivity:
@@ -428,6 +429,7 @@ class NetworkModel(object):
             output_dist = ''
 
         p_max = utils.get_pmax(self.params['p_%s' % conn_type], .5 * (self.params['w_sigma_x'] + self.params['w_sigma_v']))
+        print 'p_max for %s' % conn_type, p_max
         for tgt in tgt_cells:
             w = np.zeros(n_src, dtype='float32') 
             delays = np.zeros(n_src, dtype='float32')
@@ -649,36 +651,41 @@ if __name__ == '__main__':
     
 
     input_created = False
-    for w_ie in [0.06, 0.07, 0.08]:
-        for w_ei in [0.05, 0.06, 0.07]:
-            for w_sigma_x in [0.05, 0.10, 0.15]:
-                for w_sigma_v in [0.05, 0.10, 0.15]:
-                    for w_ee in [0.032, 0.035, 0.04]:
-                        ps.params['w_tgt_in_per_cell_ee'] = w_ee
-                        ps.params['w_tgt_in_per_cell_ei'] = w_ei
-                        ps.params['w_tgt_in_per_cell_ie'] = w_ie
-                        ps.params['w_sigma_x'] = w_sigma_x
-                        ps.params['w_sigma_v'] = w_sigma_v
-                        ps.set_filenames()
-                        if pc_id == 0:
-                            ps.create_folders()
-                            ps.write_parameters_to_file()
-                        if comm != None:
-                            comm.Barrier()
-                        sim_cnt = 0
-                        record = True
-                        load_files = False
-                        save_input_files = False#not load_files
-                        NM = NetworkModel(ps.params, comm)
-                        NM.setup(times=times)
-                        NM.create(input_created)
-                        if not input_created:
-                            spike_times_container = NM.create_input(load_files=load_files, save_output=save_input_files)
-                            input_created = True # this can be set True ONLY if the parameter does not affect the input
-                            # i.e. set this to false when sweeping f_max_stim, or blur_X/V!
-                        else:
-                            NM.spike_times_container = spike_times_container
-                        NM.connect()
-                        NM.run_sim(sim_cnt, record_v=record)
-                        NM.print_results(print_v=record)
+#    w_ie = 0.10
+#    w_ei = 0.12
+#    w_ii = 0.02
+#    for w_sigma_x in [0.05]:#, 0.10, 0.15]:
+#        for w_sigma_v in [0.05]:#, 0.10, 0.15]:
+#            for w_ee in [0.026, 0.026, 0.027, 0.028, 0.029, 0.030, 0.031, 0.032]:
+#    ps.params['w_tgt_in_per_cell_ee'] = w_ee
+#    ps.params['w_tgt_in_per_cell_ei'] = w_ei
+#    ps.params['w_tgt_in_per_cell_ie'] = w_ie
+#    ps.params['w_tgt_in_per_cell_ii'] = w_ii
+#    ps.params['w_sigma_x'] = w_sigma_x
+#    ps.params['w_sigma_v'] = w_sigma_v
+    ps.set_filenames()
+    if pc_id == 0:
+        ps.create_folders()
+        ps.write_parameters_to_file()
+    if comm != None:
+        comm.Barrier()
+    sim_cnt = 0
+    record = True
+    if params['n_cells'] > 5000:
+        load_files = False
+        save_input_files = False
+    else: # choose yourself
+        load_files = False
+        save_input_files = not load_files
+    NM = NetworkModel(ps.params, comm)
+    NM.setup(times=times)
+    NM.create(input_created)
+    if not input_created:
+        spike_times_container = NM.create_input(load_files=load_files, save_output=save_input_files)
+        input_created = True # this can be set True ONLY if the parameter does not affect the input i.e. set this to false when sweeping f_max_stim, or blur_X/V!
+    else:
+        NM.spike_times_container = spike_times_container
+    NM.connect()
+    NM.run_sim(sim_cnt, record_v=record)
+    NM.print_results(print_v=record)
 

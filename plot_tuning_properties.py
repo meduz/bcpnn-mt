@@ -10,7 +10,7 @@ import plot_hexgrid
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 
-def plot_scatter_with_histograms(x, y):
+def plot_scatter_with_histograms(x, y, fig):
 #    from matplotlib.ticker import NullFormatter
 
 #    nullfmt   = NullFormatter()         # no labels
@@ -25,14 +25,14 @@ def plot_scatter_with_histograms(x, y):
     rect_histy = [left_h, bottom, 0.2, height]
 
     # start with a rectangular Figure
-    fig2 = pylab.figure(figsize=(8,8))
+#    fig2 = pylab.figure(figsize=(8,8))
 #    ax = fig.add_subplot(111)
     
-    axScatter = fig2.add_axes(rect_scatter)
+    axScatter = fig.add_axes(rect_scatter)
     axScatter.set_xlabel('v_x')
     axScatter.set_ylabel('v_y')
-    axHistx = fig2.add_axes(rect_histx)
-    axHisty = fig2.add_axes(rect_histy)
+    axHistx = fig.add_axes(rect_histx)
+    axHisty = fig.add_axes(rect_histy)
 
     # no labels
 #    axHistx.xaxis.set_major_formatter(nullfmt)
@@ -112,21 +112,17 @@ else:
 
 ms = 2 # markersize for scatterplots
 
-width = 12
-
-fig = plt.figure(figsize=(width,  1.2 * width/ np.sqrt(3)))
+width = 8
+fig = plt.figure(figsize=(12, 9))
+#fig = plt.figure(figsize=(2*width, width))
 plt.subplots_adjust(wspace=.3)
-gs = gridspec.GridSpec(1, 2, width_ratios=[2, 1])
-#ax1 = fig.add_subplot(111, autoscale_on=False, aspect='equal')
-#ax1 = fig.add_subplot(121, aspect='equal', autoscale_on=False)
-#ax1 = fig.add_subplot(121, aspect='equal')#, autoscale_on=False)
-ax1 = plt.subplot(gs[0], aspect='equal')#, autoscale_on=False)
-ax2 = plt.subplot(gs[1], aspect='equal')#, autoscale_on=False)
+gs = gridspec.GridSpec(1, 2, width_ratios=[1, 1], height_ratios=[1, 1])
+#ax1 = fig.add_subplot(121, autoscale_on=False, aspect='equal')
+#ax2 = fig.add_subplot(122, aspect='equal')#, autoscale_on=False)
+ax1 = plt.subplot(gs[0], aspect='equal', autoscale_on=False)
+ax2 = plt.subplot(gs[1], aspect='equal', autoscale_on=False)
 
-#fig2 = pylab.figure(figsize=(width, width))
-#ax2 = fig2.add_subplot(111, autoscale_on=False, aspect='equal')
-#ax2 = fig.add_subplot(122, aspect='equal')
-#ax2 = pylab.axes()
+
 scale = 6. # scale of the quivers / arrows
 # set the colorscale for directions
 o_min = 0.
@@ -167,8 +163,8 @@ ax1.set_xlabel('$x$-position')#, fontsize=20)
 ax1.set_ylabel('$y$-position')#, fontsize=16)
 ax1.set_title('Spatial receptive fields')# for %s cells\n n_rf=%d, n_units=%d' % (cell_type, n_rf, n_units))
 ax1.set_xlim((-.05, 1.1))
-ax1.set_ylim((-.05, .7))
-cb = fig.colorbar(m, ax=ax1, shrink=.43)
+ax1.set_ylim((-.05, 1.1))
+cb = fig.colorbar(m, ax=ax1)#, shrink=.43)
 cb.set_label('Preferred angle of motion', fontsize=14)
 
 ax2.set_xlabel('$u$')#, fontsize=16)
@@ -227,18 +223,19 @@ posax2=ax2.set_position(bbax2)
 #ax3.set_xticklabels(xticks_rescaled)
 
 output_fn = params['tuning_prop_fig_%s_fn' % cell_type]
+output_fn = output_fn.rstrip('.png') + '_%.2f.png' % params['log_scale']
 print "Saving to ... ", output_fn
 fig.savefig(output_fn, dpi=200)
 
 
+fig2 = pylab.figure(figsize=(width, width))
+#ax2 = fig2.add_subplot(111, autoscale_on=False, aspect='equal')
+#ax2 = fig.add_subplot(122, aspect='equal')
+#ax2 = pylab.axes()
 #plot_scatter_with_histograms(d[:, 0], d[:, 1])
-#plot_scatter_with_histograms(d[:, 2], d[:, 3])
-#output_fn = params['figures_folder'] + 'v_tuning_histogram.png'
-#print 'Saving to', output_fn
-#fig2.savefig(output_fn, dpi=200)
-
-
-
-
+plot_scatter_with_histograms(d[:, 2], d[:, 3], fig2)
+output_fn = params['figures_folder'] + 'v_tuning_histogram_vmin%.2e_vmax%.2e.png' % (params['v_min_tp'], params['v_max_tp'])
+print 'Saving to', output_fn
+fig2.savefig(output_fn, dpi=200)
 
 pylab.show()

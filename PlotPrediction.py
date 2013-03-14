@@ -520,8 +520,9 @@ class PlotPrediction(object):
             avg_activity[time_bin] /= n_active
         avg_activity /= (self.time_binsize / 1000.)
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
+        ax.set_xlim((0, self.params['t_sim']))
         bins = np.linspace(0, self.params['t_sim'], n_bins, endpoint=True)
-        ax.bar(bins, avg_activity, width=bins[1]-bins[0])
+        ax.bar(bins, avg_activity, width=bins[1]-bins[0], )
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel('Average firing rate [Hz]')
         ax.set_title('Activity of %s cells' % cell_type)

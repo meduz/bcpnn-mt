@@ -37,7 +37,6 @@ conn_code = 'AIII'
 #param_name = 'blur_X'
 param_name = 'w_tgt_in_per_cell_ee'
 #param_name = 't_blank'
-#param_name = 'scale_latency'
 #t_range=(0, 1000)
 #param_name = 'delay_scale'
 t_range=(0, 3000)
@@ -45,15 +44,15 @@ fmaxstim = 1000.
 
 blur_v = 0.05
 tbb = 400
-#to_match = '^LargeScaleModel_(.*)_blur(.*)_blurV%.2e_(.*)' % (blur_v)
-to_match = '^LargeScaleModel_%s_fmaxstim1\.50e\+03_scaleLatency0\.15_tbb400_(.*)' % (conn_code)
+to_match = '^LargeScaleModel_(.*)_bx(.*)_wie1\.20(.*)'
+#to_match = '^LargeScaleModel_%s_fmaxstim1\.50e\+03_scaleLatency0\.15_tbb400_(.*)' % (conn_code)
 #to_match = '^LargeScaleModel_%s_fmaxstim(.*)' % (conn_code)
 #to_match = '^LargeScaleModel_%s_fmaxstim%.2e(.*)' % (conn_code,fmaxstim)
 print 'to_match', to_match
 #to_match = '^LargeScaleModel_%s_fmaxstim%.2e_(.*)' % (conn_code, fmaxstim)
 #to_match = '^LargeScaleModel_%s_fmaxstim(.*)_tbb%d$' % (conn_code, tbb)
-scale_latency = 0.15
-output_fn = 'xvdiff_%s_tbb%d_fmaxstim%.1e_scaleLatency%.2f_weeSweep_t%d-%d.dat' % (conn_code, tbb, fmaxstim, scale_latency, t_range[0], t_range[1])
+#output_fn = 'xvdiff_%s_tbb%d_fmaxstim%.1e_weeSweep_t%d-%d.dat' % (conn_code, tbb, fmaxstim, t_range[0], t_range[1])
+output_fn = 'dummy.dat'
 print 'output_fn', output_fn
 
 dir_names = []
