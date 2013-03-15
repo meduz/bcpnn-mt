@@ -19,7 +19,7 @@ if len(sys.argv) > 1:
     params = NTP.ParameterSet(fn_as_url)
 
 else:
-    print '\nPlotting the default parameters give in simulation_parameters.py\n'
+    print '\nPlotting the default parameters given in simulation_parameters.py\n'
     import simulation_parameters
     network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
     params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
@@ -42,32 +42,36 @@ def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0):
     n_cells = params['n_exc']
     sorted_idx = tp[:, sort_idx].argsort()
 
+    ylim = (tp[:, sort_idx].min(), tp[:, sort_idx].max())
+    ylen = (abs(ylim[0] - ylim[1]))
     for i in xrange(n_cells):
         cell = sorted_idx[i]
         fn = params['input_st_fn_base'] + str(cell) + '.npy'
         spiketimes = np.load(fn)
         nspikes = len(spiketimes)
-        ax.plot(spiketimes, i * np.ones(nspikes) + shift, m, color=c, markersize=2)
+        y_pos = tp[cell, sort_idx] / ylen * (abs(ylim[0] - ylim[1]))
+        ax.plot(spiketimes, y_pos * np.ones(nspikes) + shift, m, color=c, markersize=2)
+#        ax.plot(spiketimes, i * np.ones(nspikes) + shift, m, color=c, markersize=2)
 
     if sort_idx == 0:
-        ylabel_txt ='Neurons sorted by x-pos'
+        ylabel_txt ='Neurons sorted\nby x-pos'
     elif sort_idx == 1:
-        ylabel_txt ='Neurons sorted by y-pos'
+        ylabel_txt ='Neurons sorted\nby y-pos'
     elif sort_idx == 2:
-        ylabel_txt ='Neurons sorted by x-direction'
+        ylabel_txt ='Neurons sorted\nby x-direction'
     elif sort_idx == 3:
-        ylabel_txt ='Neurons sorted by y-direction'
+        ylabel_txt ='Neurons sorted\nby y-direction'
 
     ax.set_ylabel(ylabel_txt)
 
-    n_yticks = 6
-    y_tick_idx = np.linspace(0, n_cells, n_yticks)
-    y_ticks = np.linspace(tp[:, sort_idx].min(), tp[:, sort_idx].max(), n_yticks)
-    y_ticklabels = []
-    for i in xrange(n_yticks):
-        y_ticklabels.append('%.2f' % y_ticks[i])
-    ax.set_yticks(y_tick_idx)
-    ax.set_yticklabels(y_ticklabels)
+#    n_yticks = 8
+#    y_tick_idx = np.linspace(0, n_cells, n_yticks)
+#    y_ticks = np.linspace(tp[:, sort_idx].min(), tp[:, sort_idx].max(), n_yticks)
+#    y_ticklabels = []
+#    for i in xrange(n_yticks):
+#        y_ticklabels.append('%.2f' % y_ticks[i])
+#    ax.set_yticks(y_tick_idx)
+#    ax.set_yticklabels(y_ticklabels)
 
 
 def plot_output_spikes_sorted_in_space(ax, cell_type, shift=0., m='o', c='g', sort_idx=0):
@@ -76,10 +80,24 @@ def plot_output_spikes_sorted_in_space(ax, cell_type, shift=0., m='o', c='g', so
     nspikes, spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
     sorted_idx = tp[:, sort_idx].argsort()
 
+    ylim = (tp[:, sort_idx].min(), tp[:, sort_idx].max())
+    ylen = (abs(ylim[0] - ylim[1]))
+    print '\n', 'sort_idx', sort_idx, ylim, 
     for i in xrange(n_cells):
         cell = sorted_idx[i]
-        ax.plot(spiketimes[cell], i * np.ones(nspikes[cell]), 'o', color='k', markersize=2)
-#        print i, tp[cell, sort_idx], nspikes[cell]
+        y_pos = tp[cell, sort_idx] / ylen * (abs(ylim[0] - ylim[1]))
+        ax.plot(spiketimes[cell], y_pos * np.ones(nspikes[cell]), 'o', color='k', markersize=2)
+        if nspikes[cell] > 0:
+            print i, tp[cell, sort_idx], y_pos, nspikes[cell]
+
+#    n_yticks = 6
+#    y_tick_idx = np.linspace(0, n_cells, n_yticks)
+#    y_ticks = np.linspace(tp[:, sort_idx].min(), tp[:, sort_idx].max(), n_yticks)
+#    y_ticklabels = []
+#    for i in xrange(n_yticks):
+#        y_ticklabels.append('%.2f' % y_ticks[i])
+#    ax.set_yticks(y_tick_idx)
+#    ax.set_yticklabels(y_ticklabels)
 
 
 
@@ -94,7 +112,7 @@ fn_exc = params['exc_spiketimes_fn_merged'] + '.ras'
 fn_inh = params['inh_spiketimes_fn_merged'] + '.ras'
 
 # ax1 is if input spikes shall be plotted in a seperate axis  (from the output spikes)
-fig = pylab.figure()
+fig = pylab.figure(figsize=(14, 12))
 ax1 = fig.add_subplot(411)
 ax2 = fig.add_subplot(412)
 ax3 = fig.add_subplot(413)
@@ -128,14 +146,14 @@ ax2.set_xlabel('Time [ms]')
 ax3.set_xlabel('Time [ms]')
 ax4.set_xlabel('Time [ms]')
 
-ax1.set_ylim((0, params['n_exc'] + 1))
-ax2.set_ylim((0, params['n_exc'] + 1))
+#ax1.set_ylim((0, params['n_exc'] + 1))
+#ax2.set_ylim((0, params['n_exc'] + 1))
 ax3.set_ylim((0, params['n_exc'] + 1))
 ax4.set_ylim((0, params['n_inh'] + 1))
 
-#output_fn = params['rasterplot_%s_fig' % cell_type] 
-#print "Saving to", output_fn
-#pylab.savefig(output_fn)
+output_fn = params['figures_folder'] + 'rasterplot_sorted_by_tp.png'
+print "Saving to", output_fn
+pylab.savefig(output_fn, dpi=200)
 
 pylab.show()
 
