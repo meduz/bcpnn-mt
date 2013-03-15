@@ -114,7 +114,6 @@ ms = 2 # markersize for scatterplots
 
 width = 8
 fig = plt.figure(figsize=(12, 9))
-#fig = plt.figure(figsize=(2*width, width))
 plt.subplots_adjust(wspace=.3)
 gs = gridspec.GridSpec(1, 2, width_ratios=[1, 1], height_ratios=[1, 1])
 #ax1 = fig.add_subplot(121, autoscale_on=False, aspect='equal')

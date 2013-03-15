@@ -164,7 +164,7 @@ class PlotPrediction(object):
 
         """
         # torus dimensions
-        w, h = 1., 1. / np.sqrt(3)
+        w, h = self.params['torus_width'], self.params['torus_height']
         
         output_data = np.zeros((len(grid_edges), self.n_bins))
         for gid in xrange(self.n_cells):

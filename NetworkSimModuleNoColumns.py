@@ -178,8 +178,6 @@ class NetworkModel(object):
             save_output = True
 
         self.connect_input_to_exc()
-#        self.connect_input_to_exc(load_files=True, save_output=False)
-#        self.connect_input_to_exc(load_files=False, save_output=False)
         self.connect_populations('ee')
         self.connect_populations('ei')
         self.connect_populations('ie')
@@ -675,7 +673,7 @@ if __name__ == '__main__':
         load_files = False
         save_input_files = False
     else: # choose yourself
-        load_files = False
+        load_files = True
         save_input_files = not load_files
     NM = NetworkModel(ps.params, comm)
     NM.setup(times=times)
@@ -689,3 +687,6 @@ if __name__ == '__main__':
     NM.run_sim(sim_cnt, record_v=record)
     NM.print_results(print_v=record)
 
+    if pc_id == 0:
+        import plot_prediction as pp
+        pp.plot_prediction(params)

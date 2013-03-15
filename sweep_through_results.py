@@ -44,7 +44,7 @@ fmaxstim = 1000.
 
 blur_v = 0.05
 tbb = 400
-to_match = '^LargeScaleModel_(.*)_bx(.*)_wie1\.20(.*)'
+to_match = '^LargeScaleModel_(.*)'
 #to_match = '^LargeScaleModel_%s_fmaxstim1\.50e\+03_scaleLatency0\.15_tbb400_(.*)' % (conn_code)
 #to_match = '^LargeScaleModel_%s_fmaxstim(.*)' % (conn_code)
 #to_match = '^LargeScaleModel_%s_fmaxstim%.2e(.*)' % (conn_code,fmaxstim)

@@ -469,8 +469,8 @@ def set_tuning_prop(params, mode='hexgrid', cell_type='exc'):
             for i_v_rho, rho in enumerate(v_rho):
                 for i_theta, theta in enumerate(v_theta):
                     # for plotting this looks nicer, and due to the torus property it doesn't make a difference
-                    tuning_prop[index, 0] = (RF[0, i_RF] + params['sigma_RF_pos'] * rnd.randn()) % params['torus_width']
-                    tuning_prop[index, 1] = (RF[1, i_RF] + params['sigma_RF_pos'] * rnd.randn()) % params['torus_height']
+                    tuning_prop[index, 0] = (RF[0, i_RF] + params['sigma_RF_pos'] * rnd.randn())# % params['torus_width']
+                    tuning_prop[index, 1] = (RF[1, i_RF] + params['sigma_RF_pos'] * rnd.randn())# % params['torus_height']
                     tuning_prop[index, 2] = np.cos(theta + random_rotation[i_RF] + parity[i_v_rho] * np.pi / n_theta) \
                             * rho * (1. + params['sigma_RF_speed'] * rnd.randn())
                     tuning_prop[index, 3] = np.sin(theta + random_rotation[i_RF] + parity[i_v_rho] * np.pi / n_theta) \
@@ -797,7 +797,7 @@ def torus_distance(x0, x1):
 def torus_distance(x0, x1):
     return min(abs(x0 - x1), 1. - abs(x0 - x1))
 
-def torus_distance2D(x1, x2, y1, y2, w=1., h=1./np.sqrt(3)):
+def torus_distance2D(x1, x2, y1, y2, w=1., h=1.):
     """
     w and h are the width (x) and height (y) of the grid, respectively.
     """
