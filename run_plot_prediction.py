@@ -30,6 +30,8 @@ if len(sys.argv) > 1:
     get_filenames(fn_in)
 
 
-conn_code = 'AIII'
-to_match = '^LargeScaleModel_%s_fmaxstim(.*)'  % (conn_code)
 
+
+conn_code = 'AIII'
+to_match = '^LargeScaleModel_(.*)'
+run_by_match(to_match)

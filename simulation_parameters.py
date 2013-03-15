@@ -154,7 +154,7 @@ class parameter_storage(object):
         self.params['scale_latency'] = 1.0 # this determines how much the directional tuning of the src is considered when drawing connections
         self.params['delay_scale'] = 2.     # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 10.)
-        self.params['w_sigma_x'] = 0.20  # width of connectivity profile for pre-computed weights
+        self.params['w_sigma_x'] = 0.25  # width of connectivity profile for pre-computed weights
         self.params['w_sigma_v'] = 0.25 # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
@@ -248,7 +248,7 @@ class parameter_storage(object):
         self.params['v_min_tp'] = 0.15  # [a.u.] minimal velocity in visual space for training
         self.params['v_max_training'] = 0.2
         self.params['v_min_training'] = 0.2
-        self.params['blur_X'], self.params['blur_V'] = .10, .10
+        self.params['blur_X'], self.params['blur_V'] = .15, .05
 
         # the blur parameter represents the input selectivity:
         # high blur means many cells respond to the stimulus
