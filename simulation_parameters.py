@@ -76,7 +76,7 @@ class parameter_storage(object):
         print 'N_RF_X %d N_RF_Y %d' % (self.params['N_RF_X'], self.params['N_RF_Y'])
         print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
         self.params['abstract_input_scaling_factor'] = 1.
-        self.params['log_scale'] = 1.0 # base of the logarithmic tiling of particle_grid; linear if equal to one
+        self.params['log_scale'] = 2.0 # base of the logarithmic tiling of particle_grid; linear if equal to one
         self.params['sigma_RF_pos'] = .05 # some variability in the position of RFs
         self.params['sigma_RF_speed'] = .30 # some variability in the speed of RFs
         self.params['sigma_RF_direction'] = .25 * 2 * np.pi # some variability in the direction of RFs
