@@ -27,7 +27,6 @@ class PlotPrediction(object):
 
         self.spiketimes_loaded = False
         self.data_to_store = {}
-        self.tau_prediction = self.params['tau_prediction']
         # define parameters
         self.time_binsize = int(round(self.params['t_sim'] / 20))
         self.time_binsize = 25# [ms] 
@@ -170,11 +169,11 @@ class PlotPrediction(object):
         for gid in xrange(self.n_cells):
             xyuv_predicted = self.tuning_prop[gid, index] # cell tuning properties
             if (index == 0):
-                xyuv_predicted += self.tau_prediction * self.tuning_prop[gid, 2]
+                xyuv_predicted += self.tuning_prop[gid, 2]
                 xyuv_predicted = xyuv_predicted % w
 
             elif (index == 1):
-                xyuv_predicted += self.tau_prediction * self.tuning_prop[gid, 3]
+                xyuv_predicted += self.tuning_prop[gid, 3]
                 xyuv_predicted = xyuv_predicted % h
             y_pos_grid = utils.get_grid_pos_1d(xyuv_predicted, grid_edges)
             output_data[y_pos_grid, :] += self.nspikes_binned_normalized[gid, :]

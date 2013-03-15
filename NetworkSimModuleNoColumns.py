@@ -660,35 +660,39 @@ if __name__ == '__main__':
 #    ps.params['w_tgt_in_per_cell_ii'] = w_ii
 #    ps.params['w_sigma_v'] = w_sigma_v
 #    for w_sigma_x in [0.20]:#, 0.15]:
-    for w_ee in [0.03, 0.032, 0.034, 0.036]:
-        ps.params['w_sigma_x'] = w_sigma_x
-        ps.params['w_tgt_in_per_cell_ee'] = w_ee
-        ps.set_filenames()
-        if pc_id == 0:
-            ps.create_folders()
-            ps.write_parameters_to_file()
-        if comm != None:
-            comm.Barrier()
-        sim_cnt = 0
-        record = True
-        if params['n_cells'] > 5000:
-            load_files = False
-            save_input_files = False
-        else: # choose yourself
-            load_files = True
-            save_input_files = not load_files
-        NM = NetworkModel(ps.params, comm)
-        NM.setup(times=times)
-        NM.create(input_created)
-        if not input_created:
-            spike_times_container = NM.create_input(load_files=load_files, save_output=save_input_files)
-            input_created = True # this can be set True ONLY if the parameter does not affect the input i.e. set this to false when sweeping f_max_stim, or blur_X/V!
-        else:
-            NM.spike_times_container = spike_times_container
-        NM.connect()
-        NM.run_sim(sim_cnt, record_v=record)
-        NM.print_results(print_v=record)
+#        ps.params['w_sigma_x'] = w_sigma_x
+#    for w_ee in [0.03, 0.032, 0.034, 0.036]:
+        
+    for blur_x in np.arange(0.05, 0.20, 0.05):
+        for blur_v in np.arange(0.05, 0.20, 0.05):
+            ps.params['blur_X'] = blur_x
+            ps.params['blur_V'] = blur_v
+            ps.set_filenames()
+            if pc_id == 0:
+                ps.create_folders()
+                ps.write_parameters_to_file()
+            if comm != None:
+                comm.Barrier()
+            sim_cnt = 0
+            record = True
+            if params['n_cells'] > 5000:
+                load_files = False
+                save_input_files = False
+            else: # choose yourself
+                load_files = False
+                save_input_files = not load_files
+            NM = NetworkModel(ps.params, comm)
+            NM.setup(times=times)
+            NM.create(input_created)
+            if not input_created:
+                spike_times_container = NM.create_input(load_files=load_files, save_output=save_input_files)
+                input_created = True # this can be set True ONLY if the parameter does not affect the input i.e. set this to false when sweeping f_max_stim, or blur_X/V!
+            else:
+                NM.spike_times_container = spike_times_container
+            NM.connect()
+            NM.run_sim(sim_cnt, record_v=record)
+            NM.print_results(print_v=record)
 
-        if pc_id == 0:
-            import plot_prediction as pp
-            pp.plot_prediction(params)
+            if pc_id == 0:
+                import plot_prediction as pp
+                pp.plot_prediction(params)

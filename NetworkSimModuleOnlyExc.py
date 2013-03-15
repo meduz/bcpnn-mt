@@ -290,7 +290,7 @@ class NetworkModel(object):
             for i in xrange(len(sources)):
                 if w[i] > self.params['w_thresh_connection']:
 #                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
-                    delay = min(max(latency[sources[i]] * self.params['tau_prediction'] * self.params['t_stimulus'], delay_min), delay_max)  # map the delay into the valid range
+                    delay = min(max(latency[sources[i]] * self.params['t_stimulus'], delay_min), delay_max)  # map the delay into the valid range
     #                print 'debug ', delay , ' latency', latency[sources[i]]
     #                delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
                     connect(src_pop[sources[i]], tgt_pop[tgt], w[i], delay=delay, synapse_type=syn_type)

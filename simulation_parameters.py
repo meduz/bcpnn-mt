@@ -40,7 +40,7 @@ class parameter_storage(object):
         self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 6, 6# resolution in velocity norm and direction
+        self.params['N_V'], self.params['N_theta'] = 8, 4# resolution in velocity norm and direction
 
 #         Small-scale system
 #        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
@@ -76,9 +76,9 @@ class parameter_storage(object):
         print 'N_RF_X %d N_RF_Y %d' % (self.params['N_RF_X'], self.params['N_RF_Y'])
         print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
         self.params['abstract_input_scaling_factor'] = 1.
-        self.params['log_scale'] = 2.0 # base of the logarithmic tiling of particle_grid; linear if equal to one
+        self.params['log_scale'] = 1.0 # base of the logarithmic tiling of particle_grid; linear if equal to one
         self.params['sigma_RF_pos'] = .05 # some variability in the position of RFs
-        self.params['sigma_RF_speed'] = .20 # some variability in the speed of RFs
+        self.params['sigma_RF_speed'] = .30 # some variability in the speed of RFs
         self.params['sigma_RF_direction'] = .25 * 2 * np.pi # some variability in the direction of RFs
         self.params['sigma_theta_training'] = 2 * np.pi * 0.00
 
@@ -102,8 +102,6 @@ class parameter_storage(object):
         self.params['n_cells'] = self.params['n_mc'] * self.params['n_exc_per_mc'] + self.params['n_inh']
         print 'n_cells: %d\tn_exc: %d\tn_inh: %d\nn_inh / n_exc = %.3f\tn_inh / n_cells = %.3f' % (self.params['n_cells'], self.params['n_exc'], self.params['n_inh'], \
                 self.params['n_inh'] / float(self.params['n_exc']), self.params['n_inh'] / float(self.params['n_cells']))
-
-        self.params['tau_prediction'] = .10        # when reading out the network prediction, each cell predicts the stimulus to be at position: x_pred = x_i + tau_prediction * v_i
 
         # ###################
         # CELL PARAMETERS   #
@@ -132,22 +130,22 @@ class parameter_storage(object):
         """
         For each connection type ('ee', 'ei', 'ie', 'ii') choose one form of connectivity
         """
-        self.params['connectivity_ee'] = 'anisotropic'
+#        self.params['connectivity_ee'] = 'anisotropic'
 #        self.params['connectivity_ee'] = 'isotropic'
 #        self.params['connectivity_ee'] = 'random'
-#        self.params['connectivity_ee'] = False
+        self.params['connectivity_ee'] = False
 #        self.params['connectivity_ei'] = 'anisotropic'
-        self.params['connectivity_ei'] = 'isotropic'
+#        self.params['connectivity_ei'] = 'isotropic'
 #        self.params['connectivity_ei'] = 'random'
-#        self.params['connectivity_ei'] = False
+        self.params['connectivity_ei'] = False
 #        self.params['connectivity_ie'] = 'anisotropic'
-        self.params['connectivity_ie'] = 'isotropic'
+#        self.params['connectivity_ie'] = 'isotropic'
 #        self.params['connectivity_ie'] = 'random'
-#        self.params['connectivity_ie'] = False
+        self.params['connectivity_ie'] = False
 #        self.params['connectivity_ii'] = 'anisotropic'
-        self.params['connectivity_ii'] = 'isotropic'
+#        self.params['connectivity_ii'] = 'isotropic'
 #        self.params['connectivity_ii'] = 'random'
-#        self.params['connectivity_ii'] = False
+        self.params['connectivity_ii'] = False
 
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
