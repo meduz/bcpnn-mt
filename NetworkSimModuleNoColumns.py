@@ -239,8 +239,11 @@ class NetworkModel(object):
                     np.save(output_fn, rate_of_t)
                     output_fn = self.params['input_st_fn_base'] + str(unit) + '.npy'
                     np.save(output_fn, np.array(spike_times))
+
         self.times['create_input'] = self.timer.diff()
         return self.spike_times_container
+
+
 
     def connect_input_to_exc(self):
         """
@@ -663,36 +666,45 @@ if __name__ == '__main__':
 #        ps.params['w_sigma_x'] = w_sigma_x
 #    for w_ee in [0.03, 0.032, 0.034, 0.036]:
         
-    for blur_x in np.arange(0.05, 0.20, 0.05):
-        for blur_v in np.arange(0.05, 0.20, 0.05):
-            ps.params['blur_X'] = blur_x
-            ps.params['blur_V'] = blur_v
-            ps.set_filenames()
-            if pc_id == 0:
-                ps.create_folders()
-                ps.write_parameters_to_file()
-            if comm != None:
-                comm.Barrier()
-            sim_cnt = 0
-            record = True
-            if params['n_cells'] > 5000:
-                load_files = False
-                save_input_files = False
-            else: # choose yourself
-                load_files = False
-                save_input_files = not load_files
-            NM = NetworkModel(ps.params, comm)
-            NM.setup(times=times)
-            NM.create(input_created)
-            if not input_created:
-                spike_times_container = NM.create_input(load_files=load_files, save_output=save_input_files)
-                input_created = True # this can be set True ONLY if the parameter does not affect the input i.e. set this to false when sweeping f_max_stim, or blur_X/V!
-            else:
-                NM.spike_times_container = spike_times_container
-            NM.connect()
-            NM.run_sim(sim_cnt, record_v=record)
-            NM.print_results(print_v=record)
 
-            if pc_id == 0:
-                import plot_prediction as pp
-                pp.plot_prediction(params)
+#    for blur_x in np.arange(0.05, 0.20, 0.05):
+#        for blur_v in np.arange(0.05, 0.20, 0.05):
+#            ps.params['blur_X'] = blur_x
+#            ps.params['blur_V'] = blur_v
+
+    ps.set_filenames()
+    if pc_id == 0:
+        ps.create_folders()
+        ps.write_parameters_to_file()
+    if comm != None:
+        comm.Barrier()
+    sim_cnt = 0
+
+    if params['n_cells'] > 5000:
+        load_files = False
+        record = False
+        save_input_files = False
+    else: # choose yourself
+        load_files = False
+        record = True
+        save_input_files = not load_files
+
+    NM = NetworkModel(ps.params, comm)
+    NM.setup(times=times)
+    NM.create(input_created)
+
+    if not input_created:
+        spike_times_container = NM.create_input(load_files=load_files, save_output=save_input_files)
+        input_created = True # this can be set True ONLY if the parameter does not affect the input i.e. set this to false when sweeping f_max_stim, or blur_X/V!
+    else:
+        NM.spike_times_container = spike_times_container
+
+    NM.connect()
+    NM.run_sim(sim_cnt, record_v=record)
+    NM.print_results(print_v=record)
+
+    if pc_id == 0:
+        import plot_prediction as pp
+        pp.plot_prediction(params)
+
+        os.system('python plot_rasterplots.py')

@@ -3,6 +3,8 @@ This script plots the input spike trains in the top panel
 and the output rasterplots in the middle and lower panel
 """
 import sys
+import matplotlib
+matplotlib.use('Agg')
 import pylab
 import numpy as np
 import re
@@ -155,5 +157,5 @@ output_fn = params['figures_folder'] + 'rasterplot_sorted_by_tp.png'
 print "Saving to", output_fn
 pylab.savefig(output_fn, dpi=200)
 
-pylab.show()
+#pylab.show()
 

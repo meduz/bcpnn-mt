@@ -33,5 +33,6 @@ if len(sys.argv) > 1:
 
 
 conn_code = 'AIII'
-to_match = '^LargeScaleModel_(.*)'
+#to_match = '^LargeScaleModel_(.*)'
+to_match = '^LargeScaleModel_AIII_bx1.00e-01_bv1.00e-01_wsigmax2.50e-01_wsigmav2.50e-01_wee(.*)'
 run_by_match(to_match)

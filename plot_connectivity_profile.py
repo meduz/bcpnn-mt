@@ -65,7 +65,7 @@ class ConnectionPlotter(object):
             tp = self.tp_inh
 
         # torus dimensions
-        w, h = 1., 1. / np.sqrt(3)
+        w, h = self.params['torus_width'], self.params['torus_height']
         x0, y0, u0, v0 = tp[cell_id, 0] % w, tp[cell_id, 1] % h, tp[cell_id, 2], tp[cell_id, 3]
 #        x0, y0, u0, v0 = tp[cell_id, 0], tp[cell_id, 1], tp[cell_id, 2], tp[cell_id, 3]
         self.ax.plot(x0, y0, marker, c=color, markersize=self.markersize_cell)
