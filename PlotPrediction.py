@@ -278,7 +278,7 @@ class PlotPrediction(object):
         vy_prediction_trace = np.zeros((self.n_cells, self.n_bins, 2))    # _trace: prediction based on the momentary and past activity (moving average, and std) --> trace_length
 
         # torus dimensions
-        w, h = 1., 1. / np.sqrt(3)
+        w, h = self.params['torus_width'], self.params['torus_height']
         for i in xrange(self.n_bins):
 
             # 1) momentary vote
@@ -340,7 +340,6 @@ class PlotPrediction(object):
             vx_diff = self.vx_moving_avg[i ,0] - mp[2]
             vy_diff = self.vy_moving_avg[i ,0] - mp[3]
             self.vdiff_moving_avg[i, 1] = (2. / self.vdiff_moving_avg[i, 0]) * ( vx_diff * self.vx_moving_avg[i, 1] + vy_diff * self.vy_moving_avg[i, 1])
-
 
             # 3) soft-max
             # x

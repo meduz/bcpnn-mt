@@ -77,18 +77,27 @@ class ConnectivityAnalyser(object):
 
         (n_src, n_tgt, syn_type) = utils.resolve_src_tgt(conn_type, self.params)
         n_tgts = np.zeros(n_src)
+        w_out = np.zeros(n_src)
         n_srcs = np.zeros(n_tgt)
+        w_in = np.zeros(n_tgt)
         for i in xrange(conn_list[:, 0].size):
-            src, tgt, w, delay = conn_list[i, :]
+            src, tgt, w, delay = conn_list[i, :4]
             n_tgts[src] += 1 # count how often src connects to some other cell
             n_srcs[tgt] += 1 # count how often tgt is the target cell
+            w_out[src] += w
+            w_in[tgt] += w
 
         n_out_mean = n_tgts.mean()
         n_out_sem = n_tgts.std() / np.sqrt(n_src)
         n_in_mean = n_srcs.mean()
         n_in_sem = n_srcs.std() / np.sqrt(n_tgt)
-        print 'Convergence: Number of %s cells that get no %s input ' % (self.conn_type_dict[conn_type[1]], self.conn_type_dict[conn_type[0]]), (n_srcs == 0).nonzero()[0].size
+        print 'Convergence:\nNumber of %s cells that get no %s input ' % (self.conn_type_dict[conn_type[1]], self.conn_type_dict[conn_type[0]]), (n_srcs == 0).nonzero()[0].size
+        print 'Weight in %.2e +- %.2e' % (w_in.mean(), w_in.std())
+        print 'Weight out %.2e +- %.2e' % (w_out.mean(), w_out.std())
         print 'Divergence: Number of %s cells that have no %s target' % (self.conn_type_dict[conn_type[0]], self.conn_type_dict[conn_type[1]]), (n_tgts == 0).nonzero()[0].size
+
+        # OUTGOING CONNECTIONS
+        # plot number of outgoing connections
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
         ax.bar(range(n_src), n_tgts, width=1)
         ax.set_xlim((0, n_src))
@@ -99,6 +108,8 @@ class ConnectivityAnalyser(object):
         print title
         ax.set_title(title)
 
+        # INCOMING CONNECTIONS
+        # plot number of outgoing connections
         ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt + 1)
         ax.bar(range(n_tgt), n_srcs, width=1)
         ax.set_xlim((0, n_tgt))
@@ -109,8 +120,43 @@ class ConnectivityAnalyser(object):
         print title
         ax.set_title(title)
 
+
+        self.fig = self.create_fig()
+        ax = self.fig.add_subplot(221)
+        ax.bar(range(n_src), w_out, width=1)
+        ax.set_xlim((0, n_src))
+        ax.set_xlabel('Source neuron')
+        ax.set_ylabel('Sum of outgoing weights')
+
+        ax = self.fig.add_subplot(222)
+        ax.bar(range(n_tgt), w_in, width=1)
+        ax.set_xlim((0, n_tgt))
+        ax.set_xlabel('Target neuron')
+        ax.set_ylabel('Sum of incoming weights')
+
+        # plot the sorted weights
+        w_out_srt = w_out.copy()
+        w_out_srt.sort()
+        ax = self.fig.add_subplot(223)
+        ax.bar(range(n_src), w_out_srt, width=1)
+        ax.set_xlim((0, n_src))
+        ax.set_xlabel('Source neuron')
+        ax.set_ylabel('Sum of outgoing weights')
+
+        w_in_srt = w_in.copy()
+        w_in_srt.sort()
+        ax = self.fig.add_subplot(224)
+        ax.bar(range(n_tgt), w_in_srt, width=1)
+        ax.set_xlim((0, n_tgt))
+        ax.set_xlabel('Source neuron')
+        ax.set_ylabel('Sum of incoming weights')
+
+
+
+
     def plot_tgt_connections(self, conn_type, gids_to_plot=None, fig_cnt=1):
         """
+        For all gids_to_plot all outgoing connections and the centroid / center of gravitiy is plotted.
         conn_type = ['ee', 'ei', 'ie', 'ii']
         """
 
@@ -179,6 +225,7 @@ class ConnectivityAnalyser(object):
         self.fig = pylab.figure(figsize=self.fig_size)
         pylab.subplots_adjust(hspace=0.4)
         pylab.subplots_adjust(wspace=0.35)
+        return self.fig
 
 
 
@@ -437,7 +484,7 @@ if __name__ == '__main__':
         CA.n_fig_x = 1
         CA.n_fig_y = 3
         CA.create_fig()
-        CA.plot_tgt_connections(conn_type, fig_cnt=1)
+#        CA.plot_tgt_connections(conn_type, fig_cnt=1)
         CA.plot_num_outgoing_connections(conn_type, fig_cnt=2)
 
     for conn_type in conn_types:

@@ -9,7 +9,8 @@ else:
 
 data = np.loadtxt(fn)#, skiprows=1)
 
-d = data[:, 2]
+idx = 4
+d = data[:, idx]
 print "sum :", d.sum()
 print "max :", d.max(), d.argmax()
 print "min: ", d.min()
@@ -35,8 +36,8 @@ pylab.ylabel("Count")
 #pylab.ylabel("y")
 
 #pylab.xlim((0, 0.01))
-
-pylab.title(fn)
+title = 'Row %d of \n%s' % (idx, fn)
+pylab.title(title)
 
 #n, bins, hist = ax.hist(d, 20)
 pylab.show()

@@ -938,22 +938,7 @@ def linear_transformation(x, y_min, y_max):
     x_max = np.max(x)
     if x_min == x_max:
         x_max = x_min * 1.0001
-
     return (y_min + (y_max - y_min) / (x_max - x_min) * (x - x_min))
-
-#    print 'debug linear transformation x_min, x_max', x_min, x_max
-#    m = 1. / (x_min * (x_max - x_min)) * (y_min * x_max - y_min * x_min - y_min * x_max + y_max * x_min)
-#    m = 1. / (x_min * (x_max - x_min)) * (y_min * x_max - y_min * x_min - y_min * x_max + y_max * x_min)
-#    if (x_max / x_min) == np.inf:
-#        print 'inf'
-#        exit(1)
-#    if (x_max - x_min) == np.nan:
-#        print 'nan'
-#        exit(1)
-#    m = (y_max - y_min * (1. - x_max - x_max / x_min)) / (x_max - x_min)
-#    b = (y_min * x_max - y_max * x_min) / (x_max - x_min)
-#    print 'debug m, b', m, b
-#    return (m * x + b)
 
 def merge_files(input_fn_base, output_fn):
 
@@ -961,7 +946,7 @@ def merge_files(input_fn_base, output_fn):
     os.system(cmd)
 
 
-def sort_cells_by_distance_to_stimulus(n_cells):
+def sort_cells_by_distance_to_stimulus(n_cells, verbose=True):
     import simulation_parameters
     network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
     params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
@@ -970,9 +955,10 @@ def sort_cells_by_distance_to_stimulus(n_cells):
     indices, distances = sort_gids_by_distance_to_stimulus(tp , mp, params) # cells in indices should have the highest response to the stimulus
     print 'Motion parameters', mp
     print 'GID\tdist_to_stim\tx\ty\tu\tv\t\t'
-    for i in xrange(n_cells):
-        gid = indices[i]
-        print gid, '\t', distances[i], tp[gid, :]
+    if verbose:
+        for i in xrange(n_cells):
+            gid = indices[i]
+            print gid, '\t', distances[i], tp[gid, :]
     return indices, distances
 
 

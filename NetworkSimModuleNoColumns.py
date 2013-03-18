@@ -182,7 +182,7 @@ class NetworkModel(object):
         self.connect_populations('ei')
         self.connect_populations('ie')
         self.connect_populations('ii')
-        self.connect_noise()
+#        self.connect_noise()
         self.times['t_calc_conns'] = self.timer.diff()
         if self.comm != None:
             self.comm.Barrier()
@@ -335,7 +335,9 @@ class NetworkModel(object):
                     sources = sorted_indices[1:n_src_cells_per_neuron+1]  # shift indices to avoid self-connection, because p_ii = .0
                 else:
                     sources = sorted_indices[:n_src_cells_per_neuron] 
+
             w = (self.params['w_tgt_in_per_cell_%s' % conn_type] / p[sources].sum()) * p[sources]
+#            w = utils.linear_transformation(p[sources], self.params['w_min'], self.params['w_max'])
             for i in xrange(len(sources)):
 #                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
                 if w[i] > self.params['w_thresh_connection']:
@@ -344,7 +346,7 @@ class NetworkModel(object):
 #                    print 'debug ', delay , ' latency', latency[sources[i]]
                     connect(src_pop[sources[i]], tgt_pop[tgt], w[i], delay=delay, synapse_type=syn_type)
                     if self.debug_connectivity:
-                        output += '%d\t%d\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay) #                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], latency[sources[i]], p[sources[i]])
+                        output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay, p[sources[i]]) #                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], latency[sources[i]], p[sources[i]])
 
         if self.debug_connectivity:
             if self.pc_id == 0:
@@ -429,7 +431,7 @@ class NetworkModel(object):
             output = ''
             output_dist = ''
 
-        p_max = utils.get_pmax(self.params['p_%s' % conn_type], .5 * (self.params['w_sigma_x'] + self.params['w_sigma_v']))
+        p_max = utils.get_pmax(self.params['p_%s' % conn_type], self.params['w_sigma_x'])
         print 'p_max for %s' % conn_type, p_max
         for tgt in tgt_cells:
             w = np.zeros(n_src, dtype='float32') 
@@ -652,25 +654,17 @@ if __name__ == '__main__':
     
 
     input_created = False
-#    w_ie = 0.10
-#    w_ei = 0.12
-#    w_ii = 0.02
-#    for w_sigma_x in [0.05]:#, 0.10, 0.15]:
-#        for w_sigma_v in [0.05]:#, 0.10, 0.15]:
-#            for w_ee in [0.026, 0.026, 0.027, 0.028, 0.029, 0.030, 0.031, 0.032]:
-#    ps.params['w_tgt_in_per_cell_ei'] = w_ei
-#    ps.params['w_tgt_in_per_cell_ie'] = w_ie
-#    ps.params['w_tgt_in_per_cell_ii'] = w_ii
-#    ps.params['w_sigma_v'] = w_sigma_v
-#    for w_sigma_x in [0.20]:#, 0.15]:
-#        ps.params['w_sigma_x'] = w_sigma_x
-#    for w_ee in [0.03, 0.032, 0.034, 0.036]:
-        
 
-#    for blur_x in np.arange(0.05, 0.20, 0.05):
-#        for blur_v in np.arange(0.05, 0.20, 0.05):
-#            ps.params['blur_X'] = blur_x
-#            ps.params['blur_V'] = blur_v
+    w_sigma_x = float(sys.argv[1])
+    w_sigma_v = float(sys.argv[2])
+    params['w_sigma_x'] = w_sigma_x
+    params['w_sigma_v'] = w_sigma_v
+
+    w_ee = float(sys.argv[3])
+    ps.params['w_tgt_in_per_cell_ee'] = w_ee
+
+    delay_scale = float(sys.argv[4])
+    ps.params['delay_scale'] = delay_scale
 
     ps.set_filenames()
     if pc_id == 0:
@@ -685,7 +679,7 @@ if __name__ == '__main__':
         record = False
         save_input_files = False
     else: # choose yourself
-        load_files = False
+        load_files = True
         record = True
         save_input_files = not load_files
 
@@ -707,4 +701,4 @@ if __name__ == '__main__':
         import plot_prediction as pp
         pp.plot_prediction(params)
 
-        os.system('python plot_rasterplots.py')
+        os.system('python plot_rasterplots.py %s' % ps.params['folder_name'])

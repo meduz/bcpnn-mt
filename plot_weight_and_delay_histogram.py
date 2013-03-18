@@ -40,7 +40,7 @@ if conn_type == None:
 def get_incoming_connection_numbers(conn_data, n_tgt):
     n_in = np.zeros(n_tgt)
     for i in xrange(conn_data[:, 0].size):
-        src, tgt, w, delay = conn_data[i, :]
+        src, tgt, w, delay = conn_data[i, :4]
         n_in[tgt] += 1
 
     return n_in
@@ -52,6 +52,7 @@ if not os.path.exists(fn):
 output_fn = params['figures_folder'] + 'weights_and_delays_%s.png' % (conn_type)
 
 d = np.loadtxt(fn)
+print 'debug', d.shape, fn
 
 (n_src, n_tgt, syn_type) = utils.resolve_src_tgt(conn_type, params)
 n_in = get_incoming_connection_numbers(d, n_tgt)
@@ -74,11 +75,11 @@ n_weights = weights.size
 n_possible = params['n_exc']**2
 
 n_bins = 100
-n_w, bins_w = np.histogram(weights, bins=n_bins, normed=True)
+n_w, bins_w = np.histogram(weights, bins=n_bins, normed=False)
 #n_w = n_w / float(n_w.sum())
 
 print "bins_w", bins_w, '\nn_w', n_w
-n_d, bins_d = np.histogram(delays, bins=n_bins, normed=True)
+n_d, bins_d = np.histogram(delays, bins=n_bins, normed=False)
 #n_d = n_d / float(n_d.sum())
 print "bins_d", bins_d, '\nn_d', n_d
 
