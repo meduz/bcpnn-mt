@@ -209,6 +209,8 @@ class NetworkModel(object):
             dt = self.params['dt_rate'] # [ms] time step for the non-homogenous Poisson process 
             time = np.arange(0, self.params['t_sim'], dt)
             blank_idx = np.arange(1./dt * self.params['t_before_blank'], 1. / dt * (self.params['t_before_blank'] + self.params['t_blank']))
+            before_stim_idx = np.arange(0, self.params['t_start'] * 1./dt)
+            blank_idx = np.concatenate((blank_idx, before_stim_idx))
 
             my_units = self.local_idx_exc
             n_cells = len(my_units)
@@ -221,7 +223,8 @@ class NetworkModel(object):
                 L_input[:, i_time] *= self.params['f_max_stim']
             # blanking 
             for i_time in blank_idx:
-                L_input[:, i_time] = 0.
+#                L_input[:, i_time] = 0.
+                L_input[:, i_time] = np.random.permutation(L_input[:, i_time])
 
             # create the spike trains
             for i_, unit in enumerate(my_units):
@@ -330,7 +333,7 @@ class NetworkModel(object):
             sorted_indices = np.argsort(p)
             if conn_type[0] == 'e':
                 sources = sorted_indices[-n_src_cells_per_neuron:] 
-            else:
+            else: # source = inhibitory
                 if conn_type == 'ii':
                     sources = sorted_indices[1:n_src_cells_per_neuron+1]  # shift indices to avoid self-connection, because p_ii = .0
                 else:
@@ -431,7 +434,7 @@ class NetworkModel(object):
             output = ''
             output_dist = ''
 
-        p_max = utils.get_pmax(self.params['p_%s' % conn_type], self.params['w_sigma_x'])
+        p_max = utils.get_pmax(self.params['p_%s' % conn_type], self.params['w_sigma_isotropic'], conn_type)
         print 'p_max for %s' % conn_type, p_max
         for tgt in tgt_cells:
             w = np.zeros(n_src, dtype='float32') 
@@ -655,16 +658,16 @@ if __name__ == '__main__':
 
     input_created = False
 
-    w_sigma_x = float(sys.argv[1])
-    w_sigma_v = float(sys.argv[2])
-    params['w_sigma_x'] = w_sigma_x
-    params['w_sigma_v'] = w_sigma_v
+#    w_sigma_x = float(sys.argv[1])
+#    w_sigma_v = float(sys.argv[2])
+#    params['w_sigma_x'] = w_sigma_x
+#    params['w_sigma_v'] = w_sigma_v
 
-    w_ee = float(sys.argv[3])
-    ps.params['w_tgt_in_per_cell_ee'] = w_ee
+#    w_ee = float(sys.argv[3])
+#    ps.params['w_tgt_in_per_cell_ee'] = w_ee
 
-    delay_scale = float(sys.argv[4])
-    ps.params['delay_scale'] = delay_scale
+#    delay_scale = float(sys.argv[4])
+#    ps.params['delay_scale'] = delay_scale
 
     ps.set_filenames()
     if pc_id == 0:

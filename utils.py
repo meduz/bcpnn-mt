@@ -962,7 +962,7 @@ def sort_cells_by_distance_to_stimulus(n_cells, verbose=True):
     return indices, distances
 
 
-def get_pmax(p_effective, w_sigma):
+def get_pmax(p_effective, w_sigma, conn_type):
     """
     When using isotropic connectivity, the connections are drawn based upon
     this formula:
@@ -972,9 +972,18 @@ def get_pmax(p_effective, w_sigma):
 
     p_effective vs p_max has been simulated for different w_sigma values
     --> p_max is linearly dependent on p_effective, and the gradient is dependent on w_sigma (exponential decay works ok)
+    Because inh and exc have different densities, they have different parameters to achieve the same p_eff
     """
-#[  8.95125352e+16,   2.39952941e-02,   1.24175654e+00,   6.00227030e-02]
-    fit_wsigma = [4.99190053e+17,   2.26167398e-02,   1.37350638e+00,   5.74608862e-02]
+#    if conn_type == 'ee':
+#        fit_wsigma = [4.99190053e+17,   2.26167398e-02,   1.37350638e+00,   5.74608862e-02]
+#    elif conn_type == 'ie':
+#        fit_wsigma = [1.76155801e+14,   2.78732317e-02,   1.95544175e+00,   7.43228969e-02]
+#    elif conn_type == 'ii':
+#        fit_wsigma = [1.85960515e+03,   5.37343146e-02,   3.12869492e+00,   5.62153143e-01]
+#    elif conn_type == 'ei':
+#        fit_wsigma = [ 7.64996817e+13,  2.85468546e-02,   1.80410874e+00,   7.63336456e-02]
+    fit_wsigma = [1.71041872e+15,   2.64080767e-02,  2.86325463e+00,   6.79951554e-02]
+#    [  5.45574732e+16   2.43028122e-02   1.48236960e+00   6.04527514e-02]
     gradient  = fit_wsigma[0] * np.exp( - w_sigma**fit_wsigma[3] / fit_wsigma[1]) + fit_wsigma[2]
     p_max = gradient * p_effective
     return p_max

@@ -77,7 +77,7 @@ class parameter_storage(object):
         print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
         self.params['abstract_input_scaling_factor'] = 1.
         self.params['log_scale'] = 2.0 # base of the logarithmic tiling of particle_grid; linear if equal to one
-        self.params['sigma_RF_pos'] = .02 # some variability in the position of RFs
+        self.params['sigma_RF_pos'] = .05 # some variability in the position of RFs
         self.params['sigma_RF_speed'] = .30 # some variability in the speed of RFs
         self.params['sigma_RF_direction'] = .25 * 2 * np.pi # some variability in the direction of RFs
         self.params['sigma_theta_training'] = 2 * np.pi * 0.00
@@ -109,8 +109,8 @@ class parameter_storage(object):
         # TODO: distribution of parameters (e.g. tau_m)
         self.params['neuron_model'] = 'IF_cond_exp'
 #        self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
-        self.params['tau_syn_exc'] = 20.0 
-        self.params['tau_syn_inh'] = 30.0
+        self.params['tau_syn_exc'] = 5.0 
+        self.params['tau_syn_inh'] = 10.0
         if self.params['neuron_model'] == 'IF_cond_exp':
             self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
             self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
@@ -149,19 +149,19 @@ class parameter_storage(object):
 
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
-        self.params['scale_latency'] = 1.0 # this determines how much the directional tuning of the src is considered when drawing connections
-        self.params['delay_scale'] = 1.     # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
-        self.params['delay_range'] = (0.1, 15.)
-        self.params['w_sigma_x'] = 0.30  # width of connectivity profile for pre-computed weights
+        self.params['scale_latency'] = 100.0 # this determines how much the directional tuning of the src is considered when drawing connections
+        self.params['delay_scale'] = 1000.     # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
+        self.params['delay_range'] = (0.1, 5000.)
+        self.params['w_sigma_x'] = 0.10  # width of connectivity profile for pre-computed weights
         self.params['w_sigma_v'] = 0.10 # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
-
+        self.params['w_sigma_isotropic'] = .1 # should not be below  0.05 otherwise you don't get the desired p_effective 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.03 # [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ee'] = 0.08 # [uS] how much input should an exc cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ei'] = 0.10 # [uS] how much input should an inh cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ie'] = 0.15 # [uS] how much input should an exc cell get from its inh source cells?
+        self.params['w_tgt_in_per_cell_ie'] = 0.20 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.02 # [uS] how much input should an inh cell get from its source cells?
         self.params['w_tgt_in_per_cell_ee'] *= 20. / self.params['tau_syn_exc']
         self.params['w_tgt_in_per_cell_ei'] *= 20. / self.params['tau_syn_exc']
@@ -204,7 +204,8 @@ class parameter_storage(object):
         self.params['t_sim'] = 1200.                 # [ms] total simulation time
         self.params['t_stimulus'] = 1000.            # [ms] time for a stimulus of speed 1.0 to cross the whole visual field
         self.params['t_blank'] = 200.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
-        self.params['t_before_blank'] = 400.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
+        self.params['t_start'] = 200.
+        self.params['t_before_blank'] = self.params['t_start'] + 400.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
         self.params['tuning_prop_seed'] = 0         # seed for randomized tuning properties
         self.params['input_spikes_seed'] = 0
         self.params['dt_sim'] = self.params['delay_range'][0] * 1 # [ms] time step for simulation
@@ -229,8 +230,8 @@ class parameter_storage(object):
         # ######
         # INPUT 
         # ######
-        self.params['f_max_stim'] = 5000. #1500. # [Hz]
-        self.params['w_input_exc'] = 1.0e-3#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
+        self.params['f_max_stim'] = 3000. #1500. # [Hz]
+        self.params['w_input_exc'] = 10.0e-3#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
 
         # ###############
         # MOTION STIMULUS
@@ -247,7 +248,7 @@ class parameter_storage(object):
         self.params['v_min_tp'] = 0.15  # [a.u.] minimal velocity in visual space for training
         self.params['v_max_training'] = 0.2
         self.params['v_min_training'] = 0.2
-        self.params['blur_X'], self.params['blur_V'] = .2, .2
+        self.params['blur_X'], self.params['blur_V'] = .15, .15
 
         # the blur parameter represents the input selectivity:
         # high blur means many cells respond to the stimulus
@@ -288,8 +289,8 @@ class parameter_storage(object):
             else:
 #                folder_name = 'TuningProp_'
 #                folder_name = 'SLargeScaleModel_np192_noBlank_'
-                folder_name = 'SmallScale_'
-#                folder_name = 'Test_'
+#                folder_name = 'SmallScale_'
+                folder_name = 'Test_n%d_' % self.params['n_cells']
 #                folder_name = 'LargeScaleModel_'
 
 
