@@ -149,7 +149,7 @@ class parameter_storage(object):
 
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
-        self.params['scale_latency'] = 100.0 # this determines how much the directional tuning of the src is considered when drawing connections
+        self.params['scale_latency'] = .15 # this determines how much the directional tuning of the src is considered when drawing connections
         self.params['delay_scale'] = 1000.     # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 5000.)
         self.params['w_sigma_x'] = 0.10  # width of connectivity profile for pre-computed weights
@@ -333,9 +333,9 @@ class parameter_storage(object):
 
             self.params['connectivity_code'] = connectivity_code
             folder_name += connectivity_code
-            folder_name += "_bx%.1e_bv%.1e_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delay%d/" % \
+            folder_name += "_bx%.1e_bv%.1e_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delay%d_scaleLatency%.1f/" % \
                         (self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
-                        self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'])
+                        self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'], self.params['scale_latency'])
 #                        self.params['w_min'], self.params['w_max'])
 
 #            folder_name = 'OnlyNoiseInput_wexc%.2e_fexc%.2e_w_inh%.2e_finh%.2e/' % \
@@ -388,6 +388,7 @@ class parameter_storage(object):
         self.params['params_fn'] = '%ssimulation_parameters.info' % (self.params['parameters_folder'])
 
         # input spiketrains
+        self.params['merged_input_spiketrains_fn'] = "%sinput_spiketrain_merged.dat" % (self.params['input_folder'])
         self.params['input_st_fn_base'] = "%sstim_spike_train_" % self.params['input_folder']# input spike trains filename base
         self.params['input_rate_fn_base'] = "%srate_" % self.params['input_folder']# input spike trains filename base
         self.params['input_sum_fn'] = "%sinput_sum.dat" % (self.params['input_folder'])

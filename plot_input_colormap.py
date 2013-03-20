@@ -7,15 +7,25 @@ import NeuroTools.parameters as ntp
 import simulation_parameters
 import os
 import utils
+import numpy as np
 
 
 def merge_input_spiketrains(params):
 
+    all_spikes = np.zeros(0)
+    all_gids = np.zeros(0)
     for i in xrange(params['n_exc']):
         fn = self.params['input_st_fn_base'] + str(i) + '.npy'
         spike_times = np.load(fn)
+        np.concatenate((all_spikes, spike_times))
+        np.concatenate((all_gids, i * np.ones(spike_times.size)))
+    
+    output_fn = params['merged_input_spiketrains_fn']
+    print 'Saving merged spike trains to:', output_fn
+    np.save(output_fn, (all_spikes, all_gids))
 
-def plot_prediction(params=None, data_fn=None, inh_spikes = None):
+
+def plot_input_colormap(params=None, data_fn=None, inh_spikes = None):
 
     if params== None:
         network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
@@ -23,12 +33,11 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
         params = network_params.params
 
     if data_fn == None:
-        data_fn = params['exc_spiketimes_fn_merged'] + '.ras'
-
-#    if inh_spikes == None:
-#        inh_spikes = params['inh_spiketimes_fn_merged'] + '.ras'
-
-#    params['t_sim'] = 1200
+        data_fn = params['merged_input_spiketrains_fn']
+        if not os.path.exists(data_fn):
+            merge_input_spiketrains(params)
+    
+    return None
 
     plotter = P.PlotPrediction(params, data_fn)
     pylab.rcParams['axes.labelsize'] = 14
@@ -144,14 +153,13 @@ if __name__ == '__main__':
             param_fn += '/Parameters/simulation_parameters.info'
         import NeuroTools.parameters as NTP
         fn_as_url = utils.convert_to_url(param_fn)
-        print 'debug ', fn_as_url
         params = NTP.ParameterSet(fn_as_url)
         print 'Loading parameters from', param_fn
-        plot_prediction(params=params)
+        plot_input_colormap(params=params)
 
     else:
         print '\nPlotting the default parameters give in simulation_parameters.py\n'
-        plot_prediction()
+        plot_input_colormap()
 
 #folder = 'Data_inputstrength_swepng/NoColumns_winit_random_wsigmaX2.50e-01_wsigmaV2.50e-01_winput2.00e-03_finput2.00e+03pthresh1.0e-01_ptow1.0e-02/' 
 #params_fn = folder + 'simulation_parameters.info'
