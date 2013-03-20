@@ -38,10 +38,11 @@ def get_p_conn(tp_src, tp_tgt, w_sigma_x, w_sigma_v, scale_latency=1.0):
 
     d_ij = utils.torus_distance2D(tp_src[0], tp_tgt[0], tp_src[1], tp_tgt[1])
     latency = d_ij / np.sqrt(tp_src[2]**2 + tp_src[3]**2)
-    x_predicted = tp_src[0] + tp_src[2] * latency * scale_latency
-    y_predicted = tp_src[1] + tp_src[3] * latency * scale_latency
+    x_predicted = tp_src[0] + tp_src[2] * latency
+    y_predicted = tp_src[1] + tp_src[3] * latency
     p = np.exp(- (utils.torus_distance2D(x_predicted, tp_tgt[0], y_predicted, tp_tgt[1]))**2 / (2 * w_sigma_x**2)) \
             * np.exp(- ((tp_src[2] - tp_tgt[2])**2 + (tp_src[3] - tp_tgt[3])**2) / (2 * w_sigma_v**2))
+    p *= np.exp(- latency / scale_latency)
     return p, latency
 
 
