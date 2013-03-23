@@ -12,17 +12,21 @@ import numpy as np
 
 def merge_input_spiketrains(params):
 
-    all_spikes = np.zeros(0)
-    all_gids = np.zeros(0)
+    all_spikes = np.array([])
+    all_gids = np.array([])
     for i in xrange(params['n_exc']):
-        fn = self.params['input_st_fn_base'] + str(i) + '.npy'
+        fn = params['input_st_fn_base'] + str(i) + '.npy'
         spike_times = np.load(fn)
-        np.concatenate((all_spikes, spike_times))
-        np.concatenate((all_gids, i * np.ones(spike_times.size)))
+        all_spikes = np.concatenate((all_spikes, spike_times))
+        all_gids = np.concatenate((all_gids, i * np.ones(spike_times.size)))
     
+    output_data = np.array((all_spikes, all_gids)).transpose()
     output_fn = params['merged_input_spiketrains_fn']
+    print 'output_data', output_data
     print 'Saving merged spike trains to:', output_fn
-    np.save(output_fn, (all_spikes, all_gids))
+
+    np.savetxt(output_fn, output_data)
+    return output_data
 
 
 def plot_input_colormap(params=None, data_fn=None, inh_spikes = None):
@@ -33,11 +37,14 @@ def plot_input_colormap(params=None, data_fn=None, inh_spikes = None):
         params = network_params.params
 
     if data_fn == None:
-        data_fn = params['merged_input_spiketrains_fn']
-        if not os.path.exists(data_fn):
-            merge_input_spiketrains(params)
+        if params.has_key('merged_input_spiketrains_fn'):
+            output_fn = params['merged_input_spiketrains_fn']
+        else:
+            params['merged_input_spiketrains_fn'] = "%sinput_spiketrain_merged.dat" % (params['input_folder'])
+            data_fn = params['merged_input_spiketrains_fn']
+    if not os.path.exists(data_fn):
+        merge_input_spiketrains(params)
     
-    return None
 
     plotter = P.PlotPrediction(params, data_fn)
     pylab.rcParams['axes.labelsize'] = 14
@@ -46,103 +53,28 @@ def plot_input_colormap(params=None, data_fn=None, inh_spikes = None):
         return
 
     plotter.compute_v_estimates()
-    plotter.compute_position_estimates()
-    plotter.compute_theta_estimates()
+#    plotter.compute_position_estimates()
+#    plotter.compute_theta_estimates()
 
     # fig 1
     # neuronal level
-    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_delayScale%d_scaleLatency%.2f' % (params['prediction_fig_fn_base'], params['connectivity_code'], \
-            params['w_sigma_x'], params['w_sigma_v'], params['delay_scale'], params['scale_latency'])
-
+    output_fn_base = params['figures_folder'] + 'input_colormap.png'
 
     plotter.create_fig()  # create an empty figure
     pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.2)
     plotter.n_fig_x = 2
-    plotter.n_fig_y = 3
-    plotter.plot_rasterplot('exc', 1)               # 1 
-    plotter.plot_rasterplot('inh', 2)               # 2 
-    plotter.plot_vx_grid_vs_time(3)              # 3 
-    plotter.plot_vy_grid_vs_time(4)              # 4 
-    plotter.plot_x_grid_vs_time(5)
-    plotter.plot_y_grid_vs_time(6)
+    plotter.n_fig_y = 2
+#    plotter.plot_rasterplot('exc', 1)               # 1 
+#    plotter.plot_rasterplot('inh', 2)               # 2 
+    plotter.plot_vx_grid_vs_time(1)              # 3 
+    plotter.plot_vy_grid_vs_time(2)              # 4 
+    plotter.plot_x_grid_vs_time(3, ylabel='x-position of stimulus')
+    plotter.plot_y_grid_vs_time(4, ylabel='y-position of stimulus')
     output_fn = output_fn_base + '_0.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn)
 
-    # poplation level, short time-scale
-    plotter.n_fig_x = 3
-    plotter.n_fig_y = 2
-    plotter.create_fig()
-    pylab.rcParams['legend.fontsize'] = 12
-    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.3)
-    plotter.plot_vx_estimates(1)
-    plotter.plot_vy_estimates(2)
-    plotter.plot_vdiff(3)
-    plotter.plot_x_estimates(4)
-    plotter.plot_y_estimates(5) 
-    plotter.plot_xdiff(6)
-    output_fn = output_fn_base + '_1.png'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn)
-
-#    plotter.plot_theta_estimates(5)
-
-
-    # fig 3
-    # population level, long time-scale
-    plotter.n_fig_x = 1
-    plotter.n_fig_y = 4
-    pylab.rcParams['legend.fontsize'] = 10
-    pylab.subplots_adjust(hspace=0.5)
-    plotter.create_fig()
-    plotter.plot_fullrun_estimates_vx(1)
-    plotter.plot_fullrun_estimates_vy(2)
-    plotter.plot_fullrun_estimates_theta(3)
-    plotter.plot_nspike_histogram(4)
-    output_fn = output_fn_base + '_2.png'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn)
-
-    # fig 4
-    plotter.n_fig_x = 1
-    plotter.n_fig_y = 2
-    output_fn = output_fn_base + '_4.png'
-    plotter.create_fig()  # create an empty figure
-    plotter.plot_network_activity('exc', 1)
-    plotter.plot_network_activity('inh', 2)
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn)
-
-    plotter.n_fig_x = 1
-    plotter.n_fig_y = 1
-    plotter.create_fig()
-    weights = [plotter.nspikes_binned_normalized[i, :].sum() / plotter.n_bins for i in xrange(plotter.n_cells)]
-    plotter.quiver_plot(weights, fig_cnt=1)
-    output_fn = output_fn_base + '_quiver.png'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn)
-
-    plotter.save_data()
-#    plotter.n_fig_x = 1
-#    plotter.n_fig_y = 1
-#    time_binsize = plotter.time_binsize
-#    for i in xrange(plotter.n_bins):
-#        plotter.create_fig()
-#        title = 'Predicted directions after spatial marginalization\nt=%.1f - %.1f [ms]' % (i*time_binsize, (i+1)*time_binsize)
-#        plotter.quiver_plot(plotter.nspikes_binned_normalized[:, i], title=title, fig_cnt=1)
-#        output_fn = params['figures_folder'] + 'quiver_%d.png' % i
-#        print 'Saving figure to:', output_fn
-#        pylab.savefig(output_fn)
-
-#    plotter.make_infotextbox()
-
 #    pylab.show()
-
-
-#    plotter.plot_nspikes_binned()               # 1
-#    plotter.plot_nspikes_binned_normalized()    # 2
-#    plotter.plot_vx_confidence_binned()         # 3
-#    plotter.plot_vy_confidence_binned()         # 4
 
 if __name__ == '__main__':
 

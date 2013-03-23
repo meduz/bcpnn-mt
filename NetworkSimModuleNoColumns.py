@@ -223,8 +223,8 @@ class NetworkModel(object):
                 L_input[:, i_time] *= self.params['f_max_stim']
             # blanking 
             for i_time in blank_idx:
-#                L_input[:, i_time] = 0.
-                L_input[:, i_time] = np.random.permutation(L_input[:, i_time])
+                L_input[:, i_time] = 0.
+#                L_input[:, i_time] = np.random.permutation(L_input[:, i_time])
 
             # create the spike trains
             for i_, unit in enumerate(my_units):
@@ -320,8 +320,8 @@ class NetworkModel(object):
         n_src_cells_per_neuron = int(round(self.params['p_%s' % conn_type] * n_src))
         (delay_min, delay_max) = self.params['delay_range']
         for tgt in tgt_cells:
-            p = np.zeros(n_src)
-            latency = np.zeros(n_src)
+            p = np.zeros(n_src, dtype='float32')
+            latency = np.zeros(n_src, dtype='float32')
             for src in xrange(n_src):
                 if conn_type[0] == conn_type[1]: # no self-connection
                     if (src != tgt):
@@ -339,17 +339,18 @@ class NetworkModel(object):
                 else:
                     sources = sorted_indices[:n_src_cells_per_neuron] 
 
-            w = (self.params['w_tgt_in_per_cell_%s' % conn_type] / p[sources].sum()) * p[sources]
+            eta = 1e-9
+            w = (self.params['w_tgt_in_per_cell_%s' % conn_type] / (p[sources].sum() + eta)) * p[sources]
 #            w = utils.linear_transformation(p[sources], self.params['w_min'], self.params['w_max'])
             for i in xrange(len(sources)):
 #                        w[i] = max(self.params['w_min'], min(w[i], self.params['w_max']))
-                if w[i] > self.params['w_thresh_connection']:
-                    delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
-    #                delay = min(max(latency[sources[i]], delay_min), delay_max)  # map the delay into the valid range
+#                if w[i] > self.params['w_thresh_connection']:
+                delay = min(max(latency[sources[i]] * self.params['delay_scale'], delay_min), delay_max)  # map the delay into the valid range
+#                delay = min(max(latency[sources[i]], delay_min), delay_max)  # map the delay into the valid range
 #                    print 'debug ', delay , ' latency', latency[sources[i]]
-                    connect(src_pop[sources[i]], tgt_pop[tgt], w[i], delay=delay, synapse_type=syn_type)
-                    if self.debug_connectivity:
-                        output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay, p[sources[i]]) #                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], latency[sources[i]], p[sources[i]])
+                connect(src_pop[sources[i]], tgt_pop[tgt], w[i], delay=delay, synapse_type=syn_type)
+                if self.debug_connectivity:
+                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], delay, p[sources[i]]) #                    output += '%d\t%d\t%.2e\t%.2e\t%.2e\n' % (sources[i], tgt, w[i], latency[sources[i]], p[sources[i]])
 
         if self.debug_connectivity:
             if self.pc_id == 0:
@@ -443,13 +444,13 @@ class NetworkModel(object):
                 if conn_type[0] == conn_type[1]:
                     if (src != tgt): # no self-connections / autapses
                         d_ij = utils.torus_distance2D(tp_src[src, 0], tp_tgt[tgt, 0], tp_src[src, 1], tp_tgt[tgt, 1])
-                        p_ij = p_max * np.exp(-d_ij**2 / (2 * params['w_sigma_x']**2))
+                        p_ij = p_max * np.exp(-d_ij**2 / (2 * params['w_sigma_isotropic']**2))
                         if np.random.rand() <= p_ij:
                             w[src] = w_
                             delays[src] = d_ij * params['delay_scale']
                 else:
                     d_ij = utils.torus_distance2D(tp_src[src, 0], tp_tgt[tgt, 0], tp_src[src, 1], tp_tgt[tgt, 1])
-                    p_ij = p_max * np.exp(-d_ij**2 / (2 * params['w_sigma_x']**2))
+                    p_ij = p_max * np.exp(-d_ij**2 / (2 * params['w_sigma_isotropic']**2))
                     if np.random.rand() <= p_ij:
                         w[src] = w_
                         delays[src] = d_ij * params['delay_scale']
@@ -457,10 +458,10 @@ class NetworkModel(object):
             srcs = w.nonzero()[0]
             weights = w[srcs]
             for src in srcs:
-                if w[src] > self.params['w_thresh_connection']:
-                    delay = min(max(delays[src], self.params['delay_range'][0]), self.params['delay_range'][1])  # map the delay into the valid range
-                    connect(src_pop[int(src)], tgt_pop[int(tgt)], w[src], delay=delay, synapse_type=syn_type)
-                    output += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, w[src], delay) 
+#                if w[src] > self.params['w_thresh_connection']:
+                delay = min(max(delays[src], self.params['delay_range'][0]), self.params['delay_range'][1])  # map the delay into the valid range
+                connect(src_pop[int(src)], tgt_pop[int(tgt)], w[src], delay=delay, synapse_type=syn_type)
+                output += '%d\t%d\t%.2e\t%.2e\n' % (src, tgt, w[src], delay) 
                     
         if self.debug_connectivity:
             if self.pc_id == 0:
@@ -658,16 +659,16 @@ if __name__ == '__main__':
 
     input_created = False
 
-#    w_sigma_x = float(sys.argv[1])
-#    w_sigma_v = float(sys.argv[2])
-#    params['w_sigma_x'] = w_sigma_x
-#    params['w_sigma_v'] = w_sigma_v
+    w_sigma_x = float(sys.argv[1])
+    w_sigma_v = float(sys.argv[2])
+    params['w_sigma_x'] = w_sigma_x
+    params['w_sigma_v'] = w_sigma_v
 
-#    w_ee = float(sys.argv[3])
-#    ps.params['w_tgt_in_per_cell_ee'] = w_ee
+    w_ee = float(sys.argv[3])
+    ps.params['w_tgt_in_per_cell_ee'] = w_ee
 
-#    delay_scale = float(sys.argv[4])
-#    ps.params['delay_scale'] = delay_scale
+    delay_scale = float(sys.argv[4])
+    ps.params['delay_scale'] = delay_scale
 
     ps.set_filenames()
     if pc_id == 0:
@@ -700,7 +701,7 @@ if __name__ == '__main__':
     NM.run_sim(sim_cnt, record_v=record)
     NM.print_results(print_v=record)
 
-    if pc_id == 0:
+    if pc_id == 0 and params['n_cells'] < 5000:
         import plot_prediction as pp
         pp.plot_prediction(params)
 

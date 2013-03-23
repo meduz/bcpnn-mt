@@ -404,18 +404,24 @@ if __name__ == '__main__':
 
     np.random.seed(0)
 #    try:
-    if sys.argv[1].isdigit():
-        gid = int(sys.argv[1])
+    if len(sys.argv) > 1:
+        if sys.argv[1].isdigit():
+            gid = int(sys.argv[1])
+        else:
+            param_fn = sys.argv[1]
+            if os.path.isdir(param_fn):
+                param_fn += '/Parameters/simulation_parameters.info'
+            import NeuroTools.parameters as NTP
+            fn_as_url = utils.convert_to_url(param_fn)
+            print 'Loading parameters from', param_fn
+            params = NTP.ParameterSet(fn_as_url)
+            gid = np.loadtxt(params['gids_to_record_fn'])[0]
+            print 'debug', params['n_cells']
     else:
-        param_fn = sys.argv[1]
-        if os.path.isdir(param_fn):
-            param_fn += '/Parameters/simulation_parameters.info'
-        import NeuroTools.parameters as NTP
-        fn_as_url = utils.convert_to_url(param_fn)
-        print 'Loading parameters from', param_fn
-        params = NTP.ParameterSet(fn_as_url)
+        import simulation_parameters
+        ps = simulation_parameters.parameter_storage()
+        params = ps.params
         gid = np.loadtxt(params['gids_to_record_fn'])[0]
-        print 'debug', params['n_cells']
 
 #    except:
 #        gid = np.loadtxt(params['gids_to_record_fn'])[0]

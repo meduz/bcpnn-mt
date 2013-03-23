@@ -61,10 +61,10 @@ class parameter_storage(object):
 #        self.params['N_V'], self.params['N_theta'] = 1, 16# resolution in velocity norm and direction
 
         # Tuning-properties spiking
-#        self.params['N_RF'] = 20# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3.)))
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3.))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#        self.params['N_V'], self.params['N_theta'] = 2, 8# resolution in velocity norm and direction
+#        self.params['N_V'], self.params['N_theta'] = 3, 3# resolution in velocity norm and direction
 
         # Tuning-properties abstract
 #        self.params['N_RF'] = 7# np.int(n_cells/N_V/N_theta)
@@ -149,24 +149,25 @@ class parameter_storage(object):
 
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
-        self.params['scale_latency'] = .15 # this determines how much the directional tuning of the src is considered when drawing connections
-        self.params['delay_scale'] = 1000.     # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
+        self.params['scale_latency'] = 1.      # this determines how much the directional tuning of the src is considered when drawing connections
+        # WARNING: scale_latency affects w_sigma_x/v
+        self.params['delay_scale'] = 1000.      # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 5000.)
-        self.params['w_sigma_x'] = 0.10  # width of connectivity profile for pre-computed weights
-        self.params['w_sigma_v'] = 0.10 # small w_sigma: tuning_properties get stronger weight when deciding on connection
+        self.params['w_sigma_x'] = 0.1  # width of connectivity profile for pre-computed weights
+        self.params['w_sigma_v'] = 0.3 # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
-        self.params['w_sigma_isotropic'] = .1 # should not be below  0.05 otherwise you don't get the desired p_effective 
+        self.params['w_sigma_isotropic'] = 1.0 # should not be below  0.05 otherwise you don't get the desired p_effective 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.08 # [uS] how much input should an exc cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ei'] = 0.10 # [uS] how much input should an inh cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ie'] = 0.20 # [uS] how much input should an exc cell get from its inh source cells?
-        self.params['w_tgt_in_per_cell_ii'] = 0.02 # [uS] how much input should an inh cell get from its source cells?
-        self.params['w_tgt_in_per_cell_ee'] *= 20. / self.params['tau_syn_exc']
-        self.params['w_tgt_in_per_cell_ei'] *= 20. / self.params['tau_syn_exc']
-        self.params['w_tgt_in_per_cell_ie'] *= 30. / self.params['tau_syn_inh']
-        self.params['w_tgt_in_per_cell_ii'] *= 30. / self.params['tau_syn_inh']
+        self.params['w_tgt_in_per_cell_ee'] = 0.6 # [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ei'] = 1.20 # [uS] how much input should an inh cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ie'] = 1.20 # [uS] how much input should an exc cell get from its inh source cells?
+        self.params['w_tgt_in_per_cell_ii'] = 0.05 # [uS] how much input should an inh cell get from its source cells?
+#        self.params['w_tgt_in_per_cell_ee'] *= 20. / self.params['tau_syn_exc']
+#        self.params['w_tgt_in_per_cell_ei'] *= 20. / self.params['tau_syn_exc']
+#        self.params['w_tgt_in_per_cell_ie'] *= 30. / self.params['tau_syn_inh']
+#        self.params['w_tgt_in_per_cell_ii'] *= 30. / self.params['tau_syn_inh']
         self.params['conn_types'] = ['ee', 'ei', 'ie', 'ii']
 
 #        self.params['p_to_w'] = 
@@ -177,7 +178,7 @@ class parameter_storage(object):
         self.params['n_src_cells_per_neuron'] = round(self.params['p_ee'] * self.params['n_exc']) # only excitatory sources
 
         # exc - inh
-        self.params['p_ei'] = 0.02 #self.params['p_ee']
+        self.params['p_ei'] = 0.05 #self.params['p_ee']
         self.params['w_ei_mean'] = 0.005
         self.params['w_ei_sigma'] = 0.001          
 
@@ -202,9 +203,9 @@ class parameter_storage(object):
         self.params['seed'] = 12345
         self.params['np_random_seed'] = 0
         self.params['t_sim'] = 1200.                 # [ms] total simulation time
-        self.params['t_stimulus'] = 1000.            # [ms] time for a stimulus of speed 1.0 to cross the whole visual field
-        self.params['t_blank'] = 200.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
-        self.params['t_start'] = 200.
+        self.params['t_stimulus'] = 1000.            # [ms] time for a stimulus of speed 1.0 to cross the whole visual field from 0 to 1.
+        self.params['t_blank'] = 200.               # [ms] time for 'blanked' input
+        self.params['t_start'] = 0.           # [ms] Time before stimulus starts
         self.params['t_before_blank'] = self.params['t_start'] + 400.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
         self.params['tuning_prop_seed'] = 0         # seed for randomized tuning properties
         self.params['input_spikes_seed'] = 0

@@ -61,7 +61,6 @@ class PlotPrediction(object):
         self.vx_grid = np.linspace(self.vx_min, self.vx_max, self.n_vx_bins, endpoint=True)
         #self.vx_grid = np.linspace(np.min(self.vx_tuning), np.max(self.vx_tuning), self.n_vx_bins, endpoint=True)
 
-
         # vy
         self.vy_tuning = self.tuning_prop[:, 3].copy()
         self.vy_tuning.sort()
@@ -84,7 +83,6 @@ class PlotPrediction(object):
         self.sorted_indices_y = self.tuning_prop[:, 1].argsort()
         self.y_min, self.y_max = .0, self.params['torus_height']
         self.y_grid = np.linspace(self.y_min, self.y_max, self.n_y_bins, endpoint=True)
-
 
         self.normalize_spiketimes(data_fn)
         if self.no_spikes:
@@ -548,20 +546,22 @@ class PlotPrediction(object):
         self.data_to_store['vy_grid.dat'] = {'data' : vy_grid, 'edges': v_edges}
 
 
-    def plot_x_grid_vs_time(self, fig_cnt=1):
+    def plot_x_grid_vs_time(self, fig_cnt=1, ylabel=None):
         print 'plot_x_grid_vs_time ...'
         xlabel = 'Time [ms]'
-        ylabel = '$x_{predcted}$'
+        if ylabel == None:
+            ylabel = '$x_{predicted}$'
         title = ''#$x_{predicted}$ binned vs time'
         x_grid, x_edges = self.bin_estimates(self.x_grid, index=0)
         self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt)
         self.data_to_store['xpos_grid.dat'] = {'data' : x_grid, 'edges': x_edges}
 
 
-    def plot_y_grid_vs_time(self, fig_cnt=1):
+    def plot_y_grid_vs_time(self, fig_cnt=1, ylabel=None):
         print 'plot_y_grid_vs_time ...'
         xlabel = 'Time [ms]'
-        ylabel = '$y_{predcted}$'
+        if ylabel == None:
+            ylabel = '$y_{predicted}$'
         title = ''#$y_{predicted}$ binned vs time'
         y_grid, y_edges = self.bin_estimates(self.y_grid, index=1)
         self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt)
@@ -596,7 +596,8 @@ class PlotPrediction(object):
 #        ax.set_xticklabels(['%d' %i for i in self.t_ticks])
 #        color_boundaries = (0., .5)
 
-        max_conf = min(data.mean() + data.std(), data.max())
+#        max_conf = min(data.mean() + data.std(), data.max())
+        max_conf = data.max()
         norm = matplotlib.mpl.colors.Normalize(vmin=0, vmax=max_conf)
         m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cm.jet)#jet)
         m.set_array(np.arange(0., max_conf, 0.01))
