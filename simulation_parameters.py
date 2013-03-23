@@ -154,7 +154,7 @@ class parameter_storage(object):
         self.params['delay_scale'] = 1000.      # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 5000.)
         self.params['w_sigma_x'] = 0.1  # width of connectivity profile for pre-computed weights
-        self.params['w_sigma_v'] = 0.3 # small w_sigma: tuning_properties get stronger weight when deciding on connection
+        self.params['w_sigma_v'] = 0.2 # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
@@ -291,7 +291,8 @@ class parameter_storage(object):
 #                folder_name = 'TuningProp_'
 #                folder_name = 'SLargeScaleModel_np192_noBlank_'
 #                folder_name = 'SmallScale_'
-                folder_name = 'Test_n%d_' % self.params['n_cells']
+                folder_name = 'NewP_n%d_' % self.params['n_cells']
+#                folder_name = 'Test_n%d_' % self.params['n_cells']
 #                folder_name = 'LargeScaleModel_'
 
 

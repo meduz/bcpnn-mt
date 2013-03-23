@@ -320,21 +320,21 @@ class NetworkModel(object):
         n_src_cells_per_neuron = int(round(self.params['p_%s' % conn_type] * n_src))
         (delay_min, delay_max) = self.params['delay_range']
         for tgt in tgt_cells:
-            p = np.zeros(n_src, dtype='float32')
-            latency = np.zeros(n_src, dtype='float32')
-            for src in xrange(n_src):
-                if conn_type[0] == conn_type[1]: # no self-connection
-                    if (src != tgt):
-                        p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
+#            p = np.zeros(n_src, dtype='float32')
+#            latency = np.zeros(n_src, dtype='float32')
+            p, latency = CC.get_p_conn_vec(tp_src, tp_tgt[tgt, :], self.params['w_sigma_x'], self.params['w_sigma_v'])
 
-                else: # different populations --> same indices mean different cells, no check for src != tgt
-                    p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
+#            if conn_type[0] == conn_type[1]: # no self-connection
+#                if (src != tgt):
+#                    p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
+#                else: # different populations --> same indices mean different cells, no check for src != tgt
+#                    p[src], latency[src] = CC.get_p_conn(tp_src[src, :], tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
 
             sorted_indices = np.argsort(p)
             if conn_type[0] == 'e':
                 sources = sorted_indices[-n_src_cells_per_neuron:] 
             else: # source = inhibitory
-                if conn_type == 'ii':
+                if conn_type[0] == conn_type[1]:
                     sources = sorted_indices[1:n_src_cells_per_neuron+1]  # shift indices to avoid self-connection, because p_ii = .0
                 else:
                     sources = sorted_indices[:n_src_cells_per_neuron] 
@@ -659,16 +659,16 @@ if __name__ == '__main__':
 
     input_created = False
 
-    w_sigma_x = float(sys.argv[1])
-    w_sigma_v = float(sys.argv[2])
-    params['w_sigma_x'] = w_sigma_x
-    params['w_sigma_v'] = w_sigma_v
+#    w_sigma_x = float(sys.argv[1])
+#    w_sigma_v = float(sys.argv[2])
+#    params['w_sigma_x'] = w_sigma_x
+#    params['w_sigma_v'] = w_sigma_v
 
-    w_ee = float(sys.argv[3])
-    ps.params['w_tgt_in_per_cell_ee'] = w_ee
+#    w_ee = float(sys.argv[3])
+#    ps.params['w_tgt_in_per_cell_ee'] = w_ee
 
-    delay_scale = float(sys.argv[4])
-    ps.params['delay_scale'] = delay_scale
+#    delay_scale = float(sys.argv[4])
+#    ps.params['delay_scale'] = delay_scale
 
     ps.set_filenames()
     if pc_id == 0:

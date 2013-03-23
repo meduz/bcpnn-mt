@@ -790,8 +790,8 @@ def get_min_distance_to_stim(mp, tp_cell, params):
     return dist, min_spatial_dist
     
 
-def torus_distance(x0, x1):
-    return x0 - x1
+#def torus_distance(x0, x1):
+#    return x0 - x1
 
 
 def torus_distance(x0, x1):
@@ -801,10 +801,15 @@ def torus_distance2D(x1, x2, y1, y2, w=1., h=1.):
     """
     w and h are the width (x) and height (y) of the grid, respectively.
     """
-    return np.sqrt(min(abs(x1 - x2), abs(w - abs(x1 - x2)))**2 + min(abs(y1 - y2), abs(h - abs(y1-y2)))**2)
+    return np.sqrt(np.min(np.abs(x1 - x2), np.abs(w - np.abs(x1 - x2)))**2 + np.min(np.abs(y1 - y2), np.abs(h - np.abs(y1-y2)))**2)
     # if not on a torus:
 #    return np.sqrt( (x1 - x2)**2 + (y1 - y2)**2)
 
+def torus_distance2D_vec(x1, x2, y1, y2, w=1., h=1.):
+    """
+    w and h are the width (x) and height (y) of the grid, respectively.
+    """
+    return np.sqrt(np.minimum(np.abs(x1 - x2), np.abs(w - np.abs(x1 - x2)))**2 + np.minimum(np.abs(y1 - y2), np.abs(h - np.abs(y1-y2)))**2)
 
 def gather_conn_list(comm, data, n_total, output_fn):
     """
