@@ -68,7 +68,7 @@ class ActivityQuiverPlot(object):
 
         rgba_colors.append('r')
         ax.quiver(data[:, 0], data[:, 1], data[:, 2], data[:, 3], \
-                  angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4)
+                  angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4, pivot='middle')
         ax.annotate('Stimulus', (mp[0]+.1*mp[2], mp[1]+0.1*mp[1]), fontsize=12, color='r')
 
         ax.set_xlim((-0.2, 1.2))
@@ -80,8 +80,21 @@ class ActivityQuiverPlot(object):
 
 if __name__ == '__main__':
 
-    PS = simulation_parameters.parameter_storage()
-    params = PS.load_params()
+
+    if len(sys.argv) > 1:
+        param_fn = sys.argv[1]
+        if os.path.isdir(param_fn):
+            param_fn += '/Parameters/simulation_parameters.info'
+        import NeuroTools.parameters as NTP
+        fn_as_url = utils.convert_to_url(param_fn)
+        print 'debug ', fn_as_url
+        params = NTP.ParameterSet(fn_as_url)
+        print 'Loading parameters from', param_fn
+        plot_prediction(params=params)
+
+    else:
+        PS = simulation_parameters.parameter_storage()
+        params = PS.load_params()
 
     tp = np.loadtxt(params['tuning_prop_means_fn'])
 

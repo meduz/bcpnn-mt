@@ -153,6 +153,11 @@ ax4.set_xlabel('Time [ms]')
 ax3.set_ylim((0, params['n_exc'] + 1))
 ax4.set_ylim((0, params['n_inh'] + 1))
 
+ax1.set_xlim((0, params['t_sim']))
+ax2.set_xlim((0, params['t_sim']))
+ax3.set_xlim((0, params['t_sim']))
+ax4.set_xlim((0, params['t_sim']))
+
 output_fn = params['figures_folder'] + 'rasterplot_sorted_by_tp.png'
 print "Saving to", output_fn
 pylab.savefig(output_fn, dpi=200)

@@ -40,12 +40,14 @@ def peval_function_exp_decay(x, p):
 fig = pylab.figure()
 ax = fig.add_subplot(111)
 
-w_sigma_range = np.arange(0.01, 0.38, 0.01)
+w_sigma_range = np.arange(0.01, 2.00, 0.01)
+#w_sigma_range = np.arange(0.01, 0.3, 0.02)
 
 opt_params_array = np.zeros((w_sigma_range.size, 3))
-
+conn_type = 'ei'
 for i_, w_sigma_x in enumerate(w_sigma_range):
-    fn = 'p_effective/peff_wsigma%.3f_large.dat' % w_sigma_x
+#    fn = 'p_effective/peff_wsigma%.3f_%s.dat' % (w_sigma_x, conn_type)
+    fn = 'p_effective/peff_triangular_wsigma%.3f.dat' % (w_sigma_x)
     d = np.loadtxt(fn)
     p_max = d[:, 0]
     p_eff = d[:, 1]

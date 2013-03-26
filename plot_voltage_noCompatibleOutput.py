@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import pylab
 import utils
-
+import os
 
 
 def plot_volt(fn, gid=None, n=1):
@@ -68,20 +68,44 @@ def plot_average_volt(fn, gid=None, n=1):
 
 
 if __name__ == '__main__':
+
+    n_to_plot = 5
     if len(sys.argv) == 1:
         import simulation_parameters
         ps = simulation_parameters.parameter_storage()
         params = ps.params
-        fns = [params['exc_volt_fn_base'] + '.v']
+        fn = params['exc_volt_fn_base'] + '.v'
+        gids = np.loadtxt(params['gids_to_record_fn'])
+        gids = gids[:n_to_plot].tolist()
+        pylab.figure()
+        plot_volt(fn, gid=gids)
+    elif (len(sys.argv) == 2):
+        # folder / parameter file option
+        param_fn = sys.argv[1]
+        if os.path.isdir(param_fn):
+            param_fn += '/Parameters/simulation_parameters.info'
+            import NeuroTools.parameters as NTP
+            fn_as_url = utils.convert_to_url(param_fn)
+            print 'Loading parameters from', param_fn
+            params = NTP.ParameterSet(fn_as_url)
+            gids = np.loadtxt(params['gids_to_record_fn'])
+            gids = gids[:n_to_plot].tolist()
+            fn = params['exc_volt_fn_base'] + '.v'
+            pylab.figure()
+            plot_volt(fn, gid=gids)
+        else: # voltage file
+            fn = sys.argv[1]
+            pylab.figure()
+            plot_volt(fn, gid=None, n=n_to_plot)
+#        except:
+#            gids = 'all'
+
     else:
         fns = sys.argv[1:]
-    for fn in fns:
-        pylab.figure()
+        for fn in fns:
+            pylab.figure()
 
 #    fn = sys.argv[1]
-#    gids = np.loadtxt('Testing/Parameters/gids_to_record.dat')
-
-#    gids = gids[:5].tolist()
 #        gids = [205, 378]
 #        gids = [177, 130]
 #        plot_volt(fn, gids)
@@ -89,8 +113,6 @@ if __name__ == '__main__':
 #        n = 5
 #        plot_volt(fn, gid=None, n=n)
 
-#        plot_volt(fn, gid=[207])
-        plot_volt(fn, gid='all')
 #    plot_average_volt(fn, gids)
 
 #    plot_average_volt(fn, gid='all')
