@@ -1010,7 +1010,7 @@ class PlotPrediction(object):
         ax.axvline((self.params['t_before_blank'] + self.params['t_blank']) / self.time_binsize, ls='--', color=c, lw=3)
 
         if txt != '':
-            txt_pos_x = (self.params['t_stimulus'] + .25 * self.params['t_blank']) / self.time_binsize
+            txt_pos_x = (self.params['t_before_blank'] + .5 * self.params['t_blank']) / self.time_binsize
             ylim = ax.get_ylim()
             txt_pos_y = .85 * ylim[1]
             ax.annotate(txt, (txt_pos_x, txt_pos_y), fontsize=14, color='w')

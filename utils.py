@@ -172,7 +172,7 @@ def get_input(tuning_prop, params, t, motion_params=None, contrast=.9, motion='d
     n_cells = tuning_prop[:, 0].size
     if motion_params == None:
         motion_params = params['motion_params']
-    L = np.zeros(n_cells)
+#    L = np.zeros(n_cells)
     if motion=='dot':
         # define the parameters of the motion
         x0, y0, u0, v0 = motion_params
@@ -191,13 +191,18 @@ def get_input(tuning_prop, params, t, motion_params=None, contrast=.9, motion='d
             
             L range between 0 and 1
         """
-        x, y = (x0 + u0*t) % 1., (y0 + v0*t) % 1. # current position of the blob at time t assuming a perfect translation
+        x, y = (x0 + u0*t) % params['torus_width'], (y0 + v0*t) % params['torus_height'] # current position of the blob at time t assuming a perfect translation
 
-    for cell in xrange(n_cells): # todo: vectorize
-        L[cell] = np.exp( -.5 * (torus_distance2D(tuning_prop[cell, 0], x, tuning_prop[cell, 1], y)**2 / blur_X**2)
-                          -.5 * (tuning_prop[cell, 2] - u0)**2/blur_V**2
-                          -.5 * (tuning_prop[cell, 3] - v0)**2/blur_V**2
-                          )
+#    for cell in xrange(n_cells): # todo: vectorize
+#        L[cell] = np.exp( -.5 * (torus_distance2D(tuning_prop[cell, 0], x, tuning_prop[cell, 1], y)**2 / blur_X**2)
+#                          -.5 * (tuning_prop[cell, 2] - u0)**2/blur_V**2
+#                          -.5 * (tuning_prop[cell, 3] - v0)**2/blur_V**2
+#                          )
+
+        L = np.exp(-.5 * ((torus_distance2D_vec(tuning_prop[:, 0], x*np.ones(n_cells), tuning_prop[:, 1], y*np.ones(n_cells)))**2 / blur_X**2)
+                -.5 * (tuning_prop[:, 2] - u0)**2 / blur_V**2
+                -.5 * (tuning_prop[:, 3] - v0)**2 / blur_V**2
+                )
                           
 #        L[cell] = np.exp( -.5 * (tuning_prop[cell, 0] - x)**2/blur_X**2
 #                          -.5 * (tuning_prop[cell, 1] - y)**2/blur_X**2
@@ -978,19 +983,22 @@ def get_pmax(p_effective, w_sigma, conn_type):
     p_effective vs p_max has been simulated for different w_sigma values
     --> p_max is linearly dependent on p_effective, and the gradient is dependent on w_sigma (exponential decay works ok)
     Because inh and exc have different densities, they have different parameters to achieve the same p_eff
+    
+    The data have been acquired by fitting the gradient (p_max vs p_eff) versus w_sigma_x for w_sigma_x > 0.06
     """
-#    if conn_type == 'ee':
-#        fit_wsigma = [4.99190053e+17,   2.26167398e-02,   1.37350638e+00,   5.74608862e-02]
-#    elif conn_type == 'ie':
-#        fit_wsigma = [1.76155801e+14,   2.78732317e-02,   1.95544175e+00,   7.43228969e-02]
-#    elif conn_type == 'ii':
-#        fit_wsigma = [1.85960515e+03,   5.37343146e-02,   3.12869492e+00,   5.62153143e-01]
-#    elif conn_type == 'ei':
-#        fit_wsigma = [ 7.64996817e+13,  2.85468546e-02,   1.80410874e+00,   7.63336456e-02]
-    fit_wsigma = [1.71041872e+15,   2.64080767e-02,  2.86325463e+00,   6.79951554e-02]
-#    [  5.45574732e+16   2.43028122e-02   1.48236960e+00   6.04527514e-02]
+
+    if conn_type == 'ee':
+        fit_wsigma = [  8.69759077e+35,   1.15523952e-02,   1.68865787e+00, 5.21448789e-02]
+    elif conn_type == 'ei':
+        fit_wsigma = [  1.71248794e+32,   1.28067624e-02,   1.74747161e+00, 5.85147960e-02]
+    elif conn_type == 'ie':
+        fit_wsigma = [5.47304944e+43,   9.56954239e-03,   1.84786854e+00, 4.26839514e-02]
+    elif conn_type == 'ii':
+        fit_wsigma = [2.21668319e+46,   9.05343215e-03,   1.76483061e+00, 4.01129051e-02]
     gradient  = fit_wsigma[0] * np.exp( - w_sigma**fit_wsigma[3] / fit_wsigma[1]) + fit_wsigma[2]
+    print 'debug utils.get_pmax gradient for %s ws %.1e: %.3e' % (conn_type, w_sigma, gradient)
     p_max = gradient * p_effective
+
     return p_max
     
 
