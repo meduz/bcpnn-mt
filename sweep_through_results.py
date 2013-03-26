@@ -74,6 +74,7 @@ if len(missing_dirs) > 0:
     d = json.dump(missing_dirs, output_file)
     
     print '\nData files missing in the following dirs:\n', missing_dirs
+    print 'len(missing_dirs):', len(missing_dirs)
     print 'please run:\n python run_plot_prediction.py %s' % fn_out
     exit(1)
 
