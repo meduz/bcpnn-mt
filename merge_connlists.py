@@ -10,7 +10,10 @@ if len(sys.argv) > 1:
         param_fn += '/Parameters/simulation_parameters.info'
     print 'Trying to load parameters from', param_fn
     import NeuroTools.parameters as NTP
-    params = NTP.ParameterSet(utils.convert_to_url(param_fn))
+    fn_as_url = utils.convert_to_url(param_fn)
+    print 'Loading parameters from', param_fn
+    print 'Loading parameters from', fn_as_url
+    params = NTP.ParameterSet(fn_as_url)
 else:
     print '\n NOT successfull\nLoading the parameters currently in simulation_parameters.py\n'
     import simulation_parameters

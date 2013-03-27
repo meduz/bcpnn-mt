@@ -74,7 +74,7 @@ d_mean, d_std = delays.mean(), delays.std()
 n_weights = weights.size
 n_possible = params['n_exc']**2
 
-n_bins = 100
+n_bins = 50
 n_w, bins_w = np.histogram(weights, bins=n_bins, normed=False)
 #n_w = n_w / float(n_w.sum())
 
@@ -159,6 +159,6 @@ ax2.legend()
 
 print "Saving to:", output_fn
 pylab.savefig(output_fn)
-pylab.show()
+#pylab.show()
 
 

@@ -741,6 +741,8 @@ if __name__ == '__main__':
     ps.params['w_tgt_in_per_cell_ee'] = w_ee
     scale_latency = float(sys.argv[4])
     ps.params['scale_latency'] = scale_latency
+    delay_scale = float(sys.argv[5])
+    ps.params['delay_scale'] = delay_scale
     ps.set_filenames()
 
     if pc_id == 0:
@@ -755,7 +757,7 @@ if __name__ == '__main__':
         record = False
         save_input_files = False
     else: # choose yourself
-        load_files = False
+        load_files = True
         record = True
         save_input_files = not load_files
 
@@ -778,3 +780,11 @@ if __name__ == '__main__':
         pp.plot_prediction(params)
 
         os.system('python plot_rasterplots.py %s' % ps.params['folder_name'])
+
+    if pc_id == 1:
+        for conn_type in ['ee', 'ei', 'ie', 'ii']:
+            os.system('python plot_weight_and_delay_histogram.py %s %s' % (conn_type, ps.params['folder_name']))
+
+    if comm != None:
+        comm.Barrier()
+
