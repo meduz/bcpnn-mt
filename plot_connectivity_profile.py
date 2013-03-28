@@ -107,8 +107,8 @@ class ConnectionPlotter(object):
             self.y_max = max(y_tgt, self.y_max)
 #            print 'debug', tgt, x_tgt, y_tgt
             w = weights[i_]
-            if is_target:
-                print 'x, y', x_tgt, y_tgt, w
+#            if is_target:
+#                print 'x, y', x_tgt, y_tgt, w
             plot = self.ax.plot(x_tgt, y_tgt, marker, c=color, markersize=markersizes[i_], zorder=1000)
             if with_directions:
                 direction_dict[tgt] = (x_tgt, y_tgt, tgt_tp[tgt, 2], tgt_tp[tgt, 3], direction_color, self.shaft_width, quiver_style)
@@ -417,6 +417,36 @@ class ConnectionPlotter(object):
         return gid
 
 
+    def find_cell_closest_to_vector(self, v, direction=None):
+        """
+        v : target vector
+        This function searches the  exc tuning properties and 
+        returns the gid of the cell being closest to the target vecort
+        """
+
+        x_diff = self.tp_exc[:, 0] - v[0] 
+        y_diff = self.tp_exc[:, 1] - v[1]
+        diff = np.array((x_diff** 2, y_diff**2))
+        dist = np.dot(diff.transpose(), v)
+        idx = dist.argsort()
+        gid = idx[0]
+
+        n = int(round(.03 * self.tp_exc[:, 0].size))
+        if direction != None:
+            assert (len(direction) == 2), 'Two dimensional vector required'
+            # take the n cells closest to v and find the vector best aligned with direction
+            gids = idx[:n]
+            u_diff = self.tp_exc[gids, 2] - direction[0]
+            v_diff = self.tp_exc[gids, 3] - direction[1]
+            diff = np.array((u_diff**2, v_diff**2))
+            dist = np.dot(diff.transpose(), direction)
+            idx_ = dist.argsort()
+            gid = gids[idx_[0]]
+
+        return gid#, self.tp_exc[gid, :]
+    
+
+
 if __name__ == '__main__':
 
 
@@ -456,14 +486,15 @@ if __name__ == '__main__':
         params = ps.params
         gid = np.loadtxt(params['gids_to_record_fn'])[0]
 
-#    except:
-#        gid = np.loadtxt(params['gids_to_record_fn'])[0]
-#        gid = P.find_exc_gid_to_plot()
-        
-    gid = 662
+    P = ConnectionPlotter(params)
+
+
+    # here you can choose where the cell to plot should be sitting and what the preferred direction should be 
+    target_vector = (.5, .5)
+    direction = (.2, 0)
+    gid = P.find_cell_closest_to_vector(target_vector, direction)
     print 'plotting gid', gid
 
-    P = ConnectionPlotter(params)
     P.create_fig(n_plots_x, n_plots_y)
 #    exc_color = (.5, .5, .5)
     outgoing_conns = True
@@ -529,12 +560,12 @@ if __name__ == '__main__':
     output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.png' % (gid, params['w_sigma_x'], params['w_sigma_v'])
     print 'Saving figure to', output_fig
     pylab.savefig(output_fig)
-    output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.eps' % (gid, params['w_sigma_x'], params['w_sigma_v'])
-    print 'Saving figure to', output_fig
-    pylab.savefig(output_fig, dpi=200)
-    output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.pdf' % (gid, params['w_sigma_x'], params['w_sigma_v'])
-    print 'Saving figure to', output_fig
-    pylab.savefig(output_fig, dpi=200)
+#    output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.eps' % (gid, params['w_sigma_x'], params['w_sigma_v'])
+#    print 'Saving figure to', output_fig
+#    pylab.savefig(output_fig, dpi=200)
+#    output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.pdf' % (gid, params['w_sigma_x'], params['w_sigma_v'])
+#    print 'Saving figure to', output_fig
+#    pylab.savefig(output_fig, dpi=200)
 
-    pylab.show()
+#    pylab.show()
 
