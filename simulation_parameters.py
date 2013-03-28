@@ -76,7 +76,7 @@ class parameter_storage(object):
         print 'N_HC: %d   N_MC_PER_HC: %d' % (self.params['N_RF_X'] * self.params['N_RF_Y'], self.params['N_V'] * self.params['N_theta'])
         self.params['abstract_input_scaling_factor'] = 1.
         self.params['log_scale'] = 2.0 # base of the logarithmic tiling of particle_grid; linear if equal to one
-        self.params['sigma_RF_pos'] = .05 # some variability in the position of RFs
+        self.params['sigma_RF_pos'] = .00 # some variability in the position of RFs
         self.params['sigma_RF_speed'] = .30 # some variability in the speed of RFs
         self.params['sigma_RF_direction'] = .25 * 2 * np.pi # some variability in the direction of RFs
         self.params['sigma_theta_training'] = 2 * np.pi * 0.00
@@ -292,7 +292,11 @@ class parameter_storage(object):
                 folder_name = 'AdEx_SmallSpikingModel_'
 #                folder_name = 'AdEx_LargeScaleModel_'
             else:
+<<<<<<< HEAD
                 folder_name = 'Testing_'
+=======
+                folder_name = 'TuningProp_'
+>>>>>>> 7686799dc4b13099b06fec03ea1d380970743d81
 #                folder_name = 'SLargeScaleModel_np192_noBlank_'
 #                folder_name = 'SmallScale_'
 #                folder_name = 'NewP_n%d_' % self.params['n_cells']
@@ -339,13 +343,14 @@ class parameter_storage(object):
 
             self.params['connectivity_code'] = connectivity_code
             folder_name += connectivity_code
-            folder_name += "_pee%.1e_wen%.1e_bx%.1e_bv%.1e_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delay%d_scaleLatency%.2f/" % \
-                        (self.params['p_ee'], self.params['w_exc_noise'], self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
-                        self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'], self.params['scale_latency'])
+#            folder_name += "_pee%.1e_wen%.1e_bx%.1e_bv%.1e_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delay%d_scaleLatency%.2f/" % \
+#                        (self.params['p_ee'], self.params['w_exc_noise'], self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
+#                        self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'], self.params['scale_latency'])
 #                        self.params['w_min'], self.params['w_max'])
 
 #            folder_name = 'OnlyNoiseInput_wexc%.2e_fexc%.2e_w_inh%.2e_finh%.2e/' % \
 #                        (self.params['w_exc_noise'], self.params['f_exc_noise'], self.params['w_inh_noise'], self.params['f_inh_noise'])
+            folder_name += '/'
     
             self.params['folder_name'] = 'Testing/'
 #            self.params['folder_name'] = folder_name 
