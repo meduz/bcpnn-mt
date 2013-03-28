@@ -3,21 +3,45 @@ import numpy as np
 sn = "NetworkSimModuleNoColumns.py"
 
 
-w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .3, .3, .6, .15, 1000
+#w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .3, .3, .7, .15, 600
+#os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .2, .2, .5, .5, 500
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .2, .2, .4, .5, 500
 os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
 
-w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .3, .3, .6, .15, 1000
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .2, .2, .5, .5, 250
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .2, .2, .4, .5, 250
 os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
 
-w_sigma_x, w_sigma_v, scale_latency = .2, .2, .5
-for delay_scale in [500., 250., 100.]:
-    for w_ee in [.4, .5, .6]:
-        os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .2, .2, .4, .5, 100
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .2, .2, .3, .5, 100
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
 
-w_sigma_x, w_sigma_v, scale_latency = .3, .3, .5
-for delay_scale in [500., 250., 100.]:
-    for w_ee in [.4, .5, .6]:
-        os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .2, .2, .4, .5, 100
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .2, .2, .35, .5, 100
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .2, .2, .30, .5, 100
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .3, .3, .5, .5, 500
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .3, .3, .4, .5, 500
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .3, .3, .5, .5, 250
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .3, .3, .4, .5, 250
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .3, .3, .4, .5, 100
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
+w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale = .3, .3, .3, .5, 100
+os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, scale_latency, delay_scale))
 
 
 #w_sigma_x, w_sigma_v, w_ee, scale_latency = .3, .1, .5, .1

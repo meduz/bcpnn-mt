@@ -31,11 +31,10 @@ class parameter_storage(object):
 
 
 #         Medium-large system
-        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
+#        self.params['N_RF'] = 90# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']))# np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#        self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
 
 #         Medium-scale system
 #        self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
@@ -44,10 +43,10 @@ class parameter_storage(object):
 #        self.params['N_V'], self.params['N_theta'] = 8, 6# resolution in velocity norm and direction
 
 #         Small-scale system
-#        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
-#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#        self.params['N_V'], self.params['N_theta'] = 4, 4# resolution in velocity norm and direction
+        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+        self.params['N_V'], self.params['N_theta'] = 4, 4# resolution in velocity norm and direction
 
         # Minimum sized system
 #        self.params['N_RF'] = 9# np.int(n_cells/N_V/N_theta)
@@ -293,9 +292,9 @@ class parameter_storage(object):
                 folder_name = 'AdEx_SmallSpikingModel_'
 #                folder_name = 'AdEx_LargeScaleModel_'
             else:
-#                folder_name = 'TuningProp_'
+                folder_name = 'Testing_'
 #                folder_name = 'SLargeScaleModel_np192_noBlank_'
-                folder_name = 'SmallScale_'
+#                folder_name = 'SmallScale_'
 #                folder_name = 'NewP_n%d_' % self.params['n_cells']
 #                folder_name = 'Test_n%d_' % self.params['n_cells']
 #                folder_name = 'LargeScaleModel_'
@@ -348,7 +347,8 @@ class parameter_storage(object):
 #            folder_name = 'OnlyNoiseInput_wexc%.2e_fexc%.2e_w_inh%.2e_finh%.2e/' % \
 #                        (self.params['w_exc_noise'], self.params['f_exc_noise'], self.params['w_inh_noise'], self.params['f_inh_noise'])
     
-            self.params['folder_name'] = folder_name 
+            self.params['folder_name'] = 'Testing/'
+#            self.params['folder_name'] = folder_name 
         else:
             self.params['folder_name'] = folder_name
         print 'Folder name:', self.params['folder_name']

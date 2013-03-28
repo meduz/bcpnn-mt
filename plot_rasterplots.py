@@ -36,7 +36,7 @@ def plot_input_spikes(ax, shift=0, m='o', c='k'):
         fn = params['input_st_fn_base'] + str(cell) + '.npy'
         spiketimes = np.load(fn)
         nspikes = len(spiketimes)
-        ax.plot(spiketimes, cell * np.ones(nspikes) + shift, m, color=c, markersize=2)
+        ax.plot(spiketimes, cell * np.ones(nspikes) + shift, m, color=c, alpha=.1, markersize=2)
 
 
 tp = np.loadtxt(params['tuning_prop_means_fn'])
@@ -52,8 +52,8 @@ def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0):
         if os.path.exists(fn):
             spiketimes = np.load(fn)
             nspikes = len(spiketimes)
-            y_pos = tp[cell, sort_idx] / ylen * (abs(ylim[0] - ylim[1]))
-            ax.plot(spiketimes, y_pos * np.ones(nspikes) + shift, m, color=c, markersize=2)
+            y_pos = (tp[cell, sort_idx] % 1.) / ylen * (abs(ylim[0] - ylim[1]))
+            ax.plot(spiketimes, y_pos * np.ones(nspikes) + shift, m, color=c, alpha=.1, markersize=2)
         # else: this cell gets no input, because not well tuned
 #        ax.plot(spiketimes, i * np.ones(nspikes) + shift, m, color=c, markersize=2)
 
