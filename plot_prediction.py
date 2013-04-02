@@ -35,8 +35,8 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
     # fig 1
     # neuronal level
-    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_delayScale%d_scaleLatency%.2f' % (params['prediction_fig_fn_base'], params['connectivity_code'], \
-            params['w_sigma_x'], params['w_sigma_v'], params['delay_scale'], params['scale_latency'])
+    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_delayScale%d_scaleLatency%.2f_wee%.2f' % (params['prediction_fig_fn_base'], params['connectivity_code'], \
+            params['w_sigma_x'], params['w_sigma_v'], params['delay_scale'], params['scale_latency'], params['w_tgt_in_per_cell_ee'])
 
 
     plotter.create_fig()  # create an empty figure

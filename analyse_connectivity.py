@@ -91,10 +91,13 @@ class ConnectivityAnalyser(object):
         n_out_sem = n_tgts.std() / np.sqrt(n_src)
         n_in_mean = n_srcs.mean()
         n_in_sem = n_srcs.std() / np.sqrt(n_tgt)
-        print 'Convergence:\nNumber of %s cells that get no %s input ' % (self.conn_type_dict[conn_type[1]], self.conn_type_dict[conn_type[0]]), (n_srcs == 0).nonzero()[0].size
+        print '\nConvergence:\nNumber of %s cells that get no %s input: %d' % (self.conn_type_dict[conn_type[1]], self.conn_type_dict[conn_type[0]], (n_srcs == 0).nonzero()[0].size)
         print 'Weight in %.2e +- %.2e' % (w_in.mean(), w_in.std())
         print 'Weight out %.2e +- %.2e' % (w_out.mean(), w_out.std())
-        print 'Divergence: Number of %s cells that have no %s target' % (self.conn_type_dict[conn_type[0]], self.conn_type_dict[conn_type[1]]), (n_tgts == 0).nonzero()[0].size
+        print 'Divergence: Number of %s cells that have no %s target: %d\n' % (self.conn_type_dict[conn_type[0]], self.conn_type_dict[conn_type[1]], (n_tgts == 0).nonzero()[0].size)
+        print '%s cells that do not connect to other %s cells:' % (self.conn_type_dict[conn_type[0]], self.conn_type_dict[conn_type[1]]), (n_tgts == 0).nonzero()[0]
+#        print 'debug n_tgts', n_tgts
+#        print 'debug w_out', w_out
 
         # OUTGOING CONNECTIONS
         # plot number of outgoing connections

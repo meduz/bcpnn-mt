@@ -122,6 +122,7 @@ class ConnectionPlotter(object):
 
         self.load_connection_list(conn_type)
         targets = utils.get_targets(self.connection_lists[conn_type], gid)
+        print 'debug gid %d connects to cells:' % gid, targets
         tgt_ids, tgt_weights, tgt_delays = targets[:, 1], targets[:, 2], targets[:, 3]
 
         sources = utils.get_sources(self.connection_lists[conn_type], gid)
@@ -424,25 +425,26 @@ class ConnectionPlotter(object):
         returns the gid of the cell being closest to the target vecort
         """
 
-        x_diff = self.tp_exc[:, 0] - v[0] 
-        y_diff = self.tp_exc[:, 1] - v[1]
-        diff = np.array((x_diff** 2, y_diff**2))
-        dist = np.dot(diff.transpose(), v)
+        x_diff = (self.tp_exc[:, 0] - v[0])**2
+        y_diff = (self.tp_exc[:, 1] - v[1])**2
+        dist = x_diff + y_diff
         idx = dist.argsort()
         gid = idx[0]
 
-        n = int(round(.03 * self.tp_exc[:, 0].size))
+        n = int(round(.10 * self.tp_exc[:, 0].size))
         if direction != None:
             assert (len(direction) == 2), 'Two dimensional vector required'
             # take the n cells closest to v and find the vector best aligned with direction
-            gids = idx[:n]
-            u_diff = self.tp_exc[gids, 2] - direction[0]
-            v_diff = self.tp_exc[gids, 3] - direction[1]
-            diff = np.array((u_diff**2, v_diff**2))
-            dist = np.dot(diff.transpose(), direction)
-            idx_ = dist.argsort()
+            gids = idx[0:n]
+            cell_directions = np.array((self.tp_exc[gids, 2], self.tp_exc[gids, 3]))
+            u_diff = (self.tp_exc[gids, 2] - direction[0])**2
+            v_diff = (self.tp_exc[gids, 3] - direction[1])**2
+            diff = u_diff + v_diff
+            idx_ = diff.argsort()
             gid = gids[idx_[0]]
 
+        print 'find_cell_closest_to_vector', v, direction
+        print 'is ', gid, self.tp_exc[gid, :]
         return gid#, self.tp_exc[gid, :]
     
 
@@ -490,9 +492,10 @@ if __name__ == '__main__':
 
 
     # here you can choose where the cell to plot should be sitting and what the preferred direction should be 
-    target_vector = (.5, .5)
-    direction = (.2, 0)
+    target_vector = (.3, .5)
+    direction = (.5, 0.)
     gid = P.find_cell_closest_to_vector(target_vector, direction)
+    P.plot_connection_histogram(gid, 'ee')
     print 'plotting gid', gid
 
     P.create_fig(n_plots_x, n_plots_y)

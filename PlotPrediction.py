@@ -459,11 +459,13 @@ class PlotPrediction(object):
             n_cells = self.params['n_inh']
             nspikes, self.inh_spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
             spiketimes = self.inh_spiketimes
+            np.savetxt(self.params['inh_nspikes_fn_merged'] + '.dat', nspikes)
         elif cell_type == 'exc':
             fn = self.params['exc_spiketimes_fn_merged'] + '.ras'
             n_cells = self.params['n_exc']
             nspikes, self.exc_spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
             spiketimes = self.exc_spiketimes
+            np.savetxt(self.params['exc_nspikes_fn_merged'] + '.dat', nspikes)
 
         self.spiketimes_loaded = True
         return spiketimes, nspikes

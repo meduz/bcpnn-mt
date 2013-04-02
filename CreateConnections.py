@@ -79,7 +79,7 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, scale_latency=1.0):
     x_tgt_norm = tp_tgt[0]**2 + tp_tgt[1]**2
     x_src_norm = x_src[:, 0]**2 + x_src[:, 1]**2
     
-    eps = 1e-10
+    eps = 1e-12
     x_diff = utils.torus(x_tgt[0] * np.ones(n_src) - x_src[:, 0]) + eps
     y_diff = utils.torus(x_tgt[1] * np.ones(n_src) - x_src[:, 1]) + eps
 #    x_diff = utils.torus_distance_array(x_tgt[0] * np.ones(n_src), x_src[:, 0]) + eps
@@ -94,11 +94,14 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, scale_latency=1.0):
 #    print 'debug x_norm', x_norm
     
     x_cos_array = np.dot(x_diff_, v_tgt)
+    x_cos_array /= np.sqrt(v_src_norm * x_norm)
 #    print 'debug v_src_norm', v_src_norm
 #    print 'debug v_src_norm * x_norm', v_src_norm * x_norm
-    x_cos_array /= np.sqrt(v_src_norm * x_norm)
+#    print 'debug x_cos_array', x_cos_array
+#    print 'debug v_cos_array', v_cos_array
 
     p = np.exp(x_cos_array / (w_sigma_x**2)) * np.exp(v_cos_array/(w_sigma_v**2))
+#    print 'debug p', p 
 
     if scale_latency != 1.0:
         invalid_idx = latency > scale_latency

@@ -3,6 +3,7 @@ import os
 import pylab
 import numpy as np
 import plot_connectivity_profile as pc
+import utils
 
 if len(sys.argv) > 1:
     param_fn = sys.argv[1]
@@ -19,9 +20,9 @@ else:
     network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
     params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
-gid = 3
 CP = pc.ConnectionPlotter(params)
-CP.plot_connection_histogram(3, 'ee')
+gid = CP.find_cell_closest_to_vector((.5, .5), (.2, .0))
+CP.plot_connection_histogram(gid, 'ee')
 
 
 pylab.show()
