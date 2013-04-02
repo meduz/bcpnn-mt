@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import numpy as np
 import os
 import simulation_parameters
@@ -6,6 +8,7 @@ import ResultsCollector
 import re
 import pylab
 import json
+import sys
 
 """
 This script requires that plot_prediction.py has been called for all folders that 
@@ -56,11 +59,19 @@ output_fn = 'dummy.dat'
 print 'output_fn', output_fn
 
 dir_names = []
-for thing in os.listdir('.'):
-    if os.path.isdir(thing):
-        m = re.search('%s' % to_match, thing)
-        if m:
-            dir_names.append(thing)
+if len(sys.argv) == 1:
+    for thing in os.listdir('.'):
+        if os.path.isdir(thing):
+            m = re.search('%s' % to_match, thing)
+            if m:
+                dir_names.append(thing)
+else:
+    for thing in sys.argv[1:]:
+        if os.path.isdir(thing):
+            m = re.search('%s' % to_match, thing)
+            if m:
+                dir_names.append(thing)
+
 
 missing_dirs = []
 for name in dir_names:
