@@ -388,7 +388,7 @@ class NetworkModel(object):
         if self.debug_connectivity:
             if self.pc_id == 0:
                 print 'DEBUG writing to file:', conn_list_fn
-            np.savetxt(conn_list_fn, local_connlist)
+            np.savetxt(conn_list_fn, local_connlist, fmt='%d\t%d\t%.4e\t%.4e')
 
 
     def connect_ee_random(self):

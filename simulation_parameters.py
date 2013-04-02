@@ -36,16 +36,11 @@ class parameter_storage(object):
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']))# np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
 
-        self.params['N_RF'] = 80# np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']))# np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 7, 7# resolution in velocity norm and direction
-
 #         Medium-scale system
-#        self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
-#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#        self.params['N_V'], self.params['N_theta'] = 6, 6# resolution in velocity norm and direction
+        self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
+        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+        self.params['N_V'], self.params['N_theta'] = 4, 4# resolution in velocity norm and direction
 
 #         Small-scale system
 #        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
@@ -157,16 +152,16 @@ class parameter_storage(object):
         # WARNING: scale_latency affects w_sigma_x/v
         self.params['delay_scale'] = 3.      # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 5000.)
-        self.params['w_sigma_x'] = 5. # width of connectivity profile for pre-computed weights
-        self.params['w_sigma_v'] = 2. # small w_sigma: tuning_properties get stronger weight when deciding on connection
+        self.params['w_sigma_x'] = 3.5 # width of connectivity profile for pre-computed weights
+        self.params['w_sigma_v'] = .6 # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
         self.params['w_sigma_isotropic'] = 0.2 # should not be below 0.05 otherwise you don't get the desired p_effective 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.50 # [uS] how much input should an exc cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ei'] = 0.70 # [uS] how much input should an inh cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ie'] = 0.70 # [uS] how much input should an exc cell get from its inh source cells?
+        self.params['w_tgt_in_per_cell_ee'] = 0.80 # [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ei'] = 0.80 # [uS] how much input should an inh cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ie'] = 0.80 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.05 # [uS] how much input should an inh cell get from its source cells?
         self.params['w_sigma_distribution'] = 0.2 # sigma of the normal distribution of weights when drawn for isotropic connectivity
 #        self.params['w_tgt_in_per_cell_ee'] *= 20. / self.params['tau_syn_exc']
@@ -183,13 +178,13 @@ class parameter_storage(object):
         self.params['n_src_cells_per_neuron'] = round(self.params['p_ee'] * self.params['n_exc']) # only excitatory sources
 
         # exc - inh
-        self.params['p_ei'] = 0.10 #self.params['p_ee']
+        self.params['p_ei'] = 0.02 #self.params['p_ee']
         self.params['w_ei_mean'] = 0.005
         self.params['w_ei_sigma'] = 0.001          
 
         # inh - exc
 #        self.params['p_ie'] = 1.
-        self.params['p_ie'] = 0.10 #self.params['p_ee']
+        self.params['p_ie'] = 0.02 #self.params['p_ee']
         self.params['w_ie_mean'] = 0.005
         self.params['w_ie_sigma'] = 0.001          
 
@@ -299,9 +294,9 @@ class parameter_storage(object):
 #                folder_name = 'AdEx_LargeScaleModel_'
             else:
 #                folder_name = 'Testing_'
-#                folder_name = 'Debugging_'
+                folder_name = 'WsigmaSweep_'
 #                folder_name = 'SLargeScaleModel_np192_noBlank_'
-                folder_name = 'SmallScaleSweep_'
+#                folder_name = 'SmallScaleSweep_'
 #                folder_name = 'WEESWEEP_n%d_' % self.params['n_cells']
 #                folder_name = 'Test_n%d_' % self.params['n_cells']
 #                folder_name = 'LargeScaleModel_'
