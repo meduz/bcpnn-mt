@@ -72,7 +72,6 @@ else:
             if m:
                 dir_names.append(thing)
 
-
 missing_dirs = []
 for name in dir_names:
     if not os.path.exists(name + '/Data/vx_grid.dat'):
