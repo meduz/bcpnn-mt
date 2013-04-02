@@ -659,9 +659,8 @@ def get_cond_in(nspikes, conn_list, target_gid):
 
 def get_spiketrains(spiketimes_fn_or_array, n_cells=0):
     """
-    Returns an array with the number of spikes fired by each cell.
-    nspikes[gid]
-    if n_cells is not given, the length of the array will be the highest gid (not advised!)
+    Returns an list of spikes fired by each cell
+    if n_cells is not given, the length of the array will be the highest gid (not recommended!)
     """
     if type(spiketimes_fn_or_array) == type(''):
         d = np.loadtxt(spiketimes_fn_or_array)
@@ -669,13 +668,15 @@ def get_spiketrains(spiketimes_fn_or_array, n_cells=0):
         d = spiketimes_fn_or_array
     if (n_cells == 0):
         n_cells = 1 + np.max(d[:, 1])# highest gid
-    nspikes = np.zeros(n_cells)
     spiketrains = [[] for i in xrange(n_cells)]
     # seperate spike trains for all the cells
     if d.size == 0:
         return spiketrains
-    for i in xrange(d[:, 0].size):
-        spiketrains[int(d[i, 1])].append(d[i, 0])
+    elif d.shape == (2,):
+        spiketrains[int(d[1])] = [d[0]]
+    else:
+        for i in xrange(d[:, 0].size):
+            spiketrains[int(d[i, 1])].append(d[i, 0])
     return spiketrains
 
 
@@ -798,8 +799,25 @@ def get_min_distance_to_stim(mp, tp_cell, params):
 #def torus_distance(x0, x1):
 #    return x0 - x1
 
+def torus(x, w=1.):
+    """
+    center x in the range [-w/2., w/2.]
+    To see what this does, try out:
+    >> x = np.linspace(-4,4,100)
+    >> pylab.plot(x, torus(x, 2.))
+    """
+    return np.mod(x + w/2., w) - w/2.
+
+def torus_distance_array(x0, x1):
+    """
+    Compute the 1-D distance on a torus for arrays
+    """
+    return np.minimum(np.abs(x0 - x1), 1. - np.abs(x0 - x1))
 
 def torus_distance(x0, x1):
+    """
+    1-D torus like distance
+    """
     return min(abs(x0 - x1), 1. - abs(x0 - x1))
 
 def torus_distance2D(x1, x2, y1, y2, w=1., h=1.):

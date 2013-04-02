@@ -7,8 +7,8 @@ if (len(sys.argv) < 2):
 else:
     fn = sys.argv[1]
 
-#data = np.load(fn)
-data = np.loadtxt(fn)
+data = np.load(fn)
+#data = np.loadtxt(fn)
 if (data.ndim == 1):
     x_axis = np.arange(data.size)
     pylab.plot(x_axis, data)

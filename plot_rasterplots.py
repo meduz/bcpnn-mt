@@ -10,6 +10,8 @@ import numpy as np
 import re
 import utils
 import os
+import rcParams
+rcP= rcParams.rcParams
 
 if len(sys.argv) > 1:
     param_fn = sys.argv[1]
@@ -36,7 +38,7 @@ def plot_input_spikes(ax, shift=0, m='o', c='k'):
         fn = params['input_st_fn_base'] + str(cell) + '.npy'
         spiketimes = np.load(fn)
         nspikes = len(spiketimes)
-        ax.plot(spiketimes, cell * np.ones(nspikes) + shift, m, color=c, markersize=2)
+        ax.plot(spiketimes, cell * np.ones(nspikes) + shift, m, color=c, alpha=.1, markersize=2)
 
 
 tp = np.loadtxt(params['tuning_prop_means_fn'])
@@ -44,7 +46,11 @@ def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0):
     n_cells = params['n_exc']
     sorted_idx = tp[:, sort_idx].argsort()
 
-    ylim = (tp[:, sort_idx].min(), tp[:, sort_idx].max())
+    if sort_idx == 0:
+        ylim = (0, 1)
+    else:
+        crop = .8
+        ylim = (crop * tp[:, sort_idx].min(), crop * tp[:, sort_idx].max())
     ylen = (abs(ylim[0] - ylim[1]))
     for i in xrange(n_cells):
         cell = sorted_idx[i]
@@ -52,8 +58,11 @@ def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0):
         if os.path.exists(fn):
             spiketimes = np.load(fn)
             nspikes = len(spiketimes)
-            y_pos = tp[cell, sort_idx] / ylen * (abs(ylim[0] - ylim[1]))
-            ax.plot(spiketimes, y_pos * np.ones(nspikes) + shift, m, color=c, markersize=2)
+            if sort_idx == 0:
+                y_pos = (tp[cell, sort_idx] % 1.) / ylen * (abs(ylim[0] - ylim[1]))
+            else:
+                y_pos = (tp[cell, sort_idx]) / ylen * (abs(ylim[0] - ylim[1]))
+            ax.plot(spiketimes, y_pos * np.ones(nspikes) + shift, m, color=c, alpha=.1, markersize=2)
         # else: this cell gets no input, because not well tuned
 #        ax.plot(spiketimes, i * np.ones(nspikes) + shift, m, color=c, markersize=2)
 
@@ -84,12 +93,19 @@ def plot_output_spikes_sorted_in_space(ax, cell_type, shift=0., m='o', c='g', so
     nspikes, spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
     sorted_idx = tp[:, sort_idx].argsort()
 
-    ylim = (tp[:, sort_idx].min(), tp[:, sort_idx].max())
+    if sort_idx == 0:
+        ylim = (0, 1)
+    else:
+        crop = .8
+        ylim = (crop * tp[:, sort_idx].min(), crop * tp[:, sort_idx].max())
     ylen = (abs(ylim[0] - ylim[1]))
     print '\n', 'sort_idx', sort_idx, ylim, 
     for i in xrange(n_cells):
         cell = sorted_idx[i]
-        y_pos = tp[cell, sort_idx] / ylen * (abs(ylim[0] - ylim[1]))
+        if sort_idx == 0:
+            y_pos = (tp[cell, sort_idx] % 1.) / ylen * (abs(ylim[0] - ylim[1]))
+        else:
+            y_pos = (tp[cell, sort_idx]) / ylen * (abs(ylim[0] - ylim[1]))
         ax.plot(spiketimes[cell], y_pos * np.ones(nspikes[cell]), 'o', color='k', markersize=2)
 
 #    n_yticks = 6
@@ -113,54 +129,69 @@ def plot_spikes(ax, fn, n_cells):
 fn_exc = params['exc_spiketimes_fn_merged'] + '.ras'
 fn_inh = params['inh_spiketimes_fn_merged'] + '.ras'
 
-# ax1 is if input spikes shall be plotted in a seperate axis  (from the output spikes)
-fig = pylab.figure(figsize=(14, 12))
-ax1 = fig.add_subplot(411)
-ax2 = fig.add_subplot(412)
-ax3 = fig.add_subplot(413)
-ax4 = fig.add_subplot(414)
+
 pylab.rcParams['lines.markeredgewidth'] = 0
+pylab.rcParams.update(rcP)
+# ax1 is if input spikes shall be plotted in a seperate axis  (from the output spikes)
+#fig = pylab.figure(figsize=(14, 12))
+#ax1 = fig.add_subplot(411)
+#ax2 = fig.add_subplot(412)
+#ax3 = fig.add_subplot(413)
+#ax4 = fig.add_subplot(414)
+fig = pylab.figure(figsize=(14, 12))
+ax1 = fig.add_subplot(211)
+ax2 = fig.add_subplot(212)
+#ax3 = fig.add_subplot(413)
+#ax4 = fig.add_subplot(414)
+
 
 
 
 
 #ax1.set_title('Input spikes')
 
-ax3.set_ylabel('Exc ID')
-ax4.set_ylabel('Inh ID')
+#ax3.set_ylabel('Exc ID')
+#ax4.set_ylabel('Inh ID')
 
 
 # x-position
-plot_input_spikes_sorted_in_space(ax1, c='r', sort_idx=0) 
+plot_input_spikes_sorted_in_space(ax1, c='b', sort_idx=0) 
 plot_output_spikes_sorted_in_space(ax1, 'exc', c='k', sort_idx=0) 
 
 # sorted by velocity in direction x / y
-plot_input_spikes_sorted_in_space(ax2, c='r', sort_idx=2)
+plot_input_spikes_sorted_in_space(ax2, c='b', sort_idx=2)
 plot_output_spikes_sorted_in_space(ax2, 'exc', c='k', sort_idx=2) 
 
 
-plot_spikes(ax3, fn_exc, params['n_exc'])
-plot_spikes(ax4, fn_inh, params['n_inh'])
+#plot_spikes(ax3, fn_exc, params['n_exc'])
+#plot_spikes(ax4, fn_inh, params['n_inh'])
 
 
 ax1.set_xlabel('Time [ms]')
 ax2.set_xlabel('Time [ms]')
-ax3.set_xlabel('Time [ms]')
-ax4.set_xlabel('Time [ms]')
+#ax3.set_xlabel('Time [ms]')
+#ax4.set_xlabel('Time [ms]')
 
 #ax1.set_ylim((0, params['n_exc'] + 1))
 #ax2.set_ylim((0, params['n_exc'] + 1))
-ax3.set_ylim((0, params['n_exc'] + 1))
-ax4.set_ylim((0, params['n_inh'] + 1))
+#ax3.set_ylim((0, params['n_exc'] + 1))
+#ax4.set_ylim((0, params['n_inh'] + 1))
 
 ax1.set_xlim((0, params['t_sim']))
 ax2.set_xlim((0, params['t_sim']))
-ax3.set_xlim((0, params['t_sim']))
-ax4.set_xlim((0, params['t_sim']))
+#ax3.set_xlim((0, params['t_sim']))
+#ax4.set_xlim((0, params['t_sim']))
 
 output_fn = params['figures_folder'] + 'rasterplot_sorted_by_tp.png'
 print "Saving to", output_fn
 pylab.savefig(output_fn, dpi=200)
+#output_fn = params['figures_folder'] + 'rasterplot_sorted_by_tp.pdf'
+#print "Saving to", output_fn
+#pylab.savefig(output_fn, dpi=200)
+#output_fn = params['figures_folder'] + 'rasterplot_sorted_by_tp.eps'
+#print "Saving to", output_fn
+#pylab.savefig(output_fn, dpi=200)
 
-#pylab.show()
+
+pylab.show()
 
