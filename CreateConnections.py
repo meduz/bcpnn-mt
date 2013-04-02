@@ -63,7 +63,8 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, scale_latency=1.0):
     """
     n_src = tp_src[:, 0].size
     d_ij = utils.torus_distance2D_vec(tp_src[:, 0], tp_tgt[0] * np.ones(n_src), tp_src[:, 1], tp_tgt[1] * np.ones(n_src), w=np.ones(n_src), h=np.ones(n_src))
-    latency = d_ij / np.sqrt(tp_src[:, 2]**2 + tp_src[:, 3]**2)
+#    latency = d_ij / np.sqrt(tp_src[:, 2]**2 + tp_src[:, 3]**2)
+    latency = d_ij / scale_latency
 
     v_src = np.array((tp_src[:, 2], tp_src[:, 3]))
     v_src = v_src.transpose()
@@ -79,7 +80,7 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, scale_latency=1.0):
     x_tgt_norm = tp_tgt[0]**2 + tp_tgt[1]**2
     x_src_norm = x_src[:, 0]**2 + x_src[:, 1]**2
     
-    eps = 1e-12
+    eps = 1e-20
     x_diff = utils.torus(x_tgt[0] * np.ones(n_src) - x_src[:, 0]) + eps
     y_diff = utils.torus(x_tgt[1] * np.ones(n_src) - x_src[:, 1]) + eps
 #    x_diff = utils.torus_distance_array(x_tgt[0] * np.ones(n_src), x_src[:, 0]) + eps

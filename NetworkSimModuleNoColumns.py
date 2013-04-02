@@ -358,7 +358,8 @@ class NetworkModel(object):
         local_connlist = np.zeros((n_src_cells_per_neuron * len(tgt_cells), 4))
         for i_, tgt in enumerate(tgt_cells):
             p, latency = CC.get_p_conn_vec(tp_src, tp_tgt[tgt, :], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['scale_latency'])
-            p[tgt], latency[tgt] = 0., 0.
+            if conn_type[0] == conn_type[1]:
+                p[tgt], latency[tgt] = 0., 0.
             # random delays? --> np.permutate(latency) or latency[sources] * self.params['delay_scale'] * np.rand
 
             sorted_indices = np.argsort(p)
@@ -720,16 +721,16 @@ if __name__ == '__main__':
 
     input_created = False
 
-    w_sigma_x = float(sys.argv[1])
-    w_sigma_v = float(sys.argv[2])
-    params['w_sigma_x'] = w_sigma_x
-    params['w_sigma_v'] = w_sigma_v
-    w_ee = float(sys.argv[3])
-    ps.params['w_tgt_in_per_cell_ee'] = w_ee
+#    w_sigma_x = float(sys.argv[1])
+#    w_sigma_v = float(sys.argv[2])
+#    params['w_sigma_x'] = w_sigma_x
+#    params['w_sigma_v'] = w_sigma_v
+#    w_ee = float(sys.argv[3])
+#    ps.params['w_tgt_in_per_cell_ee'] = w_ee
 #    scale_latency = float(sys.argv[4])
 #    ps.params['scale_latency'] = scale_latency
-    delay_scale = float(sys.argv[4])
-    ps.params['delay_scale'] = delay_scale
+#    delay_scale = float(sys.argv[4])
+#    ps.params['delay_scale'] = delay_scale
 
     ps.set_filenames()
 
@@ -771,9 +772,12 @@ if __name__ == '__main__':
         os.system('python plot_connectivity_profile.py %s' % ps.params['folder_name'])
 
     if pc_id == 1:
-        os.system('python plot_connectivity_profile.py')
+        os.system('python plot_connectivity_profile.py %s' % ps.params['folder_name'])
         for conn_type in ['ee', 'ei', 'ie', 'ii']:
             os.system('python plot_weight_and_delay_histogram.py %s %s' % (conn_type, ps.params['folder_name']))
+
+    if pc_id == 2:
+        os.system('python analyse_connectivity.py %s' % ps.params['folder_name'])
 
     if comm != None:
         comm.Barrier()
