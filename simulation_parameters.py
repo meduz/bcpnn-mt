@@ -157,8 +157,8 @@ class parameter_storage(object):
         # WARNING: scale_latency affects w_sigma_x/v
         self.params['delay_scale'] = 3.      # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 5000.)
-        self.params['w_sigma_x'] = 5. # width of connectivity profile for pre-computed weights
-        self.params['w_sigma_v'] = 2. # small w_sigma: tuning_properties get stronger weight when deciding on connection
+        self.params['w_sigma_x'] = 3.0 # width of connectivity profile for pre-computed weights
+        self.params['w_sigma_v'] = 0.6 # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
@@ -176,25 +176,25 @@ class parameter_storage(object):
         self.params['conn_types'] = ['ee', 'ei', 'ie', 'ii']
 
 #        self.params['p_to_w'] = 
-        self.params['p_ee'] = 0.02# fraction of network cells allowed to connect to each target cell, used in CreateConnections
+        self.params['p_ee'] = 0.03# fraction of network cells allowed to connect to each target cell, used in CreateConnections
         self.params['w_thresh_connection'] = 1e-6 # connections with a weight less then this value will be discarded
         self.params['w_min'] = 5e-4             # When probabilities are transformed to weights, they are scaled so that the map into this range
         self.params['w_max'] = 5e-3
         self.params['n_src_cells_per_neuron'] = round(self.params['p_ee'] * self.params['n_exc']) # only excitatory sources
 
         # exc - inh
-        self.params['p_ei'] = 0.10 #self.params['p_ee']
+        self.params['p_ei'] = 0.05 #self.params['p_ee']
         self.params['w_ei_mean'] = 0.005
         self.params['w_ei_sigma'] = 0.001          
 
         # inh - exc
 #        self.params['p_ie'] = 1.
-        self.params['p_ie'] = 0.10 #self.params['p_ee']
+        self.params['p_ie'] = 0.05 #self.params['p_ee']
         self.params['w_ie_mean'] = 0.005
         self.params['w_ie_sigma'] = 0.001          
 
         # inh - inh
-        self.params['p_ii'] = 0.02
+        self.params['p_ii'] = 0.03
         self.params['w_ii_mean'] = 0.003
         self.params['w_ii_sigma'] = 0.001          
 
@@ -418,9 +418,11 @@ class parameter_storage(object):
         self.params['exc_spiketimes_fn_base'] = '%sexc_spikes_' % self.params['spiketimes_folder']
         self.params['exc_spiketimes_fn_merged'] = '%sexc_spikes_merged_' % self.params['spiketimes_folder']
         self.params['exc_nspikes_fn_merged'] = '%sexc_nspikes' % self.params['spiketimes_folder']
+        self.params['exc_nspikes_nonzero_fn'] = '%sexc_nspikes_nonzero.dat' % self.params['spiketimes_folder']
         self.params['inh_spiketimes_fn_base'] = '%sinh_spikes_' % self.params['spiketimes_folder']
         self.params['inh_spiketimes_fn_merged'] = '%sinh_spikes_merged_' % self.params['spiketimes_folder']
         self.params['inh_nspikes_fn_merged'] = '%sinh_nspikes' % self.params['spiketimes_folder']
+        self.params['inh_nspikes_nonzero_fn'] = '%sinh_nspikes_nonzero.dat' % self.params['spiketimes_folder']
         self.params['exc_volt_fn_base'] = '%sexc_volt' % self.params['volt_folder']
         self.params['inh_volt_fn_base'] = '%sinh_volt' % self.params['volt_folder']
         self.params['ztrace_fn_base'] = '%sztrace_' % self.params['bcpnntrace_folder']

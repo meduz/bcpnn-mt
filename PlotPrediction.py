@@ -460,12 +460,17 @@ class PlotPrediction(object):
             nspikes, self.inh_spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
             spiketimes = self.inh_spiketimes
             np.savetxt(self.params['inh_nspikes_fn_merged'] + '.dat', nspikes)
+            idx = np.nonzero(nspikes)[0]
+            np.savetxt(self.params['inh_nspikes_nonzero_fn'], np.array((idx, nspikes[idx])).transpose())
         elif cell_type == 'exc':
             fn = self.params['exc_spiketimes_fn_merged'] + '.ras'
             n_cells = self.params['n_exc']
             nspikes, self.exc_spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
             spiketimes = self.exc_spiketimes
-            np.savetxt(self.params['exc_nspikes_fn_merged'] + '.dat', nspikes)
+            np.savetxt(self.params['exc_nspikes_fn_merged'] + '.dat', np.array((range(n_cells), nspikes)).transpose())
+
+            idx = np.nonzero(nspikes)[0]
+            np.savetxt(self.params['exc_nspikes_nonzero_fn'], np.array((idx, nspikes[idx])).transpose())
 
         self.spiketimes_loaded = True
         return spiketimes, nspikes
