@@ -721,10 +721,10 @@ if __name__ == '__main__':
 
     input_created = False
 
-#    w_sigma_x = float(sys.argv[1])
-#    w_sigma_v = float(sys.argv[2])
-#    params['w_sigma_x'] = w_sigma_x
-#    params['w_sigma_v'] = w_sigma_v
+    w_sigma_x = float(sys.argv[1])
+    w_sigma_v = float(sys.argv[2])
+    params['w_sigma_x'] = w_sigma_x
+    params['w_sigma_v'] = w_sigma_v
 #    w_ee = float(sys.argv[3])
 #    ps.params['w_tgt_in_per_cell_ee'] = w_ee
 #    scale_latency = float(sys.argv[4])

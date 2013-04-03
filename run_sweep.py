@@ -3,24 +3,10 @@ import numpy as np
 sn = "NetworkSimModuleNoColumns.py"
 
 
-
-
-delay_scale = 2
-w_ee = .5
-for w_sigma_v in [6., 7., 8.]:
-    w_sigma_x = w_sigma_v - 1
-#    for w_sigma_x in [5., 10., 15., 20., 50., 100.]:
-#        for w_ee in np.arange(.5, .7, .05):
-    os.system('mpirun -np 2 python  %s %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, delay_scale))
-
-delay_scale = 2
-w_ee = .5
-for w_sigma_v in [6., 7., 8.]:
-    w_sigma_x = w_sigma_v + 1
-#    for w_sigma_x in [5., 10., 15., 20., 50., 100.]:
-#        for w_ee in np.arange(.5, .7, .05):
-    os.system('mpirun -np 2 python  %s %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, delay_scale))
-
+#for w_sigma_v in [.25, .5, .75, 1., 1.25, 1.5, 2., 3., 4., 5.]:
+for w_sigma_v in np.arange(.2, 2.1, .1):
+    w_sigma_x = w_sigma_v * 5
+    os.system('mpirun -np 8 python  %s %f %f'  % (sn, w_sigma_x, w_sigma_v))
 
 #scale_latency = .10
 #for delay_scale in [500., 200., 100., 50.]:
