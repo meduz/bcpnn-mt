@@ -725,12 +725,12 @@ if __name__ == '__main__':
     w_sigma_v = float(sys.argv[2])
     params['w_sigma_x'] = w_sigma_x
     params['w_sigma_v'] = w_sigma_v
-#    w_ee = float(sys.argv[3])
-#    ps.params['w_tgt_in_per_cell_ee'] = w_ee
-#    scale_latency = float(sys.argv[4])
-#    ps.params['scale_latency'] = scale_latency
-#    delay_scale = float(sys.argv[4])
-#    ps.params['delay_scale'] = delay_scale
+    w_ee = float(sys.argv[3])
+    ps.params['w_tgt_in_per_cell_ee'] = w_ee
+    scale_latency = float(sys.argv[4])
+    ps.params['scale_latency'] = scale_latency
+    delay_scale = float(sys.argv[5])
+    ps.params['delay_scale'] = delay_scale
 
     ps.set_filenames()
 

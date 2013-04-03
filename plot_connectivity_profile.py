@@ -319,16 +319,12 @@ class ConnectionPlotter(object):
     def load_connection_list(self, conn_type):
 
         if conn_type == 'ee':
-            n_src, n_tgt = self.params['n_exc'], self.params['n_exc']
             loaded = self.conn_list_loaded[0]
         elif conn_type == 'ei':
-            n_src, n_tgt = self.params['n_exc'], self.params['n_inh']
             loaded = self.conn_list_loaded[1]
         elif conn_type == 'ie':
-            n_src, n_tgt = self.params['n_inh'], self.params['n_exc']
             loaded = self.conn_list_loaded[2]
         elif conn_type == 'ii':
-            n_src, n_tgt = self.params['n_inh'], self.params['n_inh']
             loaded = self.conn_list_loaded[3]
 
         if loaded:
@@ -496,7 +492,7 @@ if __name__ == '__main__':
     target_vector = (.3, .5)
     direction = (.5, 0.)
 #    gid = P.find_cell_closest_to_vector(target_vector, direction)
-    gid = 2587
+#    gid = 2587
     P.plot_connection_histogram(gid, 'ee')
     print 'plotting gid', gid
 

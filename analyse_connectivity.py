@@ -420,16 +420,25 @@ class ConnectivityAnalyser(object):
 
 
     def send_list_to_root(self, list_to_be_sent):
-
         pass
         # 
-
 
 
     def plot_src_tgt_position_scatter(self, conn_type):
         pass
 
 #        for i_
+
+    def print_well_tuned_cell_connectivity(self):
+        """
+        This function prints the sources and targets for the 'well-tuned' cells,
+        and prints additional information, like
+        cos(x_tgt - x_src, v_tgt)
+        cos(x_tgt - x_src, v_tgt) / sigma_x**2
+        etc...
+        """
+        gids = np.loadtxt(self.params['gids_to_record_fn'], dtype=int)
+
 
 
 if __name__ == '__main__':
