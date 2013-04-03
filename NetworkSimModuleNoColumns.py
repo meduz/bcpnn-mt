@@ -451,7 +451,8 @@ class NetworkModel(object):
             n_max_conn = n_src * n_tgt - n_tgt
 
         elif conn_type == 'ei':
-            w_ = self.params['w_ie_mean']
+#            w_ = self.params['w_ie_mean']
+            w_ = self.params['w_ei_mean']
             w_tgt_in = params['w_tgt_in_per_cell_%s' % conn_type]
             n_max_conn = n_src * n_tgt
 
