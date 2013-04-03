@@ -64,7 +64,7 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, scale_latency=1.0):
     n_src = tp_src[:, 0].size
     d_ij = utils.torus_distance2D_vec(tp_src[:, 0], tp_tgt[0] * np.ones(n_src), tp_src[:, 1], tp_tgt[1] * np.ones(n_src), w=np.ones(n_src), h=np.ones(n_src))
 #    latency = d_ij / np.sqrt(tp_src[:, 2]**2 + tp_src[:, 3]**2)
-    latency = d_ij / scale_latency
+#    latency = d_ij / scale_latency
 
     v_src = np.array((tp_src[:, 2], tp_src[:, 3]))
     v_src = v_src.transpose()
@@ -105,11 +105,13 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, scale_latency=1.0):
 #    print 'debug p', p 
 
     if scale_latency != 1.0:
-        invalid_idx = latency > scale_latency
+#        invalid_idx = latency > scale_latency
+        invalid_idx = d_ij > scale_latency
         invalid_idx = invalid_idx.nonzero()[0]
         p[invalid_idx] = 0.
     
-    return p, latency
+    return p, d_ij
+#    return p, latency
 
     # old:
 #    p = np.exp(-dist_prediction_tgt**2 / (2*sigma_x**2)) * np.exp(v_cos_array/(sigma_v**2))

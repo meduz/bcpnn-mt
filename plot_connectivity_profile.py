@@ -122,7 +122,6 @@ class ConnectionPlotter(object):
 
         self.load_connection_list(conn_type)
         targets = utils.get_targets(self.connection_lists[conn_type], gid)
-        print 'debug gid %d connects to cells:' % gid, targets
         tgt_ids, tgt_weights, tgt_delays = targets[:, 1], targets[:, 2], targets[:, 3]
 
         sources = utils.get_sources(self.connection_lists[conn_type], gid)
@@ -176,9 +175,11 @@ class ConnectionPlotter(object):
         if outgoing_conns:
             src_tgts = utils.get_targets(self.connection_lists[conn_type], src_gid)
             tgt_ids, weights, delays = src_tgts[:, 1], src_tgts[:, 2], src_tgts[:, 3]
+            print 'Cell %d connects to:' % src_gid, tgt_ids
         else:
             src_tgts = utils.get_sources(self.connection_lists[conn_type], src_gid)
             tgt_ids, weights, delays = src_tgts[:, 0], src_tgts[:, 2], src_tgts[:, 3]
+            print 'Cell %d receives input from:' % src_gid, tgt_ids
         if conn_type == 'ee':
             src_tp = self.tp_exc
             tgt_tp = self.tp_exc
@@ -494,7 +495,8 @@ if __name__ == '__main__':
     # here you can choose where the cell to plot should be sitting and what the preferred direction should be 
     target_vector = (.3, .5)
     direction = (.5, 0.)
-    gid = P.find_cell_closest_to_vector(target_vector, direction)
+#    gid = P.find_cell_closest_to_vector(target_vector, direction)
+    gid = 2587
     P.plot_connection_histogram(gid, 'ee')
     print 'plotting gid', gid
 
