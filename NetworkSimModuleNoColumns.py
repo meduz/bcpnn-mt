@@ -451,7 +451,7 @@ class NetworkModel(object):
             n_max_conn = n_src * n_tgt - n_tgt
 
         elif conn_type == 'ei':
-            w_ = self.params['w_ie_mean']
+            w_ = self.params['w_ei_mean']
             w_tgt_in = params['w_tgt_in_per_cell_%s' % conn_type]
             n_max_conn = n_src * n_tgt
 
@@ -489,7 +489,6 @@ class NetworkModel(object):
         connector = DistanceDependentProbabilityConnector('%f * exp(-d/(2*%f**2))' % (p_max, params['w_sigma_isotropic']), allow_self_connections=False, \
                 weights=w_dist, delays=delay_dist, space=self.torus)#, n_connections=n_conn_ee)
         print 'p_max for %s' % conn_type, p_max
-#        for tgt in tgt_cells:
         prj = Projection(src_pop, tgt_pop, connector, target=syn_type)
         self.projections[conn_type].append(prj)
         if self.debug_connectivity:
@@ -721,17 +720,17 @@ if __name__ == '__main__':
 
     input_created = False
 
-    w_sigma_x = float(sys.argv[1])
-    w_sigma_v = float(sys.argv[2])
-    params['w_sigma_x'] = w_sigma_x
-    params['w_sigma_v'] = w_sigma_v
-    w_ee = float(sys.argv[3])
+#    w_sigma_x = float(sys.argv[1])
+#    w_sigma_v = float(sys.argv[2])
+#    params['w_sigma_x'] = w_sigma_x
+#    params['w_sigma_v'] = w_sigma_v
+    w_ee = float(sys.argv[1])
     ps.params['w_tgt_in_per_cell_ee'] = w_ee
-    scale_latency = float(sys.argv[4])
-    ps.params['scale_latency'] = scale_latency
-    delay_scale = float(sys.argv[5])
-    ps.params['delay_scale'] = delay_scale
+#    scale_latency = float(sys.argv[4])
+#    ps.params['scale_latency'] = scale_latency
 
+    delay_scale = float(sys.argv[2])
+    ps.params['delay_scale'] = delay_scale
     ps.set_filenames()
 
     if pc_id == 0:
