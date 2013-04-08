@@ -107,7 +107,9 @@ class parameter_storage(object):
         # ###################
         # TODO: distribution of parameters (e.g. tau_m)
         self.params['neuron_model'] = 'IF_cond_exp'
-#        self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
+#         self.params['neuron_model'] = 'IF_curr_alpha'
+#         self.params['neuron_model'] = 'IF_curr_exp'
+#         self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
         self.params['tau_syn_exc'] = 5.0 
         self.params['tau_syn_inh'] = 10.0
         if self.params['neuron_model'] == 'IF_cond_exp':
