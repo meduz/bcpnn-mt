@@ -107,10 +107,14 @@ class parameter_storage(object):
         # ###################
         # TODO: distribution of parameters (e.g. tau_m)
         self.params['neuron_model'] = 'IF_cond_exp'
+#        self.params['neuron_model'] = 'IF_cond_alpha'
 #        self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
-        self.params['tau_syn_exc'] = 5.
-        self.params['tau_syn_inh'] = 10.0
+        self.params['tau_syn_exc'] = 10.
+        self.params['tau_syn_inh'] = 20.0
         if self.params['neuron_model'] == 'IF_cond_exp':
+            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
+            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
+        elif self.params['neuron_model'] == 'IF_cond_alpha':
             self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
             self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
         elif self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
@@ -120,7 +124,7 @@ class parameter_storage(object):
                     'b' : 0.5, 'a':4.}
         # default parameters: /usr/local/lib/python2.6/dist-packages/pyNN/standardmodels/cells.py
         self.params['v_init'] = -65                 # [mV]
-        self.params['v_init_sigma'] = 0.001             # [mV]
+        self.params['v_init_sigma'] = 10.             # [mV]
 
 
         # #######################
@@ -148,9 +152,9 @@ class parameter_storage(object):
 
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
-        self.params['scale_latency'] = 0.3      # this determines how much the directional tuning of the src is considered when drawing connections
+        self.params['scale_latency'] = 0.5      # this determines how much the directional tuning of the src is considered when drawing connections
         # WARNING: scale_latency affects w_sigma_x/v
-        self.params['delay_scale'] = 1000.      # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
+        self.params['delay_scale'] = 500.      # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 5000.)
         self.params['w_sigma_x'] = 0.6 # width of connectivity profile for pre-computed weights
         self.params['w_sigma_v'] = 0.6 # small w_sigma: tuning_properties get stronger weight when deciding on connection
@@ -159,7 +163,7 @@ class parameter_storage(object):
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
         self.params['w_sigma_isotropic'] = 0.25 # spatial reach of isotropic connectivity, should not be below 0.05 otherwise you don't get the desired p_effective 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.40 # [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ee'] = 0.30 # [uS] how much input should an exc cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ei'] = 1.50 # [uS] how much input should an inh cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ie'] = 0.60 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.05 # [uS] how much input should an inh cell get from its source cells?
@@ -268,9 +272,9 @@ class parameter_storage(object):
         # ######
         # NOISE
         # ######
-        self.params['w_exc_noise'] = 4e-3          # [uS] mean value for noise ---< columns
+        self.params['w_exc_noise'] = 4e-3 * 5. / self.params['tau_syn_exc']         # [uS] mean value for noise ---< columns
         self.params['f_exc_noise'] = 2000# [Hz] 
-        self.params['w_inh_noise'] = 4e-3          # [uS] mean value for noise ---< columns
+        self.params['w_inh_noise'] = 4e-3 * 10. / self.params['tau_syn_inh']         # [uS] mean value for noise ---< columns
         self.params['f_inh_noise'] = 2000# [Hz]
 
 #        self.params['w_exc_noise'] = 1e-5          # [uS] mean value for noise ---< columns
@@ -293,7 +297,9 @@ class parameter_storage(object):
                 folder_name = 'AdEx_SmallSpikingModel_'
 #                folder_name = 'AdEx_LargeScaleModel_'
             else:
-                folder_name = 'Testing_'
+#                folder_name = 'Alpha_'
+                folder_name = 'ExpCond_'
+#                folder_name = 'DebugTuningProp'
 #                folder_name = 'WsigmaSweep_'
 #                folder_name = 'SLargeScaleModel_np192_noBlank_'
 #                folder_name = 'SmallScaleSweep_'

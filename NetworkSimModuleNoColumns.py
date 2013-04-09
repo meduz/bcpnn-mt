@@ -133,6 +133,9 @@ class NetworkModel(object):
         if self.params['neuron_model'] == 'IF_cond_exp':
             self.exc_pop = Population(n_exc, IF_cond_exp, self.params['cell_params_exc'], label='exc_cells')
             self.inh_pop = Population(self.params['n_inh'], IF_cond_exp, self.params['cell_params_inh'], label="inh_pop")
+        elif self.params['neuron_model'] == 'IF_cond_alpha':
+            self.exc_pop = Population(n_exc, IF_cond_alpha, self.params['cell_params_exc'], label='exc_cells')
+            self.inh_pop = Population(self.params['n_inh'], IF_cond_alpha, self.params['cell_params_inh'], label="inh_pop")
         elif self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
             self.exc_pop = Population(n_exc, EIF_cond_exp_isfa_ista, self.params['cell_params_exc'], label='exc_cells')
             self.inh_pop = Population(self.params['n_inh'], EIF_cond_exp_isfa_ista, self.params['cell_params_inh'], label="inh_pop")
@@ -173,6 +176,9 @@ class NetworkModel(object):
         if self.params['neuron_model'] == 'IF_cond_exp':
             self.exc_pop = Population(self.params['n_exc'], IF_cond_exp, self.params['cell_params_exc'], label='exc_cells')
             self.inh_pop = Population(self.params['n_inh'], IF_cond_exp, self.params['cell_params_inh'], label="inh_pop")
+        elif self.params['neuron_model'] == 'IF_cond_alpha':
+            self.exc_pop = Population(self.params['n_exc'], IF_cond_alpha, self.params['cell_params_exc'], label='exc_cells')
+            self.inh_pop = Population(self.params['n_inh'], IF_cond_alpha, self.params['cell_params_inh'], label="inh_pop")
         elif self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
             self.exc_pop = Population(self.params['n_exc'], EIF_cond_exp_isfa_ista, self.params['cell_params_exc'], label='exc_cells')
             self.inh_pop = Population(self.params['n_inh'], EIF_cond_exp_isfa_ista, self.params['cell_params_inh'], label="inh_pop")
@@ -724,14 +730,14 @@ if __name__ == '__main__':
 #    w_sigma_v = float(sys.argv[2])
 #    params['w_sigma_x'] = w_sigma_x
 #    params['w_sigma_v'] = w_sigma_v
-    w_ee = float(sys.argv[1])
-    ps.params['w_tgt_in_per_cell_ee'] = w_ee
 #    scale_latency = float(sys.argv[4])
 #    ps.params['scale_latency'] = scale_latency
 
-    delay_scale = float(sys.argv[2])
-    ps.params['delay_scale'] = delay_scale
-    ps.set_filenames()
+#    w_ee = float(sys.argv[1])
+#    ps.params['w_tgt_in_per_cell_ee'] = w_ee
+#    delay_scale = float(sys.argv[2])
+#    ps.params['delay_scale'] = delay_scale
+#    ps.set_filenames()
 
     if pc_id == 0:
         ps.create_folders()
