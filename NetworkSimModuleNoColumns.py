@@ -742,6 +742,8 @@ if __name__ == '__main__':
 #     ps.params['delay_scale'] = delay_scale
 #
     ps.set_filenames()
+#     ps.params['folder_name'] = None # sys.argv[1] + '=' + sys.argv[2] + '/' #'Sweep_%.3e' % self.params['w_tgt_in_per_cell_ee']
+#     ps.set_filenames(folder_name=ps.params['folder_name'])
 
     if pc_id == 0:
         ps.create_folders()
@@ -763,10 +765,10 @@ if __name__ == '__main__':
     NM = NetworkModel(ps.params, comm)
     NM.setup(times=times)
     NM.create(input_created)
-
     if not input_created:
         spike_times_container = NM.create_input(load_files=load_files, save_output=save_input_files)
         input_created = True # this can be set True ONLY if the parameter does not affect the input i.e. set this to false when sweeping f_max_stim, or blur_X/V!
+        os.system('python plot_rasterplots.py %s' % ps.params['folder_name'])
     else:
         NM.spike_times_container = spike_times_container
 

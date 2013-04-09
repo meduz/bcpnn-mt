@@ -159,7 +159,7 @@ class parameter_storage(object):
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
         self.params['w_sigma_isotropic'] = 0.2 # should not be below 0.05 otherwise you don't get the desired p_effective
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.1 # [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ee'] = 0.3 # [uS] how much input should an exc cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ei'] = 0.50 # [uS] how much input should an inh cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ie'] = 0.50 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.1 # [uS] how much input should an inh cell get from its source cells?
@@ -231,8 +231,8 @@ class parameter_storage(object):
         # ######
         # INPUT
         # ######
-        self.params['f_max_stim'] = 2000. #1500. # [Hz]
-        self.params['w_input_exc'] = 5.0e-2#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
+        self.params['f_max_stim'] = 3000. #1500. # [Hz]
+        self.params['w_input_exc'] = 5.0e-3#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
 
         # ###############
         # MOTION STIMULUS
@@ -280,6 +280,44 @@ class parameter_storage(object):
 
 
     def set_folder_name(self, folder_name=None):
+        connectivity_code = ''
+        if self.params['connectivity_ee'] == 'anisotropic':
+            connectivity_code += 'A'
+        elif self.params['connectivity_ee'] == 'isotropic':
+            connectivity_code += 'I'
+        elif self.params['connectivity_ee'] == 'random':
+            connectivity_code += 'R'
+        elif self.params['connectivity_ee'] == False:
+            connectivity_code += '-'
+
+        if self.params['connectivity_ei'] == 'anisotropic':
+            connectivity_code += 'A'
+        elif self.params['connectivity_ei'] == 'isotropic':
+            connectivity_code += 'I'
+        elif self.params['connectivity_ei'] == 'random':
+            connectivity_code += 'R'
+        elif self.params['connectivity_ei'] == False:
+            connectivity_code += '-'
+
+        if self.params['connectivity_ie'] == 'anisotropic':
+            connectivity_code += 'A'
+        elif self.params['connectivity_ie'] == 'isotropic':
+            connectivity_code += 'I'
+        elif self.params['connectivity_ie'] == 'random':
+            connectivity_code += 'R'
+        elif self.params['connectivity_ie'] == False:
+            connectivity_code += '-'
+
+        if self.params['connectivity_ii'] == 'anisotropic':
+            connectivity_code += 'A'
+        elif self.params['connectivity_ii'] == 'isotropic':
+            connectivity_code += 'I'
+        elif self.params['connectivity_ii'] == 'random':
+            connectivity_code += 'R'
+        elif self.params['connectivity_ii'] == False:
+            connectivity_code += '-'
+        self.params['connectivity_code'] = connectivity_code
+
         if folder_name == None:
             # folder naming code:
             #   PREFIX + XXXX + parameters
@@ -302,45 +340,6 @@ class parameter_storage(object):
                  folder_name = 'LargeScaleModel_'
 #                  folder_name = 'MediumScaleModel_'
 
-
-            connectivity_code = ''
-            if self.params['connectivity_ee'] == 'anisotropic':
-                connectivity_code += 'A'
-            elif self.params['connectivity_ee'] == 'isotropic':
-                connectivity_code += 'I'
-            elif self.params['connectivity_ee'] == 'random':
-                connectivity_code += 'R'
-            elif self.params['connectivity_ee'] == False:
-                connectivity_code += '-'
-
-            if self.params['connectivity_ei'] == 'anisotropic':
-                connectivity_code += 'A'
-            elif self.params['connectivity_ei'] == 'isotropic':
-                connectivity_code += 'I'
-            elif self.params['connectivity_ei'] == 'random':
-                connectivity_code += 'R'
-            elif self.params['connectivity_ei'] == False:
-                connectivity_code += '-'
-
-            if self.params['connectivity_ie'] == 'anisotropic':
-                connectivity_code += 'A'
-            elif self.params['connectivity_ie'] == 'isotropic':
-                connectivity_code += 'I'
-            elif self.params['connectivity_ie'] == 'random':
-                connectivity_code += 'R'
-            elif self.params['connectivity_ie'] == False:
-                connectivity_code += '-'
-
-            if self.params['connectivity_ii'] == 'anisotropic':
-                connectivity_code += 'A'
-            elif self.params['connectivity_ii'] == 'isotropic':
-                connectivity_code += 'I'
-            elif self.params['connectivity_ii'] == 'random':
-                connectivity_code += 'R'
-            elif self.params['connectivity_ii'] == False:
-                connectivity_code += '-'
-
-            self.params['connectivity_code'] = connectivity_code
             folder_name += connectivity_code
             folder_name += "_pee%.1e_wen%.1e_bx%.1e_bv%.1e_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delay%d_scaleLatency%.2f/" % \
                         (self.params['p_ee'], self.params['w_exc_noise'], self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
