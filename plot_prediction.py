@@ -90,21 +90,22 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
     # fig 3
     # population level, long time-scale
-    plotter.n_fig_x = 1
-    plotter.n_fig_y = 4
-    pylab.rcParams['legend.fontsize'] = 10
-    pylab.subplots_adjust(hspace=0.5)
-    plotter.create_fig()
-    plotter.plot_fullrun_estimates_vx(1)
-    plotter.plot_fullrun_estimates_vy(2)
-    plotter.plot_fullrun_estimates_theta(3)
-    plotter.plot_nspike_histogram(4)
-    output_fn = output_fn_base + '_2.png'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
-    output_fn = output_fn_base + '_2.pdf'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
+
+#    plotter.n_fig_x = 1
+#    plotter.n_fig_y = 4
+#    pylab.rcParams['legend.fontsize'] = 10
+#    pylab.subplots_adjust(hspace=0.5)
+#    plotter.create_fig()
+#    plotter.plot_fullrun_estimates_vx(1)
+#    plotter.plot_fullrun_estimates_vy(2)
+#    plotter.plot_fullrun_estimates_theta(3)
+#    plotter.plot_nspike_histogram(4)
+#    output_fn = output_fn_base + '_2.png'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
+#    output_fn = output_fn_base + '_2.pdf'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
 #    output_fn = output_fn_base + '_2.eps'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)

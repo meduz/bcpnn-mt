@@ -17,7 +17,6 @@ params = json.load(f)
 #    import NeuroTools.parameters as NTP
 #    fn_as_url = utils.convert_to_url(param_fn)
 #    params = NTP.ParameterSet(fn_as_url)
-
 #else:
 #    print '\nPlotting the default parameters given in simulation_parameters.py\n'
 #    import simulation_parameters

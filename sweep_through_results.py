@@ -42,12 +42,12 @@ param_name = 'w_tgt_in_per_cell_ee'
 #param_name = 't_blank'
 #t_range=(0, 1000)
 #param_name = 'delay_scale'
-t_range=(0, 3000)
+t_range=(0, 1600)
 fmaxstim = 1000.
 
 blur_v = 0.05
 tbb = 400
-to_match = '^LargeScaleModel_(.*)'
+to_match = '^LargeScaleModel_AIII_pee1(.*)delay250_scaleLatency0.50'
 #to_match = '^LargeScaleModel_%s_fmaxstim1\.50e\+03_scaleLatency0\.15_tbb400_(.*)' % (conn_code)
 #to_match = '^LargeScaleModel_%s_fmaxstim(.*)' % (conn_code)
 #to_match = '^LargeScaleModel_%s_fmaxstim%.2e(.*)' % (conn_code,fmaxstim)
