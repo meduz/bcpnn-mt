@@ -1,5 +1,10 @@
 """
 Simple network with a Poisson spike source projecting to populations of of IF_cond_exp neurons
+
+on the cluster:
+    frioul_batch -M "[['w_tgt_in_per_cell_ee', 'w_tgt_in_per_cell_ee', 'w_tgt_in_per_cell_ee'],[0.4, 0.8, 1.2]]" 'python NetworkSimModuleNoColumns.py'
+
+
 """
 import time
 times = {}
