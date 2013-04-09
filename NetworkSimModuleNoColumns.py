@@ -727,7 +727,7 @@ if __name__ == '__main__':
 
 
     input_created = False
-#     print 'debug argv ', sys.argv[0], sys.argv[1], sys.argv[2] 
+#     print 'debug argv ', sys.argv[0], sys.argv[1], sys.argv[2]
     ps.params[sys.argv[1]] = float(sys.argv[2])
 #     ps.params['w_tgt_in_per_cell_ee'] = float(sys.argv[1])
 #     w_sigma_x = float(sys.argv[1])
@@ -740,7 +740,7 @@ if __name__ == '__main__':
 #     ps.params['scale_latency'] = scale_latency
 #     delay_scale = float(sys.argv[5])
 #     ps.params['delay_scale'] = delay_scale
-# 
+#
     ps.set_filenames()
 
     if pc_id == 0:
