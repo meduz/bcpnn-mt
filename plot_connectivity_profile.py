@@ -5,8 +5,12 @@ import sys
 import os
 import simulation_parameters
 import matplotlib
+matplotlib.use('Agg')
 from matplotlib import cm
 import json
+
+# --------------------------------------------------------------------------
+
 
 class ConnectionPlotter(object):
 

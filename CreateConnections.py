@@ -105,7 +105,7 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, scale_latency=1.0):
     p = np.exp(x_cos_array / (w_sigma_x**2)) * np.exp(v_cos_array/(w_sigma_v**2))
 #    print 'debug p', p 
 
-    if scale_latency != 1.0:
+    if scale_latency < 1.0:
 #        invalid_idx = latency > scale_latency
         invalid_idx = d_ij > scale_latency
         invalid_idx = invalid_idx.nonzero()[0]
