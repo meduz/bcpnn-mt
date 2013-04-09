@@ -19,6 +19,7 @@ import pyNN
 import pyNN.space as space
 print 'pyNN.version: ', pyNN.__version__
 try:
+    I_fail_because_I_do_not_want_to_use_MPI
     from mpi4py import MPI
     USE_MPI = True
     comm = MPI.COMM_WORLD
@@ -721,7 +722,9 @@ if __name__ == '__main__':
 
 
     input_created = False
-
+    print 'debug argv ', sys.argv[0], sys.argv[1], sys.argv[2] 
+    ps.params[sys.argv[1]] = float(sys.argv[2])
+#     ps.params['w_tgt_in_per_cell_ee'] = float(sys.argv[1])
 #     w_sigma_x = float(sys.argv[1])
 #     w_sigma_v = float(sys.argv[2])
 #     params['w_sigma_x'] = w_sigma_x
@@ -765,7 +768,7 @@ if __name__ == '__main__':
     NM.run_sim(sim_cnt, record_v=record)
     NM.print_results(print_v=record)
 
-    if pc_id == 0 and params['n_cells'] < 10000:
+    if pc_id == 0 and params['n_cells'] < 15000:
         import plot_prediction as pp
         pp.plot_prediction(params)
 
