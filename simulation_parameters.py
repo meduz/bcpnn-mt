@@ -23,7 +23,7 @@ class parameter_storage(object):
         # ###################
         # HEXGRID PARAMETERS
         # ###################
-        # Large-scale system
+#         # Large-scale system
         self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
@@ -37,11 +37,11 @@ class parameter_storage(object):
 #        self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
 
 #         Medium-scale system
-#        self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
-#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#        self.params['N_V'], self.params['N_theta'] = 5, 5# resolution in velocity norm and direction
-
+#         self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
+#         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+#         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#         self.params['N_V'], self.params['N_theta'] = 5, 5# resolution in velocity norm and direction
+# 
 #         Small-scale system
 #        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
@@ -300,6 +300,7 @@ class parameter_storage(object):
 #                folder_name = 'WEESWEEP_n%d_' % self.params['n_cells']
 #                folder_name = 'Test_n%d_' % self.params['n_cells']
                  folder_name = 'LargeScaleModel_'
+#                  folder_name = 'MediumScaleModel_'
 
 
             connectivity_code = ''

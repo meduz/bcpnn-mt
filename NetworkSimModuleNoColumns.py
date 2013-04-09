@@ -655,7 +655,6 @@ class NetworkModel(object):
             n_cells_to_record = 5# self.params['n_exc'] * 0.02
             gids_to_record = np.random.randint(0, self.params['n_exc'], n_cells_to_record)
 
-
         if record_v:
             self.exc_pop_view = PopulationView(self.exc_pop, gids_to_record, label='good_exc_neurons')
             self.exc_pop_view.record_v()
@@ -666,17 +665,18 @@ class NetworkModel(object):
         self.exc_pop.record()
         self.times['t_record'] = self.timer.diff()
 
+        # # # # # # # # # # # # # #
+        #     R U N N N I N G     #
+        # # # # # # # # # # # # # #
         if self.pc_id == 0:
             print "Running simulation ... "
         run(self.params['t_sim'])
         self.times['t_sim'] = self.timer.diff()
 
-
-
     def print_results(self, print_v=True):
         """
             # # # # # # # # # # # # # # # # #
-            #     P R I N T    R E S U L T S
+            #   P R I N T    R E S U L T S  #
             # # # # # # # # # # # # # # # # #
         """
         if print_v:
@@ -722,7 +722,7 @@ if __name__ == '__main__':
 
 
     input_created = False
-    print 'debug argv ', sys.argv[0], sys.argv[1], sys.argv[2] 
+#     print 'debug argv ', sys.argv[0], sys.argv[1], sys.argv[2] 
     ps.params[sys.argv[1]] = float(sys.argv[2])
 #     ps.params['w_tgt_in_per_cell_ee'] = float(sys.argv[1])
 #     w_sigma_x = float(sys.argv[1])
@@ -745,7 +745,8 @@ if __name__ == '__main__':
         comm.Barrier()
     sim_cnt = 0
 
-    if params['n_cells'] > 10000:
+    max_neurons_to_record = 15800
+    if params['n_cells'] > max_neurons_to_record:
         load_files = False
         record = False
         save_input_files = False
@@ -768,19 +769,19 @@ if __name__ == '__main__':
     NM.run_sim(sim_cnt, record_v=record)
     NM.print_results(print_v=record)
 
-    if pc_id == 0 and params['n_cells'] < 15000:
+    if pc_id == 0 and params['n_cells'] < max_neurons_to_record:
         import plot_prediction as pp
         pp.plot_prediction(params)
 
         os.system('python plot_rasterplots.py %s' % ps.params['folder_name'])
         os.system('python plot_connectivity_profile.py %s' % ps.params['folder_name'])
 
-    if pc_id == 1:
+    if pc_id == 1 or not(USE_MPI):
         os.system('python plot_connectivity_profile.py %s' % ps.params['folder_name'])
         for conn_type in ['ee', 'ei', 'ie', 'ii']:
             os.system('python plot_weight_and_delay_histogram.py %s %s' % (conn_type, ps.params['folder_name']))
 
-    if pc_id == 2:
+    if pc_id == 2 or not(USE_MPI):
         os.system('python analyse_connectivity.py %s' % ps.params['folder_name'])
 
     if comm != None:
