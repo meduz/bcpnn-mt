@@ -23,19 +23,19 @@ class parameter_storage(object):
         # ###################
         # HEXGRID PARAMETERS
         # ###################
-#         # Large-scale system
+        # Large-scale system
         self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
         self.params['N_V'], self.params['N_theta'] = 2, 50# resolution in velocity norm and direction
-
+# 
 
 #         Medium-large system
-        self.params['N_RF'] = 90# np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']))# np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
-
+#         self.params['N_RF'] = 90# np.int(n_cells/N_V/N_theta)
+#         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+#         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']))# np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#         self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
+# 
 #         Medium-scale system
 #         self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
 #         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
@@ -54,12 +54,12 @@ class parameter_storage(object):
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
 #        self.params['N_V'], self.params['N_theta'] = 1, 1# resolution in velocity norm and direction
 
-        # Single-speed
-#        self.params['N_RF'] = 84# np.int(n_cells/N_V/N_theta)
-#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#        self.params['N_V'], self.params['N_theta'] = 1, 16# resolution in velocity norm and direction
-
+#         # Single-speed
+#         self.params['N_RF'] = 84# np.int(n_cells/N_V/N_theta)
+#         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+#         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']/np.sqrt(3))) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#         self.params['N_V'], self.params['N_theta'] = 1, 16# resolution in velocity norm and direction
+# 
         # Tuning-properties spiking
 #        self.params['N_RF'] = 30# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3.)))
@@ -112,19 +112,19 @@ class parameter_storage(object):
         self.params['tau_syn_exc'] = 5.0 # 10.
         self.params['tau_syn_inh'] = 10.0 # 20.
         if self.params['neuron_model'] == 'IF_cond_exp':
-            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
-            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
+            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10., 'v_reset' : -70., 'v_rest':-70}
+            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10., 'v_reset' : -70., 'v_rest':-70}
         elif self.params['neuron_model'] == 'IF_cond_alpha':
-            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
-            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70}
+            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10., 'v_reset' : -70., 'v_rest':-70}
+            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10., 'v_reset' : -70., 'v_rest':-70}
         elif self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
-            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70, \
+            self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10., 'v_reset' : -70., 'v_rest':-70., \
                     'b' : 0.5, 'a':4.}
-            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10, 'v_reset' : -70, 'v_rest':-70, \
+            self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E':self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10., 'v_reset' : -70., 'v_rest':-70., \
                     'b' : 0.5, 'a':4.}
         # default parameters: /usr/local/lib/python2.6/dist-packages/pyNN/standardmodels/cells.py
-        self.params['v_init'] = -65                 # [mV]
-        self.params['v_init_sigma'] = 10             # [mV]
+        self.params['v_init'] = -65.                 # [mV]
+        self.params['v_init_sigma'] = 10.             # [mV]
 
 
         # #######################
@@ -235,8 +235,8 @@ class parameter_storage(object):
         # ######
         # INPUT
         # ######
-        self.params['f_max_stim'] = 2000. #1500. # [Hz]
-        self.params['w_input_exc'] = 5.0e-2#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
+        self.params['f_max_stim'] = 3000. #1500. # [Hz]
+        self.params['w_input_exc'] = 5.0e-3#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
 
         # ###############
         # MOTION STIMULUS
@@ -284,65 +284,64 @@ class parameter_storage(object):
 
 
     def set_folder_name(self, folder_name=None):
-        if folder_name == None:
-            # folder naming code:
-            #   PREFIX + XXXX + parameters
-            #  X = ['A', # for anisotropic connections
-            #       'I', # for isotropic connections
-            #       'R', # for random connections
-            #       '-', # for non-existant connections
-            # order of X: 'ee', 'ei', 'ie', 'ii'
+        # folder naming code:
+        #   PREFIX + XXXX + parameters
+        #  X = ['A', # for anisotropic connections
+        #       'I', # for isotropic connections
+        #       'R', # for random connections
+        #       '-', # for non-existant connections
+        # order of X: 'ee', 'ei', 'ie', 'ii'
 
+        connectivity_code = ''
+        if self.params['connectivity_ee'] == 'anisotropic':
+            connectivity_code += 'A'
+        elif self.params['connectivity_ee'] == 'isotropic':
+            connectivity_code += 'I'
+        elif self.params['connectivity_ee'] == 'random':
+            connectivity_code += 'R'
+        elif self.params['connectivity_ee'] == False:
+            connectivity_code += '-'
+
+        if self.params['connectivity_ei'] == 'anisotropic':
+            connectivity_code += 'A'
+        elif self.params['connectivity_ei'] == 'isotropic':
+            connectivity_code += 'I'
+        elif self.params['connectivity_ei'] == 'random':
+            connectivity_code += 'R'
+        elif self.params['connectivity_ei'] == False:
+            connectivity_code += '-'
+
+        if self.params['connectivity_ie'] == 'anisotropic':
+            connectivity_code += 'A'
+        elif self.params['connectivity_ie'] == 'isotropic':
+            connectivity_code += 'I'
+        elif self.params['connectivity_ie'] == 'random':
+            connectivity_code += 'R'
+        elif self.params['connectivity_ie'] == False:
+            connectivity_code += '-'
+
+        if self.params['connectivity_ii'] == 'anisotropic':
+            connectivity_code += 'A'
+        elif self.params['connectivity_ii'] == 'isotropic':
+            connectivity_code += 'I'
+        elif self.params['connectivity_ii'] == 'random':
+            connectivity_code += 'R'
+        elif self.params['connectivity_ii'] == False:
+            connectivity_code += '-'
+        self.params['connectivity_code'] = connectivity_code
+
+        if folder_name == None:
             if self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
                 folder_name = 'AdEx_SmallSpikingModel_'
 #                folder_name = 'AdEx_LargeScaleModel_'
             else:
 #                folder_name = 'Alpha_'
-                folder_name = 'ExpCond_'
+#                 folder_name = 'ExpCond_'
 #                folder_name = 'DebugTuningProp'
 #                folder_name = 'Testing_'
 #                folder_name = 'LargeScaleModel_'
-#                folder_name = 'MediumScaleModel_'
+               folder_name = 'MediumScaleModel_'
 
-
-            connectivity_code = ''
-            if self.params['connectivity_ee'] == 'anisotropic':
-                connectivity_code += 'A'
-            elif self.params['connectivity_ee'] == 'isotropic':
-                connectivity_code += 'I'
-            elif self.params['connectivity_ee'] == 'random':
-                connectivity_code += 'R'
-            elif self.params['connectivity_ee'] == False:
-                connectivity_code += '-'
-
-            if self.params['connectivity_ei'] == 'anisotropic':
-                connectivity_code += 'A'
-            elif self.params['connectivity_ei'] == 'isotropic':
-                connectivity_code += 'I'
-            elif self.params['connectivity_ei'] == 'random':
-                connectivity_code += 'R'
-            elif self.params['connectivity_ei'] == False:
-                connectivity_code += '-'
-
-            if self.params['connectivity_ie'] == 'anisotropic':
-                connectivity_code += 'A'
-            elif self.params['connectivity_ie'] == 'isotropic':
-                connectivity_code += 'I'
-            elif self.params['connectivity_ie'] == 'random':
-                connectivity_code += 'R'
-            elif self.params['connectivity_ie'] == False:
-                connectivity_code += '-'
-
-            if self.params['connectivity_ii'] == 'anisotropic':
-                connectivity_code += 'A'
-            elif self.params['connectivity_ii'] == 'isotropic':
-                connectivity_code += 'I'
-            elif self.params['connectivity_ii'] == 'random':
-                connectivity_code += 'R'
-            elif self.params['connectivity_ii'] == False:
-                connectivity_code += '-'
-
-            self.params['connectivity_code'] = connectivity_code
             folder_name += connectivity_code
             folder_name += "_pee%.1e_wen%.1e_tausynE%d_I%d_bx%.1e_bv%.1e_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delay%d_scaleLatency%.2f/" % \
                         (self.params['p_ee'], self.params['w_exc_noise'], self.params['tau_syn_exc'], self.params['tau_syn_inh'], self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
