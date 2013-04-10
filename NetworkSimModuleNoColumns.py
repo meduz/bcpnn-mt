@@ -761,7 +761,7 @@ if __name__ == '__main__':
         record = False
         save_input_files = False
     else: # choose yourself
-        load_files = True
+        load_files = False #True
         record = True
         save_input_files = not load_files
 
@@ -771,7 +771,7 @@ if __name__ == '__main__':
     if not input_created:
         spike_times_container = NM.create_input(load_files=load_files, save_output=save_input_files)
         input_created = True # this can be set True ONLY if the parameter does not affect the input i.e. set this to false when sweeping f_max_stim, or blur_X/V!
-        os.system('python plot_rasterplots.py %s' % ps.params['folder_name'])
+#         os.system('python plot_rasterplots.py %s' % ps.params['folder_name'])
     else:
         NM.spike_times_container = spike_times_container
 
