@@ -24,7 +24,7 @@ import pyNN
 import pyNN.space as space
 print 'pyNN.version: ', pyNN.__version__
 try:
-    I_fail_because_I_do_not_want_to_use_MPI
+#    I_fail_because_I_do_not_want_to_use_MPI
     from mpi4py import MPI
     USE_MPI = True
     comm = MPI.COMM_WORLD
@@ -369,7 +369,7 @@ class NetworkModel(object):
         (delay_min, delay_max) = self.params['delay_range']
         local_connlist = np.zeros((n_src_cells_per_neuron * len(tgt_cells), 4))
         for i_, tgt in enumerate(tgt_cells):
-            p, latency = CC.get_p_conn_vec(tp_src, tp_tgt[tgt, :], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['scale_latency'])
+            p, latency = CC.get_p_conn_vec(tp_src, tp_tgt[tgt, :], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['connectivity_radius'])
             if conn_type[0] == conn_type[1]:
                 p[tgt], latency[tgt] = 0., 0.
             # random delays? --> np.permutate(latency) or latency[sources] * self.params['delay_scale'] * np.rand
@@ -423,7 +423,7 @@ class NetworkModel(object):
             latency = np.zeros(self.params['n_exc'], dtype='float32')
             for src in xrange(self.params['n_exc']):
                 if (src != tgt):
-                    p[src], latency[src] = CC.get_p_conn(self.tuning_prop_exc[src, :], self.tuning_prop_exc[tgt, :], sigma_x, sigma_v, params['scale_latency']) #                            print 'debug pc_id src tgt ', self.pc_id, src, tgt#, int(ID) < self.params['n_exc']
+                    p[src], latency[src] = CC.get_p_conn(self.tuning_prop_exc[src, :], self.tuning_prop_exc[tgt, :], sigma_x, sigma_v, params['connectivity_radius']) #                            print 'debug pc_id src tgt ', self.pc_id, src, tgt#, int(ID) < self.params['n_exc']
             sources = random.sample(xrange(self.params['n_exc']), int(self.params['n_src_cells_per_neuron']))
             idx = p[sources] > 0
             non_zero_idx = np.nonzero(idx)[0]
@@ -731,7 +731,7 @@ if __name__ == '__main__':
 
     input_created = False
 #     print 'debug argv ', sys.argv[0], sys.argv[1], sys.argv[2]
-    ps.params[sys.argv[1]] = float(sys.argv[2])
+#    ps.params[sys.argv[1]] = float(sys.argv[2])
 #     ps.params['w_tgt_in_per_cell_ee'] = float(sys.argv[1])
 #     w_sigma_x = float(sys.argv[1])
 #     w_sigma_v = float(sys.argv[2])
@@ -739,11 +739,16 @@ if __name__ == '__main__':
 #     params['w_sigma_v'] = w_sigma_v
 #     w_ee = float(sys.argv[3])
 #     ps.params['w_tgt_in_per_cell_ee'] = w_ee
-#     scale_latency = float(sys.argv[4])
-#     ps.params['scale_latency'] = scale_latency
+#     connectivity_radius = float(sys.argv[4])
+#     ps.params['connectivity_radius'] = connectivity_radius
 #     delay_scale = float(sys.argv[5])
 #     ps.params['delay_scale'] = delay_scale
 #
+
+    a = float(sys.argv[1])
+    b = float(sys.argv[2])
+    params['cell_params_exc']['a'] = a
+    params['cell_params_exc']['b'] = b
     ps.set_filenames()
 #     ps.params['folder_name'] = None # sys.argv[1] + '=' + sys.argv[2] + '/' #'Sweep_%.3e' % self.params['w_tgt_in_per_cell_ee']
 #     ps.set_filenames(folder_name=ps.params['folder_name'])
@@ -761,7 +766,7 @@ if __name__ == '__main__':
         record = False
         save_input_files = False
     else: # choose yourself
-        load_files = False #True
+        load_files = True
         record = True
         save_input_files = not load_files
 

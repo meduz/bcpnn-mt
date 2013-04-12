@@ -620,7 +620,7 @@ if __name__ == '__main__':
         ps.params['w_tgt_in_per_cell_ii'] = p4
         ps.params['w_sigma_x'] = p5
         ps.params['w_sigma_v'] = p6
-        ps.params['scale_latency'] = p7
+        ps.params['connectivity_radius'] = p7
         ps.params['delay_scale'] = p8
 
     except:

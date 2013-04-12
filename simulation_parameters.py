@@ -24,11 +24,10 @@ class parameter_storage(object):
         # HEXGRID PARAMETERS
         # ###################
         # Large-scale system
-        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 2, 50# resolution in velocity norm and direction
-# 
+#        self.params['N_RF'] = 100# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#        self.params['N_V'], self.params['N_theta'] = 2, 50# resolution in velocity norm and direction
 
 #         Medium-large system
 #         self.params['N_RF'] = 90# np.int(n_cells/N_V/N_theta)
@@ -37,11 +36,11 @@ class parameter_storage(object):
 #         self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
 # 
 #         Medium-scale system
-#         self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
-#         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-#         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#         self.params['N_V'], self.params['N_theta'] = 5, 5# resolution in velocity norm and direction
-# 
+        self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
+        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+        self.params['N_V'], self.params['N_theta'] = 5, 5# resolution in velocity norm and direction
+ 
 #         Small-scale system
 #        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
@@ -106,9 +105,9 @@ class parameter_storage(object):
         # CELL PARAMETERS   #
         # ###################
         # TODO: distribution of parameters (e.g. tau_m)
-        self.params['neuron_model'] = 'IF_cond_exp'
+#        self.params['neuron_model'] = 'IF_cond_exp'
 #        self.params['neuron_model'] = 'IF_cond_alpha'
-#        self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
+        self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
         self.params['tau_syn_exc'] = 5.0 # 10.
         self.params['tau_syn_inh'] = 10.0 # 20.
         if self.params['neuron_model'] == 'IF_cond_exp':
@@ -152,8 +151,8 @@ class parameter_storage(object):
 
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
-        self.params['scale_latency'] = 0.5      # this determines how much the directional tuning of the src is considered when drawing connections
-        # WARNING: scale_latency affects w_sigma_x/v
+        self.params['connectivity_radius'] = 0.5      # this determines how much the directional tuning of the src is considered when drawing connections
+        # WARNING: connectivity_radius affects w_sigma_x/v
         self.params['delay_scale'] = 500.      # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 5000.)
         self.params['w_sigma_x'] = 0.6 # width of connectivity profile for pre-computed weights
@@ -165,7 +164,7 @@ class parameter_storage(object):
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
         self.params['w_tgt_in_per_cell_ee'] = 0.30 # [uS] how much input should an exc cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ei'] = 1.50 # [uS] how much input should an inh cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ie'] = 0.60 # [uS] how much input should an exc cell get from its inh source cells?
+        self.params['w_tgt_in_per_cell_ie'] = 0.80 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.05 # [uS] how much input should an inh cell get from its source cells?
         self.params['w_tgt_in_per_cell_ee'] *= 5. / self.params['tau_syn_exc']
         self.params['w_tgt_in_per_cell_ei'] *= 5. / self.params['tau_syn_exc']
@@ -235,7 +234,7 @@ class parameter_storage(object):
         # ######
         # INPUT
         # ######
-        self.params['f_max_stim'] = 3000. #1500. # [Hz]
+        self.params['f_max_stim'] = 5000. #1500. # [Hz]
         self.params['w_input_exc'] = 5.0e-3#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
 
         # ###############
@@ -332,20 +331,20 @@ class parameter_storage(object):
 
         if folder_name == None:
             if self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
-                folder_name = 'AdEx_SmallSpikingModel_'
+                folder_name = 'AdEx_a%.2e_b%.2e_' % (self.params['cell_params_exc']['a'], self.params['cell_params_exc']['b'])
 #                folder_name = 'AdEx_LargeScaleModel_'
             else:
 #                folder_name = 'Alpha_'
 #                 folder_name = 'ExpCond_'
-#                folder_name = 'DebugTuningProp'
+                folder_name = 'DebugConn'
 #                folder_name = 'Testing_'
 #                folder_name = 'LargeScaleModel_'
-               folder_name = 'MediumScaleModel_'
+#               folder_name = 'MediumScaleModel_'
 
             folder_name += connectivity_code
-            folder_name += "_pee%.1e_wen%.1e_tausynE%d_I%d_bx%.1e_bv%.1e_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delay%d_scaleLatency%.2f/" % \
+            folder_name += "_pee%.1e_wen%.1e_tausynE%d_I%d_bx%.1e_bv%.1e_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delay%d_connRadius%.2f/" % \
                         (self.params['p_ee'], self.params['w_exc_noise'], self.params['tau_syn_exc'], self.params['tau_syn_inh'], self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \
-                        self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'], self.params['scale_latency'])
+                        self.params['w_tgt_in_per_cell_ei'], self.params['w_tgt_in_per_cell_ie'], self.params['w_tgt_in_per_cell_ii'], self.params['delay_scale'], self.params['connectivity_radius'])
 
 #            folder_name = 'OnlyNoiseInput_wexc%.2e_fexc%.2e_w_inh%.2e_finh%.2e/' % \
 #                        (self.params['w_exc_noise'], self.params['f_exc_noise'], self.params['w_inh_noise'], self.params['f_inh_noise'])

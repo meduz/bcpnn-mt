@@ -362,8 +362,8 @@ class ConnectivityAnalyser(object):
 
         c_x /= n_tgt
         c_v /= n_tgt
-#        c_x *= self.params['scale_latency']
-#        c_v *= self.params['scale_latency']
+#        c_x *= self.params['connectivity_radius']
+#        c_v *= self.params['connectivity_radius']
         return c_x, c_v
 #        n_tgt =
 
@@ -398,9 +398,9 @@ class ConnectivityAnalyser(object):
             for src in xrange(n_src):
                 if conn_type[0] == conn_type[1]: # no self-connection
                     if (src != tgt):
-                        p[src], latency[src] = CC.get_p_conn(self.tp_src[src, :], self.tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
+                        p[src], latency[src] = CC.get_p_conn(self.tp_src[src, :], self.tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['connectivity_radius'])
                 else: # different populations --> same indices mean different cells, no check for src != tgt
-                    p[src], latency[src] = CC.get_p_conn(self.tp_src[src, :], self.tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
+                    p[src], latency[src] = CC.get_p_conn(self.tp_src[src, :], self.tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['connectivity_radius'])
             # sort connection probabilities and select remaining connections
             sorted_indices = np.argsort(p)
             if conn_type[0] == 'e':
