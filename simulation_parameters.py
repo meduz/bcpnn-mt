@@ -105,9 +105,9 @@ class parameter_storage(object):
         # CELL PARAMETERS   #
         # ###################
         # TODO: distribution of parameters (e.g. tau_m)
-#        self.params['neuron_model'] = 'IF_cond_exp'
+        self.params['neuron_model'] = 'IF_cond_exp'
 #        self.params['neuron_model'] = 'IF_cond_alpha'
-        self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
+#        self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
         self.params['tau_syn_exc'] = 5.0 # 10.
         self.params['tau_syn_inh'] = 10.0 # 20.
         if self.params['neuron_model'] == 'IF_cond_exp':
@@ -148,21 +148,21 @@ class parameter_storage(object):
         self.params['connectivity_ii'] = 'isotropic'
 #        self.params['connectivity_ii'] = 'random'
 #        self.params['connectivity_ii'] = False
-
+        self.params['with_short_term_depression'] = True
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
         self.params['connectivity_radius'] = 0.5      # this determines how much the directional tuning of the src is considered when drawing connections
         # WARNING: connectivity_radius affects w_sigma_x/v
         self.params['delay_scale'] = 500.      # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 5000.)
-        self.params['w_sigma_x'] = 0.6 # width of connectivity profile for pre-computed weights
-        self.params['w_sigma_v'] = 0.6 # small w_sigma: tuning_properties get stronger weight when deciding on connection
+        self.params['w_sigma_x'] = 1.0 # width of connectivity profile for pre-computed weights
+        self.params['w_sigma_v'] = 1.0 # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
         self.params['w_sigma_isotropic'] = 0.25 # spatial reach of isotropic connectivity, should not be below 0.05 otherwise you don't get the desired p_effective 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.30 # [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ee'] = 0.50 # [uS] how much input should an exc cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ei'] = 1.50 # [uS] how much input should an inh cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ie'] = 0.80 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.05 # [uS] how much input should an inh cell get from its source cells?
@@ -336,11 +336,13 @@ class parameter_storage(object):
             else:
 #                folder_name = 'Alpha_'
 #                 folder_name = 'ExpCond_'
-                folder_name = 'DebugConn'
+                folder_name = 'DebugConn_'
 #                folder_name = 'Testing_'
 #                folder_name = 'LargeScaleModel_'
 #               folder_name = 'MediumScaleModel_'
 
+            if self.params['with_short_term_depression']:
+                folder_name += 'STD_'
             folder_name += connectivity_code
             folder_name += "_pee%.1e_wen%.1e_tausynE%d_I%d_bx%.1e_bv%.1e_wsigmax%.2e_wsigmav%.2e_wee%.2e_wei%.2e_wie%.2e_wii%.2e_delay%d_connRadius%.2f/" % \
                         (self.params['p_ee'], self.params['w_exc_noise'], self.params['tau_syn_exc'], self.params['tau_syn_inh'], self.params['blur_X'], self.params['blur_V'], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['w_tgt_in_per_cell_ee'], \

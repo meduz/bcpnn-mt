@@ -66,6 +66,9 @@ class NetworkModel(object):
 
         np.random.seed(params['np_random_seed'] + self.pc_id)
 
+        if self.params['with_short_term_depression']:
+            self.short_term_depression = SynapseDynamics(fast=TsodyksMarkramMechanism(U=0.95, tau_rec=10.0, tau_facil=0.0))
+
     def import_pynn(self):
         """
         This function needs only be called when this class is used in another script as imported module
@@ -306,9 +309,36 @@ class NetworkModel(object):
         """
         if self.pc_id == 0:
             print "Connecting input spiketrains..."
+        
+#        self.stimulus = Population(len(self.local_idx_exc), SpikeSourceArray)
+#            self.exc_pop = Population(n_exc, IF_cond_exp, self.params['cell_params_exc'], label='exc_cells')
+#                prj = Projection(src_pop, tgt_pop, connector, target=syn_type)
+#            self.projections[conn_type].append(prj)
+
+#        self.projections['stim'] = []
+#        self.stimuli = []
+#        self.pop_views = [] 
+#        conn = OneToOneConnector(weights=self.params['w_input_exc'])
         for i_, unit in enumerate(self.local_idx_exc):
             spike_times = self.spike_times_container[i_]
-            ssa = create(SpikeSourceArray, {'spike_times': spike_times})
+#            ssa = create(SpikeSourceArray, {'spike_times': spike_times})
+            ssa = Population(1, SpikeSourceArray, {'spike_times': spike_times})
+#            ssa.set({'spike_times' : spike_times})
+#            self.stimuli.append(ssa)
+
+#            if self.params['with_short_term_depression']:
+
+#                connect(ssa, self.exc_pop[unit], self.params['w_input_exc'], synapse_type='excitatory', synapse_dynamics=self.short_term_depression)
+#                selector = np.zeros(self.params['n_exc'], dtype=np.bool)
+#                selector[unit] = True
+#                print 'debug unit', unit, type(unit)
+#                w[i_] = 1.#self.params['w_input_exc']
+#                tgt = PopulationView(self.exc_pop, np.array([unit]))
+#                self.pop_views.append(tgt)
+#                prj = Projection(ssa, tgt, conn, target='excitatory', synapse_dynamics=self.short_term_depression)
+#                prj = Projection(self.stimuli[-1], self.pop_views[-1], conn, target='excitatory', synapse_dynamics=self.short_term_depression)
+#                self.projections['stim'].append(prj)
+#            else:
             connect(ssa, self.exc_pop[unit], self.params['w_input_exc'], synapse_type='excitatory')
         self.times['connect_input'] = self.timer.diff()
 
@@ -394,7 +424,10 @@ class NetworkModel(object):
             conn_list = np.array((sources, tgt * np.ones(n_src_cells_per_neuron), w, delays))
             local_connlist[i_ * n_src_cells_per_neuron : (i_ + 1) * n_src_cells_per_neuron, :] = conn_list.transpose()
             connector = FromListConnector(conn_list.transpose())
-            prj = Projection(src_pop, tgt_pop, connector)
+            if self.params['with_short_term_depression']:
+                prj = Projection(src_pop, tgt_pop, connector, target=syn_type, synapse_dynamics=self.short_term_depression)
+            else:
+                prj = Projection(src_pop, tgt_pop, connector, target=syn_type)
             self.projections[conn_type].append(prj)
 
         if self.debug_connectivity:
@@ -501,7 +534,10 @@ class NetworkModel(object):
         connector = DistanceDependentProbabilityConnector('%f * exp(-d/(2*%f**2))' % (p_max, params['w_sigma_isotropic']), allow_self_connections=False, \
                 weights=w_dist, delays=delay_dist, space=self.torus)#, n_connections=n_conn_ee)
         print 'p_max for %s' % conn_type, p_max
-        prj = Projection(src_pop, tgt_pop, connector, target=syn_type)
+        if self.params['with_short_term_depression']:
+            prj = Projection(src_pop, tgt_pop, connector, target=syn_type, synapse_dynamics=self.short_term_depression)
+        else:
+            prj = Projection(src_pop, tgt_pop, connector, target=syn_type)#, synapse_dynamics=self.STD)
         self.projections[conn_type].append(prj)
         if self.debug_connectivity:
 #                if self.pc_id == 0:
@@ -577,7 +613,10 @@ class NetworkModel(object):
                 boundaries=(self.params['delay_range'][0], self.params['delay_range'][1]))
 
         connector= FastFixedProbabilityConnector(self.params['p_%s' % conn_type], weights=weight_distr, delays=delay_dist)
-        prj = Projection(src_pop, tgt_pop, connector, target=syn_type)
+        if self.params['with_short_term_depression']:
+            prj = Projection(src_pop, tgt_pop, connector, target=syn_type, synapse_dynamics=self.short_term_depression)
+        else:
+            prj = Projection(src_pop, tgt_pop, connector, target=syn_type)
 
         conn_list_fn = self.params['conn_list_%s_fn_base' % conn_type] + '%d.dat' % (self.pc_id)
         print 'Saving random %s connections to %s' % (conn_type, conn_list_fn)
@@ -745,14 +784,15 @@ if __name__ == '__main__':
 #     ps.params['delay_scale'] = delay_scale
 #
 
-    a = float(sys.argv[1])
-    b = float(sys.argv[2])
-    params['cell_params_exc']['a'] = a
-    params['cell_params_exc']['b'] = b
-    ps.set_filenames()
+#    a = float(sys.argv[1])
+#    b = float(sys.argv[2])
+#    params['cell_params_exc']['a'] = a
+#    params['cell_params_exc']['b'] = b
+
 #     ps.params['folder_name'] = None # sys.argv[1] + '=' + sys.argv[2] + '/' #'Sweep_%.3e' % self.params['w_tgt_in_per_cell_ee']
 #     ps.set_filenames(folder_name=ps.params['folder_name'])
 
+    ps.set_filenames()
     if pc_id == 0:
         ps.create_folders()
         ps.write_parameters_to_file()
