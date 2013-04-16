@@ -3,6 +3,18 @@ import matplotlib
 import pylab
 import numpy as np
 import sys
+#import rcParams
+#rcP= rcParams.rcParams
+
+rcP= { 'axes.labelsize' : 18,
+            'label.fontsize': 18,
+            'xtick.labelsize' : 18, 
+            'ytick.labelsize' : 18, 
+            'axes.titlesize'  : 20,
+            'legend.fontsize': 9}
+
+pylab.rcParams.update(rcP)
+
 
 # --------------------------------------------------------------------------
 #def get_figsize(fig_width_pt):
@@ -57,7 +69,7 @@ else:
     print info
 
 rate = np.load(rate_fn)
-rate /= np.max(rate)
+#rate /= np.max(rate)
 y_min = rate.min()
 y_max = rate.max()
 
@@ -71,7 +83,8 @@ n, bins = np.histogram(spikes, bins=n_bins, range=(0, params['t_sim']))
 print 'n, bins', n, 'total', np.sum(n), 'binsize:', binsize
 
 fig = pylab.figure()
-pylab.subplots_adjust(hspace=0.35)
+pylab.subplots_adjust(bottom=.15, left=.15, hspace=.55)
+#pylab.subplots_adjust(hspace=0.35)
 ax = fig.add_subplot(211)
 
 nspikes = spikes.size
@@ -90,7 +103,7 @@ n_steps = int(round(1. / params['dt_rate']))
 rate = rate[::n_steps] # ::10 because dt for rate creation was 0.1 ms
 ax.plot(np.arange(rate.size), rate, label='Cond_in = %.3e nS' % cond_in, lw=2, c='b')
 ax.set_xlabel('Time [ms]')
-ax.set_ylabel('Normalized motion energy')
+ax.set_ylabel('Input rate (t) [Hz]')
 
 #ax.legend()
 ax = fig.add_subplot(212)
@@ -99,12 +112,12 @@ ax.set_title('Binned input spike train, binsize=%.1f ms' % binsize)
 
 ax.set_xlim((0, params['t_sim']))
 ax.set_ylabel('Number of input spikes')
-ax.set_xlabel('Times [ms]')
+ax.set_xlabel('Time [ms]')
 
 #if params_loaded:
-#    output_fn = params['figures_folder'] + 'input_%d.png' % (gid)
-#    print 'Saving to', output_fn
-#    pylab.savefig(output_fn)
+output_fn = params['figures_folder'] + 'input_%d.png' % (gid)
+print 'Saving to', output_fn
+pylab.savefig(output_fn, dpi=200)
 
 #output_fn = 'delme.dat'
 #np.savetxt(output_fn, data)
