@@ -36,8 +36,8 @@ idx_0 = 0
 for i in xrange(params['n_exc']):
     idx_1 = n_input_spikes[i] + idx_0
     if n_input_spikes[i] > 0:
-        output_array[idx_0:idx_1, 0] = np.ones(idx_1 - idx_0) * i
-        output_array[idx_0:idx_1, 1] = input_spike_trains[i]
+        output_array[idx_0:idx_1, 1] = np.ones(idx_1 - idx_0) * i
+        output_array[idx_0:idx_1, 0] = input_spike_trains[i]
         idx_0 = idx_1
 
 output_fn = params['input_folder'] + 'merged_input.dat'

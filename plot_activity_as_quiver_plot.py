@@ -6,7 +6,9 @@ import matplotlib
 from matplotlib import cm
 import time
 import utils
-
+import rcParams
+rcP= rcParams.rcParams
+pylab.rcParams.update(rcP)
 
 class ActivityQuiverPlot(object):
 
@@ -32,14 +34,16 @@ class ActivityQuiverPlot(object):
         scale = 1
 
         fig = pylab.figure()
-        ax = fig.add_subplot(111)
+        pylab.subplots_adjust(bottom=.15, left=.15)
+        ax = fig.add_subplot(111, aspect='equal')
 
         o_min = self.network_activity.min()
         o_max = self.network_activity.max()
         norm = matplotlib.mpl.colors.Normalize(vmin=o_min, vmax=o_max)
         m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cm.Greys)#jet)
         m.set_array(np.arange(o_min, o_max, 0.01))
-        fig.colorbar(m)
+        cb = fig.colorbar(m, ax=ax, shrink=.825)
+        cb.set_label('Number of input spikes')
         rgba_colors = []
 
 #        idx_sorted = range(self.gids_to_plot.size)
@@ -56,7 +60,7 @@ class ActivityQuiverPlot(object):
     #        o_min = min(o_min, activity)
     #        print 'max activity cell %d' % cell, activity.max()
             rgba_colors.append(m.to_rgba(activity))
-            print activity, gid
+#            print activity, gid
 
         print 'debug global max', self.network_activity.max(), self.network_activity[self.gids_to_plot].argmax()
         n_cells = self.gids_to_plot.size
@@ -66,14 +70,24 @@ class ActivityQuiverPlot(object):
         mp = self.params['motion_params']
         data[-1,:] = mp
 
-        rgba_colors.append('r')
+        rgba_colors.append('b')
         ax.quiver(data[:, 0], data[:, 1], data[:, 2], data[:, 3], \
-                  angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4, pivot='middle')
-        ax.annotate('Stimulus', (mp[0]+.1*mp[2], mp[1]+0.1*mp[1]), fontsize=12, color='r')
+                  angles='xy', scale_units='xy', scale=scale, color=rgba_colors, headwidth=4, pivot='middle', width=0.007)
+#        ax.annotate('Stimulus', (mp[0]+.1*mp[2], mp[1]+0.1*mp[1]), fontsize=12, color='b')
 
-        ax.set_xlim((-0.2, 1.2))
-        ax.set_ylim((-0.2, 1.2))
+        ax.set_xlim((-.1, 1.2))
+        ax.set_ylim((.1, .9))
+#        ax.set_ylim((-.1, 1.2))
+        ax.set_xlabel('x-position')
+        ax.set_ylabel('y-position')
+        ax.set_xticks(np.arange(0, 1.2, .2))
+        ax.set_yticks(np.arange(0, 1.2, .2))
+
         output_fn = self.params['figures_folder'] + 'activity_quiverplot.png'
+        print 'Saving to', output_fn
+        pylab.savefig(output_fn, dpi=200)
+        output_fn = self.params['figures_folder'] + 'activity_quiverplot.pdf'
+        print 'Saving to', output_fn
         pylab.savefig(output_fn)
         pylab.show()
 
@@ -87,7 +101,6 @@ if __name__ == '__main__':
             param_fn += '/Parameters/simulation_parameters.info'
         import NeuroTools.parameters as NTP
         fn_as_url = utils.convert_to_url(param_fn)
-        print 'debug ', fn_as_url
         params = NTP.ParameterSet(fn_as_url)
         print 'Loading parameters from', param_fn
         plot_prediction(params=params)
@@ -100,9 +113,16 @@ if __name__ == '__main__':
 
     AQP = ActivityQuiverPlot(params)
     sim_cnt = 0
-    spikes_fn = params['exc_spiketimes_fn_merged'] + '.ras'
+
+    # you can also plot the input but do this before:
+    # os.system('python merge_input_spikefiles.py')
+    spikes_fn = params['input_folder'] + 'merged_input.dat'
+
+#    spikes_fn = params['exc_spiketimes_fn_merged'] + '.ras'
     print 'Loading ', spikes_fn
+    # the spikes_fn should store the raw spike trains with spike times in column 0, and gids in column 1
     nspikes = utils.get_nspikes(spikes_fn, n_cells = params['n_exc'])
+    print 'nspikes', nspikes.shape
     AQP.set_network_activity(nspikes)
     AQP.plot_activity_as_quiver(tuning_prop=tp)
 
