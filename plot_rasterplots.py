@@ -29,7 +29,7 @@ else:
     params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
 
-def plot_input_spikes(ax, shift=0, m='o', c='k'):
+def plot_input_spikes(ax, shift=0, m='o', c='k', ms=2):
     """
     Shift could be used when plotting in the same axis as the output spikes
     """
@@ -38,11 +38,11 @@ def plot_input_spikes(ax, shift=0, m='o', c='k'):
         fn = params['input_st_fn_base'] + str(cell) + '.npy'
         spiketimes = np.load(fn)
         nspikes = len(spiketimes)
-        ax.plot(spiketimes, cell * np.ones(nspikes) + shift, m, color=c, alpha=.1, markersize=2)
+        ax.plot(spiketimes, cell * np.ones(nspikes) + shift, m, color=c, alpha=.1, markersize=ms)
 
 
 tp = np.loadtxt(params['tuning_prop_means_fn'])
-def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0):
+def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0, ms=2):
     n_cells = params['n_exc']
     sorted_idx = tp[:, sort_idx].argsort()
 
@@ -87,7 +87,7 @@ def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0):
 #    ax.set_yticklabels(y_ticklabels)
 
 
-def plot_output_spikes_sorted_in_space(ax, cell_type, shift=0., m='o', c='g', sort_idx=0):
+def plot_output_spikes_sorted_in_space(ax, cell_type, shift=0., m='o', c='g', sort_idx=0, ms=2):
     n_cells = params['n_%s' % cell_type]
     fn = params['%s_spiketimes_fn_merged' % cell_type] + '.ras'
     nspikes, spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
@@ -106,7 +106,7 @@ def plot_output_spikes_sorted_in_space(ax, cell_type, shift=0., m='o', c='g', so
             y_pos = (tp[cell, sort_idx] % 1.) / ylen * (abs(ylim[0] - ylim[1]))
         else:
             y_pos = (tp[cell, sort_idx]) / ylen * (abs(ylim[0] - ylim[1]))
-        ax.plot(spiketimes[cell], y_pos * np.ones(nspikes[cell]), 'o', color='k', markersize=2)
+        ax.plot(spiketimes[cell], y_pos * np.ones(nspikes[cell]), 'o', color='k', markersize=ms)
 
 #    n_yticks = 6
 #    y_tick_idx = np.linspace(0, n_cells, n_yticks)
@@ -155,12 +155,12 @@ ax2 = fig.add_subplot(212)
 
 
 # x-position
-plot_input_spikes_sorted_in_space(ax1, c='b', sort_idx=0) 
-plot_output_spikes_sorted_in_space(ax1, 'exc', c='k', sort_idx=0) 
+plot_input_spikes_sorted_in_space(ax1, c='b', sort_idx=0, ms=3) 
+plot_output_spikes_sorted_in_space(ax1, 'exc', c='k', sort_idx=0, ms=3) 
 
 # sorted by velocity in direction x / y
-plot_input_spikes_sorted_in_space(ax2, c='b', sort_idx=2)
-plot_output_spikes_sorted_in_space(ax2, 'exc', c='k', sort_idx=2) 
+plot_input_spikes_sorted_in_space(ax2, c='b', sort_idx=2, ms=3)
+plot_output_spikes_sorted_in_space(ax2, 'exc', c='k', sort_idx=2, ms=3) 
 
 
 #plot_spikes(ax3, fn_exc, params['n_exc'])
