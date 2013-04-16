@@ -491,8 +491,8 @@ if __name__ == '__main__':
 
 
     # here you can choose where the cell to plot should be sitting and what the preferred direction should be 
-    target_vector = (.3, .5)
-    direction = (.5, 0.)
+    target_vector = (.5, .5)
+    direction = (.3, 0.)
     gid = P.find_cell_closest_to_vector(target_vector, direction)
 #    gid = 2587
     P.plot_connection_histogram(gid, 'ee')
