@@ -46,9 +46,9 @@ def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0, ms
     n_cells = params['n_exc']
     sorted_idx = tp[:, sort_idx].argsort()
 
-    if sort_idx == 0:
+    if sort_idx == 0 or sort_idx == 1:
         ylim = (0, 1)
-    else:
+    else: # it's a velocity --> adjust the range to plot
         crop = .8
         ylim = (crop * tp[:, sort_idx].min(), crop * tp[:, sort_idx].max())
     ylen = (abs(ylim[0] - ylim[1]))

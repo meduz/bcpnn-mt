@@ -105,8 +105,8 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radius=1.0
 
     
     
-#    return p, d_ij
-    return p, latency
+    return p, d_ij
+#    return p, latency
 
     # old:
 #    p = np.exp(-dist_prediction_tgt**2 / (2*sigma_x**2)) * np.exp(v_cos_array/(sigma_v**2))

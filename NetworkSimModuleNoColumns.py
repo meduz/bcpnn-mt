@@ -399,7 +399,9 @@ class NetworkModel(object):
         (delay_min, delay_max) = self.params['delay_range']
         local_connlist = np.zeros((n_src_cells_per_neuron * len(tgt_cells), 4))
         for i_, tgt in enumerate(tgt_cells):
-            p, latency = CC.get_p_conn_vec(tp_src, tp_tgt[tgt, :], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['connectivity_radius'])
+            p, latency = CC.get_p_conn_vec(tp_src, tp_tgt[tgt, :], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['connectivity_radius'], self.params['maximal_latency'])
+#            print 'latencies:', latency, np.mean(latency), np.min(latency), np.max(latency)
+#            p, latency = CC.get_p_conn_vec_xpred(tp_src, tp_tgt[tgt, :], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['connectivity_radius'])
             if conn_type[0] == conn_type[1]:
                 p[tgt], latency[tgt] = 0., 0.
             # random delays? --> np.permutate(latency) or latency[sources] * self.params['delay_scale'] * np.rand
@@ -776,12 +778,13 @@ if __name__ == '__main__':
 #     w_sigma_v = float(sys.argv[2])
 #     params['w_sigma_x'] = w_sigma_x
 #     params['w_sigma_v'] = w_sigma_v
-#     w_ee = float(sys.argv[3])
-#     ps.params['w_tgt_in_per_cell_ee'] = w_ee
-#     connectivity_radius = float(sys.argv[4])
-#     ps.params['connectivity_radius'] = connectivity_radius
-#     delay_scale = float(sys.argv[5])
-#     ps.params['delay_scale'] = delay_scale
+#    w_ee = float(sys.argv[1])
+#    ps.params['w_tgt_in_per_cell_ee'] = w_ee
+#    connectivity_radius = float(sys.argv[2])
+#    ps.params['connectivity_radius'] = connectivity_radius
+#    delay_scale = float(sys.argv[3])
+#    ps.params['delay_scale'] = delay_scale
+
 #
 
 #    a = float(sys.argv[1])

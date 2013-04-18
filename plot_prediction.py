@@ -24,8 +24,8 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 #    params['t_sim'] = 1200
 
     plotter = P.PlotPrediction(params, data_fn)
-    pylab.rcParams['axes.labelsize'] = 14
-    pylab.rcParams['axes.titlesize'] = 16
+    pylab.rcParams['axes.labelsize'] = 18
+    pylab.rcParams['axes.titlesize'] = 18
     if plotter.no_spikes:
         return
 
@@ -41,24 +41,46 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
     plotter.create_fig()  # create an empty figure
     pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.2)
+    plotter.n_fig_x = 1
+    plotter.n_fig_y = 2
+    plotter.plot_input_spikes_sorted_in_space(1, c='b', sort_idx=0, ms=1) 
+    plotter.plot_output_spikes_sorted_in_space(1, 'exc', c='k', sort_idx=0, ms=1) 
+    plotter.plot_input_spikes_sorted_in_space(2, c='b', sort_idx=2, ms=1) 
+    plotter.plot_output_spikes_sorted_in_space(2, 'exc', c='k', sort_idx=2, ms=1) 
+    output_fn = output_fn_base + '_sorted_by_tp.png'
+    print 'Saving figure to:', output_fn
+    pylab.savefig(output_fn, dpi=200)
+#    plotter.plot_rasterplot('inh', 2)               # 2 
+
+#    plotter.plot_rasterplot('exc', 1)               # 1 
+#    plotter.plot_rasterplot('inh', 2)               # 2 
+
+    plotter.create_fig()  # create an empty figure
     plotter.n_fig_x = 2
     plotter.n_fig_y = 3
-    plotter.plot_rasterplot('exc', 1)               # 1 
-    plotter.plot_rasterplot('inh', 2)               # 2 
-    plotter.plot_vx_grid_vs_time(3)              # 3 
-    plotter.plot_vy_grid_vs_time(4)              # 4 
-    plotter.plot_x_grid_vs_time(5)
-    plotter.plot_y_grid_vs_time(6)
+    plotter.plot_network_activity('exc', 1)
+    plotter.plot_network_activity('inh', 2)
+    plotter.plot_vx_grid_vs_time(4)              # 3 
+    plotter.plot_vy_grid_vs_time(6)              # 4 
+    plotter.plot_x_grid_vs_time(3)
+    plotter.plot_y_grid_vs_time(5)
     output_fn = output_fn_base + '_0.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
-    output_fn = output_fn_base + '_0.pdf'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
+#    output_fn = output_fn_base + '_0.pdf'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
 #    output_fn = output_fn_base + '_0.eps'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)
 
+    plotter.n_fig_x = 1
+    plotter.n_fig_y = 1
+    plotter.create_fig()  # create an empty figure
+    plotter.plot_rasterplot('inh', 1)               # 2 
+    output_fn = output_fn_base + '_rp_inh.png'
+    print 'Saving figure to:', output_fn
+    pylab.savefig(output_fn, dpi=200)
 
 
     # poplation level, short time-scale
@@ -76,9 +98,9 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     output_fn = output_fn_base + '_1.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
-    output_fn = output_fn_base + '_1.pdf'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
+#    output_fn = output_fn_base + '_1.pdf'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
 #    output_fn = output_fn_base + '_1.eps'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)
@@ -113,17 +135,17 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
 
     # fig 4
-    plotter.n_fig_x = 1
-    plotter.n_fig_y = 2
-    plotter.create_fig()  # create an empty figure
-    plotter.plot_network_activity('exc', 1)
-    plotter.plot_network_activity('inh', 2)
-    output_fn = output_fn_base + '_4.png'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
-    output_fn = output_fn_base + '_4.pdf'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
+#    plotter.n_fig_x = 1
+#    plotter.n_fig_y = 2
+#    plotter.create_fig()  # create an empty figure
+#    plotter.plot_network_activity('exc', 1)
+#    plotter.plot_network_activity('inh', 2)
+#    output_fn = output_fn_base + '_4.png'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
+#    output_fn = output_fn_base + '_4.pdf'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
 #    output_fn = output_fn_base + '_4.eps'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)
@@ -138,9 +160,9 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     output_fn = output_fn_base + '_quiver.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
-    output_fn = output_fn_base + '_quiver.pdf'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
+#    output_fn = output_fn_base + '_quiver.pdf'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
 #    output_fn = output_fn_base + '_quiver.eps'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)

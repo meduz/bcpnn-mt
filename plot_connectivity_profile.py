@@ -37,7 +37,7 @@ class ConnectionPlotter(object):
         self.y_min, self.y_max = 1.0, .0
         self.quiver_scale = 2.
 
-    def create_fig(self, n_plots_x, n_plots_y):
+    def create_fig(self, n_plots_x, n_plots_y, title=None):
         self.n_plots_x, self.n_plots_y = n_plots_x, n_plots_y
         self.markersize_cell = 10
         self.markersize_min = 3
@@ -49,7 +49,11 @@ class ConnectionPlotter(object):
         pylab.rcParams['ytick.labelsize'] = 24
         self.fig = pylab.figure(figsize=(14, 10))
         self.ax = self.fig.add_subplot(n_plots_y, n_plots_x, 1, aspect='equal')
-        self.ax.set_title('Connectivity profile')
+        if title == None and self.params['connectivity_code'] == 'IIII':
+            title = 'Isotropic connectivity'
+        elif title == None:
+            title = 'Connectivity profile'
+        self.ax.set_title(title)
         self.ax.set_xlabel('$x$-position')
         self.ax.set_ylabel('$y$-position')
 
@@ -310,10 +314,12 @@ class ConnectionPlotter(object):
 
         xlim = self.ax.get_xlim()
         ylim = self.ax.get_ylim()
-        self.ax.set_xlim((xlim[0] - 0.02, xlim[1] + 0.25))
-        self.ax.set_ylim((ylim[0] - 0.10, ylim[1] + 0.10))
-#        self.ax.set_xlim((0, 1.3))
-#        self.ax.set_ylim((0, 1.3))
+
+#        self.ax.set_xlim((xlim[0] - 0.02, xlim[1] + 0.25))
+#        self.ax.set_ylim((ylim[0] - 0.10, ylim[1] + 0.10))
+
+        self.ax.set_xlim((-.1, 1.1))
+        self.ax.set_ylim((-.1, 1.1))
 #        print 'x_min, x_max', self.x_min, self.x_max
 #        print 'y_min, y_max', self.y_min, self.y_max
 #        self.ax.set_xlim((self.x_min - 0.05, self.x_max + 0.05))
@@ -498,7 +504,11 @@ if __name__ == '__main__':
     P.plot_connection_histogram(gid, 'ee')
     print 'plotting gid', gid
 
-    P.create_fig(n_plots_x, n_plots_y)
+    title = 'Anisotropic speed-dependent\nconnectivity profile'
+#    title = 'Anisotropic speed-independent\nconnectivity profile'
+#    title = 'Isotropic connectivity profile'
+#    title = None
+    P.create_fig(n_plots_x, n_plots_y, title=title)
 #    exc_color = (.5, .5, .5)
     outgoing_conns = True
     ee_targets = P.plot_connection_type(gid, 'ee', 'o', 'k', outgoing_conns, with_directions, plot_delays=with_delays, with_histogram=with_histogram)
@@ -549,5 +559,8 @@ if __name__ == '__main__':
     print 'Saving figure to', output_fig
     pylab.savefig(output_fig)
 
+    output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.pdf' % (gid, params['w_sigma_x'], params['w_sigma_v'])
+    print 'Saving figure to', output_fig
+    pylab.savefig(output_fig)
 #    pylab.show()
 
