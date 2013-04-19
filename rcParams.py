@@ -1,5 +1,5 @@
-rcParams = { 'axes.labelsize' : 28,
-            'label.fontsize': 28,
+rcParams = { 'axes.labelsize' : 24,
+            'label.fontsize': 24,
             'xtick.labelsize' : 24, 
             'ytick.labelsize' : 24, 
             'axes.titlesize'  : 32,

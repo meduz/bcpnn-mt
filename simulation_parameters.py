@@ -30,17 +30,17 @@ class parameter_storage(object):
 #        self.params['N_V'], self.params['N_theta'] = 2, 50# resolution in velocity norm and direction
 
 #         Medium-large system
-#         self.params['N_RF'] = 90# np.int(n_cells/N_V/N_theta)
-#         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-#         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']))# np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#         self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
-# 
+#        self.params['N_RF'] = 90# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']))# np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#        self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
+ 
 #         Medium-scale system
         self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
         self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
         self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
         self.params['N_V'], self.params['N_theta'] = 5, 5# resolution in velocity norm and direction
- 
+# 
 #         Small-scale system
 #        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
@@ -108,10 +108,10 @@ class parameter_storage(object):
         self.params['neuron_model'] = 'IF_cond_exp'
 #        self.params['neuron_model'] = 'IF_cond_alpha'
 #        self.params['neuron_model'] = 'EIF_cond_exp_isfa_ista'
-#        self.params['tau_syn_exc'] = 5.0 # 10.
-#        self.params['tau_syn_inh'] = 10.0 # 20.
-        self.params['tau_syn_exc'] = 20.0 # 10.
-        self.params['tau_syn_inh'] = 40.0 # 20.
+        self.params['tau_syn_exc'] = 5.0 # 10.
+        self.params['tau_syn_inh'] = 10.0 # 20.
+#        self.params['tau_syn_exc'] = 20.0 # 10.
+#        self.params['tau_syn_inh'] = 40.0 # 20.
         if self.params['neuron_model'] == 'IF_cond_exp':
             self.params['cell_params_exc'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10., 'v_reset' : -70., 'v_rest':-70}
             self.params['cell_params_inh'] = {'cm':1.0, 'tau_refrac':1.0, 'v_thresh':-50.0, 'tau_syn_E': self.params['tau_syn_exc'], 'tau_syn_I':self.params['tau_syn_inh'], 'tau_m' : 10., 'v_reset' : -70., 'v_rest':-70}
@@ -154,20 +154,23 @@ class parameter_storage(object):
 #        self.params['with_short_term_depression'] = True
 
         # when the initial connections are derived on the cell's tuning properties, these two values are used
-        self.params['connectivity_radius'] = 1.00      # this determines how much the directional tuning of the src is considered when drawing connections
-        self.params['maximal_latency'] = None      # optional restriction in connectivity based on distance and preferred direction of the source cell
+        self.params['direction_based_conn'] = True
+        if self.params['direction_based_conn']:
+            self.params['connectivity_radius'] = 1.0      # this determines how much the directional tuning of the src is considered when drawing connections
+        else:
+            self.params['connectivity_radius'] = 0.2      # this determines how much the directional tuning of the src is considered when drawing connections
         # WARNING: connectivity_radius affects w_sigma_x/v
-        self.params['delay_scale'] = 25.      # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
+        self.params['delay_scale'] = 1000.      # this determines the scaling from the latency (d(src, tgt) / v_src)  to the connection delay (delay_ij = latency_ij * delay_scale)
         self.params['delay_range'] = (0.1, 5000.)
-        self.params['w_sigma_x'] = 0.5 # width of connectivity profile for pre-computed weights
-        self.params['w_sigma_v'] = 0.5 # small w_sigma: tuning_properties get stronger weight when deciding on connection
+        self.params['w_sigma_x'] = 0.3 # width of connectivity profile for pre-computed weights
+        self.params['w_sigma_v'] = 0.3 # small w_sigma: tuning_properties get stronger weight when deciding on connection
                                                 # large w_sigma: high connection probability (independent of tuning_properties)
                                                 # small w_sigma_*: deviation from unaccelerated movements become less likely, straight line movements preferred
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
         self.params['w_sigma_isotropic'] = 0.25 # spatial reach of isotropic connectivity, should not be below 0.05 otherwise you don't get the desired p_effective 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
         self.params['w_tgt_in_per_cell_ee'] = 0.50# [uS] how much input should an exc cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ei'] = 1.50 # [uS] how much input should an inh cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ei'] = 1.80 # [uS] how much input should an inh cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ie'] = 0.80 # [uS] how much input should an exc cell get from its inh source cells?
         self.params['w_tgt_in_per_cell_ii'] = 0.15 # [uS] how much input should an inh cell get from its source cells?
         self.params['w_tgt_in_per_cell_ee'] *= 5. / self.params['tau_syn_exc']
@@ -178,7 +181,7 @@ class parameter_storage(object):
         self.params['conn_types'] = ['ee', 'ei', 'ie', 'ii']
 
 #        self.params['p_to_w'] =
-        self.params['p_ee'] = 0.02 # fraction of network cells allowed to connect to each target cell, used in CreateConnections
+        self.params['p_ee'] = 0.01 # fraction of network cells allowed to connect to each target cell, used in CreateConnections
         self.params['w_thresh_connection'] = 1e-6 # connections with a weight less then this value will be discarded
         self.params['w_min'] = 5e-4             # When probabilities are transformed to weights, they are scaled so that the map into this range
         self.params['w_max'] = 5e-3
@@ -239,7 +242,7 @@ class parameter_storage(object):
         # INPUT
         # ######
         self.params['f_max_stim'] = 5000. #1500. # [Hz]
-        self.params['w_input_exc'] = 1.0e-2#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
+        self.params['w_input_exc'] = 5.0e-3#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
 
         # ###############
         # MOTION STIMULUS
@@ -340,10 +343,13 @@ class parameter_storage(object):
             else:
 #                folder_name = 'Alpha_'
 #                 folder_name = 'ExpCond_'
-                folder_name = 'NewSearch_'
+#                folder_name = 'Small_'
 #                folder_name = 'Testing_'
-#                folder_name = 'LargeScaleModel_'
-#               folder_name = 'MediumScaleModel_'
+
+                if self.params['direction_based_conn']:
+                    folder_name = 'DB_'
+                else:
+                    folder_name = 'MB_'
 
             if self.params['with_short_term_depression']:
                 folder_name += 'STD_'
