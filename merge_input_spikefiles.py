@@ -4,15 +4,12 @@ import json
 import sys
 
 if len(sys.argv) > 1:
-    if sys.argv[1].isdigit():
-        gid = int(sys.argv[1])
-    else:
-        param_fn = sys.argv[1]
-        if os.path.isdir(param_fn):
-            param_fn += '/Parameters/simulation_parameters.json'
-        print 'Loading parameters from', param_fn
-        f = file(param_fn, 'r')
-        params = json.load(f)
+    param_fn = sys.argv[1]
+    if os.path.isdir(param_fn):
+        param_fn += '/Parameters/simulation_parameters.json'
+    print 'Loading parameters from', param_fn
+    f = file(param_fn, 'r')
+    params = json.load(f)
 else:
     import simulation_parameters
     ps = simulation_parameters.parameter_storage()

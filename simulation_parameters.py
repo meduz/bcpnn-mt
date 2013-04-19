@@ -166,10 +166,10 @@ class parameter_storage(object):
                                                 # large w_sigma_*: broad (deviation from unaccelerated movements possible to predict)
         self.params['w_sigma_isotropic'] = 0.25 # spatial reach of isotropic connectivity, should not be below 0.05 otherwise you don't get the desired p_effective 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.20# [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ee'] = 0.50# [uS] how much input should an exc cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ei'] = 1.50 # [uS] how much input should an inh cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ie'] = 0.80 # [uS] how much input should an exc cell get from its inh source cells?
-        self.params['w_tgt_in_per_cell_ii'] = 0.05 # [uS] how much input should an inh cell get from its source cells?
+        self.params['w_tgt_in_per_cell_ii'] = 0.15 # [uS] how much input should an inh cell get from its source cells?
         self.params['w_tgt_in_per_cell_ee'] *= 5. / self.params['tau_syn_exc']
         self.params['w_tgt_in_per_cell_ei'] *= 5. / self.params['tau_syn_exc']
         self.params['w_tgt_in_per_cell_ie'] *= 10. / self.params['tau_syn_inh']
@@ -185,18 +185,18 @@ class parameter_storage(object):
         self.params['n_src_cells_per_neuron'] = round(self.params['p_ee'] * self.params['n_exc']) # only excitatory sources
 
         # exc - inh
-        self.params['p_ei'] = 0.03 #self.params['p_ee']
+        self.params['p_ei'] = 0.05 #self.params['p_ee']
         self.params['w_ei_mean'] = 0.005
         self.params['w_ei_sigma'] = 0.001
 
         # inh - exc
 #        self.params['p_ie'] = 1.
-        self.params['p_ie'] = 0.03 #self.params['p_ee']
+        self.params['p_ie'] = 0.05 #self.params['p_ee']
         self.params['w_ie_mean'] = 0.005
         self.params['w_ie_sigma'] = 0.001
 
         # inh - inh
-        self.params['p_ii'] = 0.03
+        self.params['p_ii'] = 0.02
         self.params['w_ii_mean'] = 0.003
         self.params['w_ii_sigma'] = 0.001
 
@@ -340,7 +340,7 @@ class parameter_storage(object):
             else:
 #                folder_name = 'Alpha_'
 #                 folder_name = 'ExpCond_'
-                folder_name = 'NewDebugConn_'
+                folder_name = 'NewSearch_'
 #                folder_name = 'Testing_'
 #                folder_name = 'LargeScaleModel_'
 #               folder_name = 'MediumScaleModel_'

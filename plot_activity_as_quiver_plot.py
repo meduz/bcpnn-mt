@@ -6,8 +6,16 @@ import matplotlib
 from matplotlib import cm
 import time
 import utils
-import rcParams
-rcP= rcParams.rcParams
+import os
+import json
+
+rcP = { 'axes.labelsize' : 28,
+            'label.fontsize': 28,
+            'xtick.labelsize' : 20, 
+            'ytick.labelsize' : 20, 
+            'axes.titlesize'  : 32,
+            'legend.fontsize': 9}
+
 pylab.rcParams.update(rcP)
 
 class ActivityQuiverPlot(object):
@@ -42,8 +50,10 @@ class ActivityQuiverPlot(object):
         norm = matplotlib.mpl.colors.Normalize(vmin=o_min, vmax=o_max)
         m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cm.Greys)#jet)
         m.set_array(np.arange(o_min, o_max, 0.01))
-        cb = fig.colorbar(m, ax=ax, shrink=.825)
-        cb.set_label('Number of input spikes')
+#        cb = fig.colorbar(m, ax=ax, shrink=.825, ticks=[])
+#        cbar = fig.colorbar(cax, ticks=[-1, 0, 1])
+#        cbar.ax.set_yticklabels
+#        cb.set_label('Number of input spikes')
         rgba_colors = []
 
 #        idx_sorted = range(self.gids_to_plot.size)
@@ -68,7 +78,9 @@ class ActivityQuiverPlot(object):
 #        data[:n_cells,:] = tp[self.gids_to_plot, :]
         data[:n_cells,:] = tp[idx_sorted, :]
         mp = self.params['motion_params']
-        data[-1,:] = mp
+        t_travel = .5 * self.params['t_sim'] / 1000.
+        data[-1,:] = (mp[0] + t_travel * mp[2], mp[1] + t_travel * mp[3], mp[2], mp[3])
+#        data[-1,:] = mp
 
         rgba_colors.append('b')
         ax.quiver(data[:, 0], data[:, 1], data[:, 2], data[:, 3], \
@@ -98,26 +110,28 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         param_fn = sys.argv[1]
         if os.path.isdir(param_fn):
-            param_fn += '/Parameters/simulation_parameters.info'
-        import NeuroTools.parameters as NTP
-        fn_as_url = utils.convert_to_url(param_fn)
-        params = NTP.ParameterSet(fn_as_url)
+            param_fn += '/Parameters/simulation_parameters.json'
         print 'Loading parameters from', param_fn
-        plot_prediction(params=params)
-
+        f = file(param_fn, 'r')
+        params = json.load(f)
     else:
-        PS = simulation_parameters.parameter_storage()
-        params = PS.load_params()
+        import simulation_parameters
+        ps = simulation_parameters.parameter_storage()
+        params = ps.params
 
     tp = np.loadtxt(params['tuning_prop_means_fn'])
 
     AQP = ActivityQuiverPlot(params)
     sim_cnt = 0
 
+
     # you can also plot the input but do this before:
     # os.system('python merge_input_spikefiles.py')
-    spikes_fn = params['input_folder'] + 'merged_input.dat'
+#    spikes_fn = params['input_folder'] + 'merged_input.dat'
+#    if not os.path.exists(spikes_fn):
+#        os.system('python merge_input_spikefiles.py %s' % (params['folder_name']))
 
+    spikes_fn = 'InputSpikeTrains_bX1.50e-01_bV1.50e-01_fstim5.0e+03_tsim3000_tblank200_tbeforeblank600_15520nrns/merged_input_800-1200.dat'
 #    spikes_fn = params['exc_spiketimes_fn_merged'] + '.ras'
     print 'Loading ', spikes_fn
     # the spikes_fn should store the raw spike trains with spike times in column 0, and gids in column 1

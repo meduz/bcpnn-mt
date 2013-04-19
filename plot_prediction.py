@@ -39,17 +39,18 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
             params['w_sigma_x'], params['w_sigma_v'], params['delay_scale'], params['connectivity_radius'], params['w_tgt_in_per_cell_ee'])
 
 
-    plotter.create_fig()  # create an empty figure
-    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.2)
-    plotter.n_fig_x = 1
-    plotter.n_fig_y = 2
-    plotter.plot_input_spikes_sorted_in_space(1, c='b', sort_idx=0, ms=1) 
-    plotter.plot_output_spikes_sorted_in_space(1, 'exc', c='k', sort_idx=0, ms=1) 
-    plotter.plot_input_spikes_sorted_in_space(2, c='b', sort_idx=2, ms=1) 
-    plotter.plot_output_spikes_sorted_in_space(2, 'exc', c='k', sort_idx=2, ms=1) 
-    output_fn = output_fn_base + '_sorted_by_tp.png'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
+#    plotter.create_fig()  # create an empty figure
+#    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.2)
+#    plotter.n_fig_x = 1
+#    plotter.n_fig_y = 2
+#    plotter.plot_input_spikes_sorted_in_space(1, c='b', sort_idx=0, ms=1) 
+#    plotter.plot_output_spikes_sorted_in_space(1, 'exc', c='k', sort_idx=0, ms=1) 
+#    plotter.plot_input_spikes_sorted_in_space(2, c='b', sort_idx=2, ms=1) 
+#    plotter.plot_output_spikes_sorted_in_space(2, 'exc', c='k', sort_idx=2, ms=1) 
+#    output_fn = output_fn_base + '_sorted_by_tp.png'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
+
 #    plotter.plot_rasterplot('inh', 2)               # 2 
 
 #    plotter.plot_rasterplot('exc', 1)               # 1 

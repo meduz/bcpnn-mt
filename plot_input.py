@@ -5,6 +5,7 @@ import numpy as np
 import sys
 #import rcParams
 #rcP= rcParams.rcParams
+import os
 
 rcP= { 'axes.labelsize' : 18,
             'label.fontsize': 18,
@@ -45,28 +46,37 @@ pylab.rcParams.update(rcP)
 # --------------------------------------------------------------------------
 
 
-params_loaded = False
 if len(sys.argv) == 2:
     gid = int(sys.argv[1])
     import simulation_parameters
     ps = simulation_parameters.parameter_storage()
     params = ps.params
-    rate_fn = params['input_rate_fn_base'] + str(gid) + '.npy'
-    spike_fn = params['input_st_fn_base'] + str(gid) + '.npy'
-    print 'Loading data from'
-    print rate_fn
-    print spike_fn
-    params_loaded = True
+
 
 elif len(sys.argv) == 3:
-    rate_fn = sys.argv[1]
-    spike_fn = sys.argv[2]
-else:
-    info = "\n\tuse:\n \
-    \t\tpython plot_input.py   [RATE_ENVELOPE_FILE]  [SPIKE_INPUT_FILE]\n \
-    \tor: \n\
-    \t\tpython plot_input.py [gid of the cell to plot]" 
-    print info
+    gid = int(sys.argv[1])
+    import json
+    param_fn = sys.argv[2]
+    if os.path.isdir(param_fn):
+        param_fn += '/Parameters/simulation_parameters.json'
+    print '\nLoading parameters from %s\n' % (param_fn)
+    f = file(param_fn, 'r')
+    params = json.load(f)
+
+rate_fn = params['input_rate_fn_base'] + str(gid) + '.npy'
+spike_fn = params['input_st_fn_base'] + str(gid) + '.npy'
+print 'Loading data from'
+print rate_fn
+print spike_fn
+print 'debug', params['figures_folder']
+
+#else:
+#    info = "\n\tuse:\n \
+#    \t\tpython plot_input.py   [RATE_ENVELOPE_FILE]  [SPIKE_INPUT_FILE]\n \
+#    \tor: \n\
+#    \t\tpython plot_input.py [gid of the cell to plot]" 
+#    print info
+
 
 rate = np.load(rate_fn)
 #rate /= np.max(rate)
@@ -83,8 +93,7 @@ n, bins = np.histogram(spikes, bins=n_bins, range=(0, params['t_sim']))
 print 'n, bins', n, 'total', np.sum(n), 'binsize:', binsize
 
 fig = pylab.figure()
-pylab.subplots_adjust(bottom=.15, left=.15, hspace=.55)
-#pylab.subplots_adjust(hspace=0.35)
+pylab.subplots_adjust(bottom=.10, left=.12, hspace=.02, top=0.94)#55)
 ax = fig.add_subplot(211)
 
 nspikes = spikes.size
@@ -102,19 +111,30 @@ print 'rate', rate
 n_steps = int(round(1. / params['dt_rate']))
 rate = rate[::n_steps] # ::10 because dt for rate creation was 0.1 ms
 ax.plot(np.arange(rate.size), rate, label='Cond_in = %.3e nS' % cond_in, lw=2, c='b')
-ax.set_xlabel('Time [ms]')
-ax.set_ylabel('Input rate (t) [Hz]')
+#ax.set_xlabel('Time [ms]')
+ax.set_xticks([])
+
+ax.set_ylabel('Input rate (t) [kHz]')
+def set_yticks(ax, n_ticks=5, endpoint=False):
+    ylim = ax.get_ylim()
+    ticks = np.linspace(ylim[0], ylim[1], n_ticks, endpoint=endpoint)
+    ax.set_yticks(ticks)
+    ax.set_yticklabels(['%d' % i for i in ticks])
+
+set_yticks(ax, 5)
+#ax.set_yticklabels(['', '.7', '1.4', '2.1', '2.8'])
 
 #ax.legend()
 ax = fig.add_subplot(212)
 ax.bar(bins[:-1], n, width= bins[1] - bins[0])
-ax.set_title('Binned input spike train, binsize=%.1f ms' % binsize)
+#ax.set_title('Binned input spike train, binsize=%.1f ms' % binsize)
 
 ax.set_xlim((0, params['t_sim']))
-ax.set_ylabel('Number of input spikes')
+ax.set_ylabel('Num input spikes')
 ax.set_xlabel('Time [ms]')
+#ylabels = ax.get_yticklabels()
+set_yticks(ax, 4)
 
-#if params_loaded:
 output_fn = params['figures_folder'] + 'input_%d.png' % (gid)
 print 'Saving to', output_fn
 pylab.savefig(output_fn, dpi=200)

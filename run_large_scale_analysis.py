@@ -23,9 +23,9 @@ params = json.load(f)
 #    network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
 #    params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
-script_names = ['plot_prediction.py', 'plot_connectivity_profile.py', 'plot_rasterplots.py', 'plot_weight_and_delay_histogram.py ee',\
-        'plot_weight_and_delay_histogram.py ei', 'plot_weight_and_delay_histogram.py ie', 'plot_weight_and_delay_histogram.py ii', \
-        'analyse_simple.py']
+script_names = ['plot_rasterplots.py', 'plot_prediction.py', 'plot_connectivity_profile.py', 'plot_weight_and_delay_histogram.py ee',\
+        'plot_weight_and_delay_histogram.py ei', 'plot_weight_and_delay_histogram.py ie', 'plot_weight_and_delay_histogram.py ii']
+        #'analyse_simple.py']
 
 #script_names = ['merge_connlists.py', 'analyse_simple.py', 'merge_connlists.py', \
 #'get_conductance_matrix.py', 'plot_spike_histogram.py exc', 'plot_spike_histogram.py inh', 'plot_connectivity_profile.py']
