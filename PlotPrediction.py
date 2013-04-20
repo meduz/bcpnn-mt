@@ -452,8 +452,9 @@ class PlotPrediction(object):
     def create_fig(self):
         print "plotting ...."
         self.fig = pylab.figure(figsize=self.fig_size)
-        pylab.subplots_adjust(hspace=0.4)
-        pylab.subplots_adjust(wspace=0.35)
+        pylab.subplots_adjust(hspace=0.02)
+        pylab.subplots_adjust(wspace=0.18)
+        pylab.subplots_adjust(top=0.97, right=0.97)
 
     def load_spiketimes(self, cell_type):
         if cell_type == 'inh':
@@ -562,7 +563,7 @@ class PlotPrediction(object):
             ax.set_ylim(ylim)
 
 
-    def plot_network_activity(self, cell_type, fig_cnt=1):
+    def plot_network_activity(self, cell_type, fig_cnt=1, set_ylabel=True):
 
         if cell_type == 'exc':
             n_cells = self.params['n_exc']
@@ -589,19 +590,21 @@ class PlotPrediction(object):
         ax.set_xlim((0, self.params['t_sim']))
         bins = np.linspace(0, self.params['t_sim'], n_bins, endpoint=True)
         ax.bar(bins, avg_activity, width=bins[1]-bins[0], )
-        ax.set_xlabel('Time [ms]')
-        ax.set_ylabel('Average firing rate [Hz]')
+#        ax.set_xlabel('Time [ms]')
+        ax.set_xticklabels([])
+        if set_ylabel:
+            ax.set_ylabel('Average firing rate [Hz]')
         ax.set_title('Activity of %s cells' % cell_type)
 
 
     def plot_vx_grid_vs_time(self, fig_cnt=1):
         print 'plot_vx_grid_vs_time ... '
-        xlabel = 'Time [ms]'
+        xlabel = ''#Time [ms]'
         ylabel = '$v_x$'
 #        title = '$v_x$ binned vs time'
         title = ''
         vx_grid, v_edges = self.bin_estimates(self.vx_grid, index=2)
-        self.plot_grid_vs_time(vx_grid, title, xlabel, ylabel, v_edges, fig_cnt, max_conf=.05)
+        self.plot_grid_vs_time(vx_grid, title, xlabel, ylabel, v_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=False)
         self.data_to_store['vx_grid.dat'] = {'data' : vx_grid, 'edges': v_edges}
 
 
@@ -612,18 +615,18 @@ class PlotPrediction(object):
         ylabel = '$v_y$'
         title = ''#$v_y$ binned vs time'
         vy_grid, v_edges = self.bin_estimates(self.vy_grid, index=3)
-        self.plot_grid_vs_time(vy_grid, title, xlabel, ylabel, v_edges, fig_cnt, max_conf=.05)
+        self.plot_grid_vs_time(vy_grid, title, xlabel, ylabel, v_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=True)
         self.data_to_store['vy_grid.dat'] = {'data' : vy_grid, 'edges': v_edges}
 
 
     def plot_x_grid_vs_time(self, fig_cnt=1, ylabel=None):
         print 'plot_x_grid_vs_time ...'
-        xlabel = 'Time [ms]'
+        xlabel = ''#Time [ms]'
         if ylabel == None:
             ylabel = '$x_{predicted}$'
         title = ''#$x_{predicted}$ binned vs time'
         x_grid, x_edges = self.bin_estimates(self.x_grid, index=0)
-        self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt, max_conf=.05)
+        self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=False)
         self.data_to_store['xpos_grid.dat'] = {'data' : x_grid, 'edges': x_edges}
 
 
@@ -634,11 +637,11 @@ class PlotPrediction(object):
             ylabel = '$y_{predicted}$'
         title = ''#$y_{predicted}$ binned vs time'
         y_grid, y_edges = self.bin_estimates(self.y_grid, index=1)
-        self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt, max_conf=.05)
+        self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=True)
         self.data_to_store['ypos_grid.dat'] = {'data' : y_grid, 'edges': y_edges}
 
 
-    def plot_grid_vs_time(self, data, title='', xlabel='', ylabel='', yticks=[], fig_cnt=1, show_blank=None, max_conf=None):
+    def plot_grid_vs_time(self, data, title='', xlabel='', ylabel='', yticks=[], fig_cnt=1, show_blank=None, max_conf=None, set_colorbar=True, set_xlabels=True):
         """
         Plots a colormap / grid versus time
         """
@@ -657,10 +660,6 @@ class PlotPrediction(object):
         ax.set_yticks(y_ticks)
         ax.set_yticklabels(['%.2f' %i for i in yticks[::5]])
 
-        n_x_bins = len(self.t_ticks)
-        x_bin_labels = ['%d' % i for i in self.t_ticks]
-        ax.set_xticks(np.linspace(0, self.n_bins, n_x_bins))#range(self.n_bins)[::4])
-        ax.set_xticklabels(x_bin_labels)
 #        print  '\nDEBUG\n\t ticks', self.t_ticks
 #        ax.set_xticks(self.t_ticks)
 #        ax.set_xticklabels(['%d' %i for i in self.t_ticks])
@@ -672,18 +671,32 @@ class PlotPrediction(object):
         norm = matplotlib.mpl.colors.Normalize(vmin=0, vmax=max_conf)
         m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cm.jet)#jet)
         m.set_array(np.arange(0., max_conf, 0.01))
-        cb = pylab.colorbar(m, orientation='horizontal', aspect=40, anchor=(.5, .0))
-        ticklabels = cb.ax.get_xticklabels()
-#        print 'ticklabels', ticklabels, type(ticklabels)
-#        ticklabels = list(ticklabels)
-        ticklabel_texts = []
-        for text in ticklabels:
-            ticklabel_texts.append('%s' % text.get_text())
-        ticklabel_texts[-1] = '> %.1f' % max_conf
-        for i_, text in enumerate(ticklabels):
-            text.set_text(ticklabel_texts[i_])
-        cb.ax.set_xticklabels(ticklabel_texts)
-        cb.set_label('Prediction confidence')
+        if set_colorbar:
+
+            cb = pylab.colorbar(m, orientation='horizontal', aspect=40, anchor=(.5, .0))
+            ticklabels = cb.ax.get_xticklabels()
+    #        print 'ticklabels', ticklabels, type(ticklabels)
+    #        ticklabels = list(ticklabels)
+            ticklabel_texts = []
+            for text in ticklabels:
+                ticklabel_texts.append('%s' % text.get_text())
+            ticklabel_texts[-1] = '> %.2f' % max_conf
+            for i_, text in enumerate(ticklabels):
+                text.set_text(ticklabel_texts[i_])
+            cb.ax.set_xticklabels(ticklabel_texts)
+            cb.set_label('Prediction confidence')
+
+        if set_xlabels:
+            n_x_bins = len(self.t_ticks)
+            x_bin_labels = ['%d' % i for i in self.t_ticks]
+            ax.set_xticks(np.linspace(0, self.n_bins, n_x_bins))#range(self.n_bins)[::4])
+            ax.set_xticklabels(x_bin_labels)
+
+
+        else:
+            ax.set_xticks([])
+#            ax.set_xticklabels([])
+
         if show_blank:
             self.plot_blank_on_cmap(cax, txt='blank')
 

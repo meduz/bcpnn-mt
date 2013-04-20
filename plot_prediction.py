@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import pylab
 import PlotPrediction as P
 import sys
@@ -60,45 +60,61 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     plotter.n_fig_x = 2
     plotter.n_fig_y = 3
     plotter.plot_network_activity('exc', 1)
-    plotter.plot_network_activity('inh', 2)
-    plotter.plot_vx_grid_vs_time(4)              # 3 
-    plotter.plot_vy_grid_vs_time(6)              # 4 
+    plotter.plot_network_activity('inh', 2, set_ylabel=False)
     plotter.plot_x_grid_vs_time(3)
+    plotter.plot_vx_grid_vs_time(4)              # 3 
     plotter.plot_y_grid_vs_time(5)
+    plotter.plot_vy_grid_vs_time(6)              # 4 
+
+#    axes = plotter.fig.get_axes()
+#    points = []
+#    bbs = []
+#    for i_, ax in enumerate(axes):
+#        bb = ax.get_position()
+#        pts = bb.get_points()
+#        points.append(pts)
+#        bbs.append(bb)
+#        print 'ax %d bounding box:' % i_, bb, '\tpoints:', pts
+#    print '[[left bottom] [ width height]]'
+#    
+
+       #! Get relative position of subplots axes as Bbox object.
+#       bbax1=ax1.get_position()
+#       bbax2=ax2.get_position()
+
+       #! Get relative position of subplots axes as Bbox and get position in a
+       #! ndarray:[[left bottom] [ width height]]
+#       posax1 = bbax1.get_points()
+#       posax2 = bbax2.get_points()
+
+       #! Lower subplot ax1 bottom and decrease height of subplot ax2
+#       posax1[0][1]=posax1[0][1]-0.2/float(subplot_dim[0])
+#       posax2[1][1]=posax2[1][1]-0.2/float(subplot_dim[0])
+
+
     output_fn = output_fn_base + '_0.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
-#    output_fn = output_fn_base + '_0.pdf'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn, dpi=200)
-#    output_fn = output_fn_base + '_0.eps'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn, dpi=200)
 
-    plotter.n_fig_x = 1
-    plotter.n_fig_y = 1
-    plotter.create_fig()  # create an empty figure
-    plotter.plot_rasterplot('inh', 1)               # 2 
-    output_fn = output_fn_base + '_rp_inh.png'
+    output_fn = output_fn_base + '_0.pdf'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
 
+#    plotter.n_fig_x = 3
+#    plotter.n_fig_y = 2
+#    plotter.create_fig()
+#    pylab.rcParams['legend.fontsize'] = 12
+#    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.3)
+#    plotter.plot_vx_estimates(1)
+#    plotter.plot_vy_estimates(2)
+#    plotter.plot_vdiff(3)
+#    plotter.plot_x_estimates(4)
+#    plotter.plot_y_estimates(5) 
+#    plotter.plot_xdiff(6)
+#    output_fn = output_fn_base + '_1.png'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
 
-    # poplation level, short time-scale
-    plotter.n_fig_x = 3
-    plotter.n_fig_y = 2
-    plotter.create_fig()
-    pylab.rcParams['legend.fontsize'] = 12
-    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.3)
-    plotter.plot_vx_estimates(1)
-    plotter.plot_vy_estimates(2)
-    plotter.plot_vdiff(3)
-    plotter.plot_x_estimates(4)
-    plotter.plot_y_estimates(5) 
-    plotter.plot_xdiff(6)
-    output_fn = output_fn_base + '_1.png'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
 #    output_fn = output_fn_base + '_1.pdf'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)
@@ -106,6 +122,14 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)
 
+
+#    plotter.n_fig_x = 1
+#    plotter.n_fig_y = 1
+#    plotter.create_fig()  # create an empty figure
+#    plotter.plot_rasterplot('inh', 1)               # 2 
+#    output_fn = output_fn_base + '_rp_inh.png'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
 
 
 #    plotter.plot_theta_estimates(5)
@@ -153,14 +177,15 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
 
 
-    plotter.n_fig_x = 1
-    plotter.n_fig_y = 1
-    plotter.create_fig()
-    weights = [plotter.nspikes_binned_normalized[i, :].sum() / plotter.n_bins for i in xrange(plotter.n_cells)]
-    plotter.quiver_plot(weights, fig_cnt=1)
-    output_fn = output_fn_base + '_quiver.png'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
+#    plotter.n_fig_x = 1
+#    plotter.n_fig_y = 1
+#    plotter.create_fig()
+#    weights = [plotter.nspikes_binned_normalized[i, :].sum() / plotter.n_bins for i in xrange(plotter.n_cells)]
+#    plotter.quiver_plot(weights, fig_cnt=1)
+#    output_fn = output_fn_base + '_quiver.png'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
+
 #    output_fn = output_fn_base + '_quiver.pdf'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)
@@ -184,7 +209,7 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
 #    plotter.make_infotextbox()
 
-#    pylab.show()
+    pylab.show()
 
 
 #    plotter.plot_nspikes_binned()               # 1
