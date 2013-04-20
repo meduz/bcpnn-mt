@@ -10,8 +10,13 @@ import numpy as np
 import re
 import utils
 import os
-import rcParams
-rcP= rcParams.rcParams
+rcP= { 'axes.labelsize' : 24,
+            'label.fontsize': 24,
+            'xtick.labelsize' : 24, 
+            'ytick.labelsize' : 24, 
+            'axes.titlesize'  : 32,
+            'legend.fontsize': 9}
+
 
 if len(sys.argv) > 1:
     param_fn = sys.argv[1]
@@ -67,13 +72,13 @@ def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0, ms
 #        ax.plot(spiketimes, i * np.ones(nspikes) + shift, m, color=c, markersize=2)
 
     if sort_idx == 0:
-        ylabel_txt ='Neurons sorted\nby x-pos'
+        ylabel_txt ='$x$-pos'
     elif sort_idx == 1:
-        ylabel_txt ='Neurons sorted\nby y-pos'
+        ylabel_txt ='Neurons sorted by $y$-pos'
     elif sort_idx == 2:
-        ylabel_txt ='Neurons sorted\nby x-direction'
+        ylabel_txt ='Neurons sorted by $v_x$, '
     elif sort_idx == 3:
-        ylabel_txt ='Neurons sorted\nby y-direction'
+        ylabel_txt ='Neurons sorted by $v_y$'
 
     ax.set_ylabel(ylabel_txt)
 
@@ -139,6 +144,7 @@ pylab.rcParams.update(rcP)
 #ax3 = fig.add_subplot(413)
 #ax4 = fig.add_subplot(414)
 fig = pylab.figure(figsize=(14, 12))
+pylab.subplots_adjust(hspace=.03)
 ax1 = fig.add_subplot(211)
 ax2 = fig.add_subplot(212)
 #ax3 = fig.add_subplot(413)
@@ -167,7 +173,9 @@ plot_output_spikes_sorted_in_space(ax2, 'exc', c='k', sort_idx=2, ms=3)
 #plot_spikes(ax4, fn_inh, params['n_inh'])
 
 
-ax1.set_xlabel('Time [ms]')
+ax1.set_xticks([])
+ax1.set_yticklabels(['', '.2', '.4', '.6', '.8', '1.0'])
+#ax1.set_xlabel('Time [ms]')
 ax2.set_xlabel('Time [ms]')
 #ax3.set_xlabel('Time [ms]')
 #ax4.set_xlabel('Time [ms]')
@@ -179,6 +187,7 @@ ax2.set_xlabel('Time [ms]')
 
 ax1.set_xlim((0, params['t_sim']))
 ax2.set_xlim((0, params['t_sim']))
+ax2.set_ylim((-3, 3))
 #ax3.set_xlim((0, params['t_sim']))
 #ax4.set_xlim((0, params['t_sim']))
 
@@ -193,5 +202,5 @@ pylab.savefig(output_fn, dpi=200)
 #pylab.savefig(output_fn, dpi=200)
 
 
-pylab.show()
+#pylab.show()
 

@@ -821,7 +821,7 @@ if __name__ == '__main__':
         os.system('python plot_connectivity_profile.py %s' % ps.params['folder_name'])
         for conn_type in ['ee', 'ei', 'ie', 'ii']:
             os.system('python plot_weight_and_delay_histogram.py %s %s' % (conn_type, ps.params['folder_name']))
-    if pc_id == 2 or not(USE_MPI):
+    if pc_id == 1 or not(USE_MPI):
         os.system('python analyse_connectivity.py %s' % ps.params['folder_name'])
 
     if comm != None:
