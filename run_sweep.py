@@ -9,7 +9,10 @@ sn = "NetworkSimModuleNoColumns.py"
 #        for w_ee in [.2, .25]:
 #            os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, connectivity_radius, delay_scale))
 
-#for delay_scale in [10., 5., 3., 2.]:
+for w_ee in [.3, .35, .4]:
+    for delay_scale in [1000., 500., 250., 100., 50., 25., 10., 5., 2.]:
+        os.system('mpirun -np 2 python  %s %f %f'  % (sn, w_ee, delay_scale))
+
 #    for connectivity_radius in [.2, .3]:
 #        for w_ee in [.25, .3]:
 #            os.system('mpirun -np 2 python  %s %f %f %f %f %f'  % (sn, w_sigma_x, w_sigma_v, w_ee, connectivity_radius, delay_scale))
