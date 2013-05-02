@@ -30,10 +30,10 @@ class parameter_storage(object):
 #        self.params['N_V'], self.params['N_theta'] = 2, 50# resolution in velocity norm and direction
 
 #         Medium-large system
-        self.params['N_RF'] = 90# np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']))# np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
+#        self.params['N_RF'] = 90# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF']))# np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+#        self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
 
 #         Medium-scale system
 #        self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
@@ -43,10 +43,10 @@ class parameter_storage(object):
 
 # 
 #         Small-scale system
-#        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
-#        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-#        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#        self.params['N_V'], self.params['N_theta'] = 4, 4# resolution in velocity norm and direction
+        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+        self.params['N_V'], self.params['N_theta'] = 4, 4# resolution in velocity norm and direction
 
         # Minimum sized system
 #        self.params['N_RF'] = 9# np.int(n_cells/N_V/N_theta)
@@ -242,8 +242,8 @@ class parameter_storage(object):
         # ######
         # INPUT
         # ######
-        self.params['f_max_stim'] = 4000. #1500. # [Hz]
-        self.params['w_input_exc'] = 5.0e-3#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
+        self.params['f_max_stim'] = 3000. #1500. # [Hz]
+        self.params['w_input_exc'] = 1.0e-2#2.5e-3 # [uS] mean value for input stimulus ---< exc_units (columns
 
         # ###############
         # MOTION STIMULUS
@@ -345,12 +345,13 @@ class parameter_storage(object):
 #                folder_name = 'Alpha_'
 #                 folder_name = 'ExpCond_'
 #                folder_name = 'Small_'
-#                folder_name = 'Testing_'
+#                folder_name = 'HW_tuning_'
 
                 if self.params['direction_based_conn']:
                     folder_name = 'DB_'
                 else:
                     folder_name = 'MB_'
+                folder_name = 'HW_tuning_'
 
             if self.params['with_short_term_depression']:
                 folder_name += 'STD_'

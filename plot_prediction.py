@@ -24,8 +24,8 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 #    params['t_sim'] = 1200
 
     plotter = P.PlotPrediction(params, data_fn)
-    pylab.rcParams['axes.labelsize'] = 18
-    pylab.rcParams['axes.titlesize'] = 18
+    pylab.rcParams['axes.labelsize'] = 22
+    pylab.rcParams['axes.titlesize'] = 22
     if plotter.no_spikes:
         return
 
@@ -58,13 +58,13 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
     plotter.create_fig()  # create an empty figure
     plotter.n_fig_x = 2
-    plotter.n_fig_y = 3
-    plotter.plot_network_activity('exc', 1)
-    plotter.plot_network_activity('inh', 2, set_ylabel=False)
+    plotter.n_fig_y = 2
+#    plotter.plot_network_activity('exc', 1)
+#    plotter.plot_network_activity('inh', 2, set_ylabel=False)
+    plotter.plot_vx_grid_vs_time(1)              # 3 
+    plotter.plot_vy_grid_vs_time(2)              # 4 
     plotter.plot_x_grid_vs_time(3)
-    plotter.plot_vx_grid_vs_time(4)              # 3 
-    plotter.plot_y_grid_vs_time(5)
-    plotter.plot_vy_grid_vs_time(6)              # 4 
+    plotter.plot_y_grid_vs_time(4)
 
 #    axes = plotter.fig.get_axes()
 #    points = []
@@ -77,22 +77,22 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 #        print 'ax %d bounding box:' % i_, bb, '\tpoints:', pts
 #    print '[[left bottom] [ width height]]'
 #    
-
        #! Get relative position of subplots axes as Bbox object.
 #       bbax1=ax1.get_position()
 #       bbax2=ax2.get_position()
-
        #! Get relative position of subplots axes as Bbox and get position in a
        #! ndarray:[[left bottom] [ width height]]
 #       posax1 = bbax1.get_points()
 #       posax2 = bbax2.get_points()
-
        #! Lower subplot ax1 bottom and decrease height of subplot ax2
 #       posax1[0][1]=posax1[0][1]-0.2/float(subplot_dim[0])
 #       posax2[1][1]=posax2[1][1]-0.2/float(subplot_dim[0])
 
-
     output_fn = output_fn_base + '_0.png'
+    print 'Saving figure to:', output_fn
+    pylab.savefig(output_fn, dpi=200)
+
+    output_fn = output_fn_base + '_0.svg'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
 
@@ -100,20 +100,24 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
 
-#    plotter.n_fig_x = 3
-#    plotter.n_fig_y = 2
-#    plotter.create_fig()
-#    pylab.rcParams['legend.fontsize'] = 12
-#    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.3)
-#    plotter.plot_vx_estimates(1)
-#    plotter.plot_vy_estimates(2)
-#    plotter.plot_vdiff(3)
-#    plotter.plot_x_estimates(4)
-#    plotter.plot_y_estimates(5) 
-#    plotter.plot_xdiff(6)
-#    output_fn = output_fn_base + '_1.png'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn, dpi=200)
+    plotter.n_fig_x = 3
+    plotter.n_fig_y = 2
+    plotter.create_fig()
+    pylab.rcParams['legend.fontsize'] = 12
+    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.3)
+    plotter.plot_vx_estimates(1)
+    plotter.plot_vy_estimates(2)
+    plotter.plot_vdiff(3)
+    plotter.plot_x_estimates(4)
+    plotter.plot_y_estimates(5) 
+    plotter.plot_xdiff(6)
+    output_fn = output_fn_base + '_1.png'
+    print 'Saving figure to:', output_fn
+    pylab.savefig(output_fn, dpi=200)
+    output_fn = output_fn_base + '_1.svg'
+    print 'Saving figure to:', output_fn
+    pylab.savefig(output_fn, dpi=200)
+
 
 #    output_fn = output_fn_base + '_1.pdf'
 #    print 'Saving figure to:', output_fn
