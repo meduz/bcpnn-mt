@@ -611,22 +611,24 @@ class PlotPrediction(object):
 
     def plot_vy_grid_vs_time(self, fig_cnt=1):
         print 'plot_vy_grid_vs_time ...'
-        xlabel = 'Time [ms]'
+        xlabel = ''
+#        xlabel = 'Time [ms]'
         ylabel = '$v_y$'
         title = ''#$v_y$ binned vs time'
         vy_grid, v_edges = self.bin_estimates(self.vy_grid, index=3)
-        self.plot_grid_vs_time(vy_grid, title, xlabel, ylabel, v_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=True)
+        self.plot_grid_vs_time(vy_grid, title, xlabel, ylabel, v_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=False)
         self.data_to_store['vy_grid.dat'] = {'data' : vy_grid, 'edges': v_edges}
 
 
     def plot_x_grid_vs_time(self, fig_cnt=1, ylabel=None):
         print 'plot_x_grid_vs_time ...'
-        xlabel = ''#Time [ms]'
+        xlabel = 'Time [ms]'
         if ylabel == None:
             ylabel = '$x_{predicted}$'
         title = ''#$x_{predicted}$ binned vs time'
         x_grid, x_edges = self.bin_estimates(self.x_grid, index=0)
-        self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=False)
+#        self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=True)
+        self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt, max_conf=.05, set_colorbar=True, set_xlabels=True)
         self.data_to_store['xpos_grid.dat'] = {'data' : x_grid, 'edges': x_edges}
 
 
@@ -637,7 +639,8 @@ class PlotPrediction(object):
             ylabel = '$y_{predicted}$'
         title = ''#$y_{predicted}$ binned vs time'
         y_grid, y_edges = self.bin_estimates(self.y_grid, index=1)
-        self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=True)
+#        self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=True)
+        self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt, max_conf=.05, set_colorbar=True, set_xlabels=True)
         self.data_to_store['ypos_grid.dat'] = {'data' : y_grid, 'edges': y_edges}
 
 
