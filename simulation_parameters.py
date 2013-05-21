@@ -18,7 +18,7 @@ class parameter_storage(object):
 
     def set_default_params(self):
         self.params['simulator'] = 'nest' # 'brian' #
-        self.params['abstract'] = False
+        self.params['abstract'] = True
 
         # ###################
         # HEXGRID PARAMETERS
@@ -36,16 +36,16 @@ class parameter_storage(object):
 #        self.params['N_V'], self.params['N_theta'] = 8, 8# resolution in velocity norm and direction
  
 #         Medium-scale system
-        self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
-        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
-        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-        self.params['N_V'], self.params['N_theta'] = 5, 5# resolution in velocity norm and direction
-# 
-#         Small-scale system
-#        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
+#        self.params['N_RF'] = 60 # np.int(n_cells/N_V/N_theta)
 #        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
 #        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
-#        self.params['N_V'], self.params['N_theta'] = 4, 4# resolution in velocity norm and direction
+#        self.params['N_V'], self.params['N_theta'] = 5, 5# resolution in velocity norm and direction
+# 
+#         Small-scale system
+        self.params['N_RF'] = 40# np.int(n_cells/N_V/N_theta)
+        self.params['N_RF_X'] = np.int(np.sqrt(self.params['N_RF']*np.sqrt(3)))
+        self.params['N_RF_Y'] = np.int(np.sqrt(self.params['N_RF'])) # np.sqrt(np.sqrt(3)) comes from resolving the problem "how to quantize the square with a hex grid of a total of N_RF dots?"
+        self.params['N_V'], self.params['N_theta'] = 1, 16# resolution in velocity norm and direction
 
         # Minimum sized system
 #        self.params['N_RF'] = 9# np.int(n_cells/N_V/N_theta)
@@ -78,7 +78,7 @@ class parameter_storage(object):
         self.params['sigma_RF_pos'] = .05 # some variability in the position of RFs
         self.params['sigma_RF_speed'] = .30 # some variability in the speed of RFs
         self.params['sigma_RF_direction'] = .25 * 2 * np.pi # some variability in the direction of RFs
-        self.params['sigma_theta_training'] = 2 * np.pi * 0.00
+        self.params['sigma_theta_training'] = 2 * np.pi * 0.05
 
         # ###################
         # NETWORK PARAMETERS
@@ -212,7 +212,7 @@ class parameter_storage(object):
         # ######################
         self.params['seed'] = 12345
         self.params['np_random_seed'] = 0
-        self.params['t_sim'] = 1600.                 # [ms] total simulation time
+        self.params['t_sim'] = 5000.                 # [ms] total simulation time
         self.params['t_stimulus'] = 1000.            # [ms] time for a stimulus of speed 1.0 to cross the whole visual field from 0 to 1.
         self.params['t_blank'] = 200.               # [ms] time for 'blanked' input
         self.params['t_start'] = 200.           # [ms] Time before stimulus starts
@@ -221,7 +221,7 @@ class parameter_storage(object):
         self.params['input_spikes_seed'] = 0
         self.params['dt_sim'] = self.params['delay_range'][0] * 1 # [ms] time step for simulation
         if self.params['abstract']:
-            self.params['dt_rate'] = 1.                # [ms] time step for the non-homogenous Poisson process
+            self.params['dt_rate'] = 5.                # [ms] time step for the non-homogenous Poisson process
         else:
             self.params['dt_rate'] = .1                # [ms] time step for the non-homogenous Poisson process
         # 5.0 for abstract learning, 0.1 when used as envelope for poisson procees
@@ -269,10 +269,10 @@ class parameter_storage(object):
         # ###################
         # TRAINING PARAMETERS
         # ###################
-        self.params['n_theta'] = 1 # number of different orientations to train with
+        self.params['n_theta'] = 16 # number of different orientations to train with
         self.params['n_speeds'] = 1
         self.params['n_cycles'] = 1
-        self.params['n_stim_per_direction'] = 40 # each direction is trained this many times
+        self.params['n_stim_per_direction'] = 2 # each direction is trained this many times
 
 
         # ######
@@ -363,7 +363,12 @@ class parameter_storage(object):
 #            folder_name += '_wsx%.2e_wsv%.2e/'  % \
 #                    (self.params['w_sigma_x'], self.params['w_sigma_v'])
 
+            if self.params['abstract']:
+                folder_name = 'Abstract/'
+
             self.params['folder_name'] = folder_name
+
+
         else:
             self.params['folder_name'] = folder_name
         print 'Folder name:', self.params['folder_name']
