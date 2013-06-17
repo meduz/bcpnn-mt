@@ -401,7 +401,7 @@ class NetworkModel(object):
         for i_, tgt in enumerate(tgt_cells):
             if self.params['direction_based_conn']:
                 p, latency = CC.get_p_conn_vec_xpred(tp_src, tp_tgt[tgt, :], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['connectivity_radius'])
-            else:
+            else: # it's motion_based connectivity
                 p, latency = CC.get_p_conn_vec(tp_src, tp_tgt[tgt, :], self.params['w_sigma_x'], self.params['w_sigma_v'], self.params['connectivity_radius'], self.params['maximal_latency'])
             if conn_type[0] == conn_type[1]:
                 p[tgt], latency[tgt] = 0., 0.
@@ -536,7 +536,6 @@ class NetworkModel(object):
         p_max = utils.get_pmax(self.params['p_%s' % conn_type], self.params['w_sigma_isotropic'], conn_type)
         connector = DistanceDependentProbabilityConnector('%f * exp(-d/(2*%f**2))' % (p_max, params['w_sigma_isotropic']), allow_self_connections=False, \
                 weights=w_dist, delays=delay_dist, space=self.torus)#, n_connections=n_conn_ee)
-        print 'p_max for %s' % conn_type, p_max
         if self.params['with_short_term_depression']:
             prj = Projection(src_pop, tgt_pop, connector, target=syn_type, synapse_dynamics=self.short_term_depression)
         else:
