@@ -5,7 +5,7 @@ import sys
 import os
 import simulation_parameters
 import matplotlib
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 from matplotlib import cm
 import json
 
@@ -37,7 +37,7 @@ class ConnectionPlotter(object):
         self.y_min, self.y_max = 1.0, .0
         self.quiver_scale = 2.
 
-    def create_fig(self, n_plots_x, n_plots_y, title=None, set_xlabel=True, set_ylabel=True):
+    def create_fig(self, n_plots_x, n_plots_y):
         self.n_plots_x, self.n_plots_y = n_plots_x, n_plots_y
         self.markersize_cell = 10
         self.markersize_min = 3
@@ -49,19 +49,9 @@ class ConnectionPlotter(object):
         pylab.rcParams['ytick.labelsize'] = 24
         self.fig = pylab.figure(figsize=(14, 10))
         self.ax = self.fig.add_subplot(n_plots_y, n_plots_x, 1, aspect='equal')
-        if title == None and self.params['connectivity_code'] == 'IIII':
-            title = 'Isotropic connectivity'
-        elif title == None:
-            title = 'Connectivity profile'
-        self.ax.set_title(title)
-        if set_xlabel:
-            self.ax.set_xlabel('$x$-position')
-        else:
-            self.ax.set_xticklabels([])
-        if set_ylabel:
-            self.ax.set_ylabel('$y$-position')
-        else:
-            self.ax.set_yticklabels([])
+        self.ax.set_title('Connectivity profile')
+        self.ax.set_xlabel('$x$-position')
+        self.ax.set_ylabel('$y$-position')
 
 
     def plot_cell(self, cell_id, exc=True, color='g', marker='D', annotate=False):
@@ -184,8 +174,7 @@ class ConnectionPlotter(object):
 
 
 
-    def plot_connection_type(self, src_gid, conn_type, marker, color, outgoing_conns=True, with_directions=False, plot_delays=False, annotate=False, with_histogram=False, \
-            set_colorbar=True):
+    def plot_connection_type(self, src_gid, conn_type, marker, color, outgoing_conns=True, with_directions=False, plot_delays=False, annotate=False, with_histogram=False):
         self.load_connection_list(conn_type)
         if outgoing_conns:
             src_tgts = utils.get_targets(self.connection_lists[conn_type], src_gid)
@@ -223,14 +212,13 @@ class ConnectionPlotter(object):
 
         if plot_delays:
             delay_min, delay_max = delays.min(), delays.max()
-            delay_min, delay_max = 0.5, 1500
 #            delay_min, delay_max = self.params['delay_range'][0], self.params['delay_range'][1]
             norm = matplotlib.mpl.colors.Normalize(vmin=delay_min, vmax=delay_max)
             m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cm.jet)#spring)
             m.set_array(np.arange(delay_min, delay_max, 0.01))
-            if set_colorbar and not self.delay_colorbar_set:
+            if not self.delay_colorbar_set:
                 cb = self.fig.colorbar(m)
-#                cb.set_label('Connection delays [ms]', fontsize=28)
+                cb.set_label('Connection delays [ms]', fontsize=28)
                 self.delay_colorbar_set = True
 
             x_src, y_src = src_tp[src_gid, 0], src_tp[src_gid, 1]
@@ -322,12 +310,10 @@ class ConnectionPlotter(object):
 
         xlim = self.ax.get_xlim()
         ylim = self.ax.get_ylim()
-
-#        self.ax.set_xlim((xlim[0] - 0.02, xlim[1] + 0.25))
-#        self.ax.set_ylim((ylim[0] - 0.10, ylim[1] + 0.10))
-
-        self.ax.set_xlim((-.1, 1.1))
-        self.ax.set_ylim((-.1, 1.1))
+        self.ax.set_xlim((xlim[0] - 0.02, xlim[1] + 0.25))
+        self.ax.set_ylim((ylim[0] - 0.10, ylim[1] + 0.10))
+#        self.ax.set_xlim((0, 1.3))
+#        self.ax.set_ylim((0, 1.3))
 #        print 'x_min, x_max', self.x_min, self.x_max
 #        print 'y_min, y_max', self.y_min, self.y_max
 #        self.ax.set_xlim((self.x_min - 0.05, self.x_max + 0.05))
@@ -480,19 +466,16 @@ if __name__ == '__main__':
         n_plots_x, n_plots_y = 1, 1
 
     np.random.seed(0)
-#    try:
     if len(sys.argv) > 1:
         if sys.argv[1].isdigit():
             gid = int(sys.argv[1])
         else:
             param_fn = sys.argv[1]
             if os.path.isdir(param_fn):
-#                param_fn += '/Parameters/simulation_parameters.info'
                 param_fn += '/Parameters/simulation_parameters.json'
-            import NeuroTools.parameters as NTP
-            fn_as_url = utils.convert_to_url(param_fn)
-            print 'Loading parameters from', param_fn
+            import json
             f = file(param_fn, 'r')
+            print 'Loading parameters from', param_fn
             params = json.load(f)
             gid = np.loadtxt(params['gids_to_record_fn'])[0]
     else:
@@ -505,49 +488,23 @@ if __name__ == '__main__':
 
 
     # here you can choose where the cell to plot should be sitting and what the preferred direction should be 
-    target_vector = (.5, .5)
-    direction = (.3, 0.)
+    target_vector = (.3, .5)
+    direction = (.5, 0.)
     gid = P.find_cell_closest_to_vector(target_vector, direction)
 #    gid = 2587
     P.plot_connection_histogram(gid, 'ee')
     print 'plotting gid', gid
 
-#    title = 'Motion-based anisotropic'
-#    set_ylabel = True
-#    set_colorbar = False
-
-#    title = 'Direction-based anisotropic'
-#    set_ylabel = False
-#    set_colorbar = False
-
-    title = 'Isotropic'
-    set_ylabel = False
-    set_colorbar = True
-
-    P.create_fig(n_plots_x, n_plots_y, title=title, set_xlabel=True, set_ylabel=set_ylabel)
+    P.create_fig(n_plots_x, n_plots_y)
 #    exc_color = (.5, .5, .5)
     outgoing_conns = True
-    ee_targets = P.plot_connection_type(gid, 'ee', 'o', 'k', outgoing_conns, with_directions, plot_delays=with_delays, with_histogram=with_histogram, set_colorbar=set_colorbar)
+    ee_targets = P.plot_connection_type(gid, 'ee', 'o', 'k', outgoing_conns, with_directions, plot_delays=with_delays, with_histogram=with_histogram)
     print 'ee_targets:', ee_targets
     print 'len(ee_targets):', len(ee_targets)
     outgoing_conns = False
-    ee_sources = P.plot_connection_type(gid, 'ee', '^', 'r', outgoing_conns, with_directions, plot_delays=with_delays, with_histogram=with_histogram, set_colorbar=set_colorbar)
+    ee_sources = P.plot_connection_type(gid, 'ee', '^', 'r', outgoing_conns, with_directions, plot_delays=with_delays, with_histogram=with_histogram)
 #    ei_targets = P.plot_connection_type(gid, 'ei', 'x', 'r', with_directions, plot_delays=with_delays)#, annotate=True)
     P.plot_cell(gid, exc=True, color='y')
-
-
-    if with_directions:
-        P.plot_directions()
-
-    title = title.replace(' ', '_')
-    output_fig = params['figures_folder'] + 'connectivity_profile_%s_wsx%.2f_wsv%.2f.png' % (title, params['w_sigma_x'], params['w_sigma_v'])
-    print 'Saving figure to', output_fig
-    pylab.savefig(output_fig)
-
-    output_fig = params['figures_folder'] + 'connectivity_profile_%s_wsx%.2f_wsv%.2f.pdf' % (title, params['w_sigma_x'], params['w_sigma_v'])
-    print 'Saving figure to', output_fig
-    pylab.savefig(output_fig)
-#    pylab.show()
 
 
     # search for an adequate inhibitory target cell
@@ -563,7 +520,7 @@ if __name__ == '__main__':
 #    inh_color = (.5, .5, .5)
 #    with_directions = False
 #    with_delays = False
-#    inh_color = 'b'
+    inh_color = 'b'
 #    inh_gid = ei_targets[1]
 #    print 'inh gid', inh_gid
 #    P.plot_cell(inh_gid, exc=False, color='b')
@@ -575,6 +532,19 @@ if __name__ == '__main__':
 #    gid = tgts[0]
 #    P.plot_cell(gid, exc=False, color='b')
 #    P.plot_connection_type(gid, 'ee', 'x', 'r', with_directions)
+
+    if with_directions:
+        P.plot_directions()
+
 #    P.plot_cells_as_dots(range(params['n_exc']), P.tp_exc)
 #    P.plot_cells_as_dots(range(params['n_exc']), P.tp_inh)
+
+
 #    P.make_legend()
+
+    output_fig = params['figures_folder'] + 'connectivity_profile_%d_wsx%.2f_wsv%.2f.png' % (gid, params['w_sigma_x'], params['w_sigma_v'])
+    print 'Saving figure to', output_fig
+    pylab.savefig(output_fig)
+
+#    pylab.show()
+

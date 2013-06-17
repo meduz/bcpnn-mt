@@ -1,9 +1,8 @@
 import matplotlib
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import pylab
 import PlotPrediction as P
 import sys
-import NeuroTools.parameters as ntp
 import simulation_parameters
 import os
 import utils
@@ -24,8 +23,8 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 #    params['t_sim'] = 1200
 
     plotter = P.PlotPrediction(params, data_fn)
-    pylab.rcParams['axes.labelsize'] = 22
-    pylab.rcParams['axes.titlesize'] = 22
+    pylab.rcParams['axes.labelsize'] = 14
+    pylab.rcParams['axes.titlesize'] = 16
     if plotter.no_spikes:
         return
 
@@ -39,67 +38,29 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
             params['w_sigma_x'], params['w_sigma_v'], params['delay_scale'], params['connectivity_radius'], params['w_tgt_in_per_cell_ee'])
 
 
-#    plotter.create_fig()  # create an empty figure
-#    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.2)
-#    plotter.n_fig_x = 1
-#    plotter.n_fig_y = 2
-#    plotter.plot_input_spikes_sorted_in_space(1, c='b', sort_idx=0, ms=1) 
-#    plotter.plot_output_spikes_sorted_in_space(1, 'exc', c='k', sort_idx=0, ms=1) 
-#    plotter.plot_input_spikes_sorted_in_space(2, c='b', sort_idx=2, ms=1) 
-#    plotter.plot_output_spikes_sorted_in_space(2, 'exc', c='k', sort_idx=2, ms=1) 
-#    output_fn = output_fn_base + '_sorted_by_tp.png'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn, dpi=200)
-
-#    plotter.plot_rasterplot('inh', 2)               # 2 
-
-#    plotter.plot_rasterplot('exc', 1)               # 1 
-#    plotter.plot_rasterplot('inh', 2)               # 2 
-
     plotter.create_fig()  # create an empty figure
+    pylab.subplots_adjust(left=0.07, bottom=0.07, right=0.97, top=0.93, wspace=0.3, hspace=.2)
     plotter.n_fig_x = 2
-    plotter.n_fig_y = 2
-#    plotter.plot_network_activity('exc', 1)
-#    plotter.plot_network_activity('inh', 2, set_ylabel=False)
-    plotter.plot_vx_grid_vs_time(1)              # 3 
-    plotter.plot_vy_grid_vs_time(2)              # 4 
-    plotter.plot_x_grid_vs_time(3)
-    plotter.plot_y_grid_vs_time(4)
-
-#    axes = plotter.fig.get_axes()
-#    points = []
-#    bbs = []
-#    for i_, ax in enumerate(axes):
-#        bb = ax.get_position()
-#        pts = bb.get_points()
-#        points.append(pts)
-#        bbs.append(bb)
-#        print 'ax %d bounding box:' % i_, bb, '\tpoints:', pts
-#    print '[[left bottom] [ width height]]'
-#    
-       #! Get relative position of subplots axes as Bbox object.
-#       bbax1=ax1.get_position()
-#       bbax2=ax2.get_position()
-       #! Get relative position of subplots axes as Bbox and get position in a
-       #! ndarray:[[left bottom] [ width height]]
-#       posax1 = bbax1.get_points()
-#       posax2 = bbax2.get_points()
-       #! Lower subplot ax1 bottom and decrease height of subplot ax2
-#       posax1[0][1]=posax1[0][1]-0.2/float(subplot_dim[0])
-#       posax2[1][1]=posax2[1][1]-0.2/float(subplot_dim[0])
-
+    plotter.n_fig_y = 3
+    plotter.plot_rasterplot('exc', 1)               # 1 
+    plotter.plot_rasterplot('inh', 2)               # 2 
+    plotter.plot_vx_grid_vs_time(3)              # 3 
+    plotter.plot_vy_grid_vs_time(4)              # 4 
+    plotter.plot_x_grid_vs_time(5)
+    plotter.plot_y_grid_vs_time(6)
     output_fn = output_fn_base + '_0.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
-
-    output_fn = output_fn_base + '_0.svg'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
-
     output_fn = output_fn_base + '_0.pdf'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
+#    output_fn = output_fn_base + '_0.eps'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
 
+
+
+    # poplation level, short time-scale
     plotter.n_fig_x = 3
     plotter.n_fig_y = 2
     plotter.create_fig()
@@ -114,26 +75,13 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
     output_fn = output_fn_base + '_1.png'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
-    output_fn = output_fn_base + '_1.svg'
+    output_fn = output_fn_base + '_1.pdf'
     print 'Saving figure to:', output_fn
     pylab.savefig(output_fn, dpi=200)
-
-
-#    output_fn = output_fn_base + '_1.pdf'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn, dpi=200)
 #    output_fn = output_fn_base + '_1.eps'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)
 
-
-#    plotter.n_fig_x = 1
-#    plotter.n_fig_y = 1
-#    plotter.create_fig()  # create an empty figure
-#    plotter.plot_rasterplot('inh', 1)               # 2 
-#    output_fn = output_fn_base + '_rp_inh.png'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn, dpi=200)
 
 
 #    plotter.plot_theta_estimates(5)
@@ -164,35 +112,34 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
 
     # fig 4
-#    plotter.n_fig_x = 1
-#    plotter.n_fig_y = 2
-#    plotter.create_fig()  # create an empty figure
-#    plotter.plot_network_activity('exc', 1)
-#    plotter.plot_network_activity('inh', 2)
-#    output_fn = output_fn_base + '_4.png'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn, dpi=200)
-#    output_fn = output_fn_base + '_4.pdf'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn, dpi=200)
+    plotter.n_fig_x = 1
+    plotter.n_fig_y = 2
+    plotter.create_fig()  # create an empty figure
+    plotter.plot_network_activity('exc', 1)
+    plotter.plot_network_activity('inh', 2)
+    output_fn = output_fn_base + '_4.png'
+    print 'Saving figure to:', output_fn
+    pylab.savefig(output_fn, dpi=200)
+    output_fn = output_fn_base + '_4.pdf'
+    print 'Saving figure to:', output_fn
+    pylab.savefig(output_fn, dpi=200)
 #    output_fn = output_fn_base + '_4.eps'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)
 
 
 
-#    plotter.n_fig_x = 1
-#    plotter.n_fig_y = 1
-#    plotter.create_fig()
-#    weights = [plotter.nspikes_binned_normalized[i, :].sum() / plotter.n_bins for i in xrange(plotter.n_cells)]
-#    plotter.quiver_plot(weights, fig_cnt=1)
-#    output_fn = output_fn_base + '_quiver.png'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn, dpi=200)
-
-#    output_fn = output_fn_base + '_quiver.pdf'
-#    print 'Saving figure to:', output_fn
-#    pylab.savefig(output_fn, dpi=200)
+    plotter.n_fig_x = 1
+    plotter.n_fig_y = 1
+    plotter.create_fig()
+    weights = [plotter.nspikes_binned_normalized[i, :].sum() / plotter.n_bins for i in xrange(plotter.n_cells)]
+    plotter.quiver_plot(weights, fig_cnt=1)
+    output_fn = output_fn_base + '_quiver.png'
+    print 'Saving figure to:', output_fn
+    pylab.savefig(output_fn, dpi=200)
+    output_fn = output_fn_base + '_quiver.pdf'
+    print 'Saving figure to:', output_fn
+    pylab.savefig(output_fn, dpi=200)
 #    output_fn = output_fn_base + '_quiver.eps'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)
@@ -213,7 +160,7 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
 #    plotter.make_infotextbox()
 
-    pylab.show()
+#    pylab.show()
 
 
 #    plotter.plot_nspikes_binned()               # 1
@@ -227,12 +174,12 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         param_fn = sys.argv[1]
         if os.path.isdir(param_fn):
-            param_fn += '/Parameters/simulation_parameters.info'
-        import NeuroTools.parameters as NTP
-        fn_as_url = utils.convert_to_url(param_fn)
-        print 'debug ', fn_as_url
-        params = NTP.ParameterSet(fn_as_url)
+            param_fn += '/Parameters/simulation_parameters.json'
+
+        import json
+        f = file(param_fn, 'r')
         print 'Loading parameters from', param_fn
+        params = json.load(f)
         plot_prediction(params=params)
 
     else:
