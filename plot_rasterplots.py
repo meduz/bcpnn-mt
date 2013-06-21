@@ -4,14 +4,19 @@ and the output rasterplots in the middle and lower panel
 """
 import sys
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import pylab
 import numpy as np
 import re
 import utils
 import os
-import rcParams
-rcP= rcParams.rcParams
+rcP= { 'axes.labelsize' : 24,
+            'label.fontsize': 24,
+            'xtick.labelsize' : 24, 
+            'ytick.labelsize' : 24, 
+            'axes.titlesize'  : 32,
+            'legend.fontsize': 9}
+
 
 if len(sys.argv) > 1:
     param_fn = sys.argv[1]
@@ -29,7 +34,7 @@ else:
     params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
 
 
-def plot_input_spikes(ax, shift=0, m='o', c='k'):
+def plot_input_spikes(ax, shift=0, m='o', c='k', ms=2):
     """
     Shift could be used when plotting in the same axis as the output spikes
     """
@@ -38,17 +43,17 @@ def plot_input_spikes(ax, shift=0, m='o', c='k'):
         fn = params['input_st_fn_base'] + str(cell) + '.npy'
         spiketimes = np.load(fn)
         nspikes = len(spiketimes)
-        ax.plot(spiketimes, cell * np.ones(nspikes) + shift, m, color=c, alpha=.1, markersize=2)
+        ax.plot(spiketimes, cell * np.ones(nspikes) + shift, m, color=c, alpha=.1, markersize=ms)
 
 
 tp = np.loadtxt(params['tuning_prop_means_fn'])
-def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0):
+def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0, ms=2):
     n_cells = params['n_exc']
     sorted_idx = tp[:, sort_idx].argsort()
 
-    if sort_idx == 0:
+    if sort_idx == 0 or sort_idx == 1:
         ylim = (0, 1)
-    else:
+    else: # it's a velocity --> adjust the range to plot
         crop = .8
         ylim = (crop * tp[:, sort_idx].min(), crop * tp[:, sort_idx].max())
     ylen = (abs(ylim[0] - ylim[1]))
@@ -67,13 +72,13 @@ def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0):
 #        ax.plot(spiketimes, i * np.ones(nspikes) + shift, m, color=c, markersize=2)
 
     if sort_idx == 0:
-        ylabel_txt ='Neurons sorted\nby x-pos'
+        ylabel_txt ='Neurons sorted by $x$-pos'
     elif sort_idx == 1:
-        ylabel_txt ='Neurons sorted\nby y-pos'
+        ylabel_txt ='Neurons sorted by $y$-pos'
     elif sort_idx == 2:
-        ylabel_txt ='Neurons sorted\nby x-direction'
+        ylabel_txt ='Neurons sorted by $v_x$, '
     elif sort_idx == 3:
-        ylabel_txt ='Neurons sorted\nby y-direction'
+        ylabel_txt ='Neurons sorted by $v_y$'
 
     ax.set_ylabel(ylabel_txt)
 
@@ -87,7 +92,7 @@ def plot_input_spikes_sorted_in_space(ax, shift=0., m='o', c='g', sort_idx=0):
 #    ax.set_yticklabels(y_ticklabels)
 
 
-def plot_output_spikes_sorted_in_space(ax, cell_type, shift=0., m='o', c='g', sort_idx=0):
+def plot_output_spikes_sorted_in_space(ax, cell_type, shift=0., m='o', c='g', sort_idx=0, ms=2):
     n_cells = params['n_%s' % cell_type]
     fn = params['%s_spiketimes_fn_merged' % cell_type] + '.ras'
     nspikes, spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
@@ -106,7 +111,7 @@ def plot_output_spikes_sorted_in_space(ax, cell_type, shift=0., m='o', c='g', so
             y_pos = (tp[cell, sort_idx] % 1.) / ylen * (abs(ylim[0] - ylim[1]))
         else:
             y_pos = (tp[cell, sort_idx]) / ylen * (abs(ylim[0] - ylim[1]))
-        ax.plot(spiketimes[cell], y_pos * np.ones(nspikes[cell]), 'o', color='k', markersize=2)
+        ax.plot(spiketimes[cell], y_pos * np.ones(nspikes[cell]), 'o', color='k', markersize=ms)
 
 #    n_yticks = 6
 #    y_tick_idx = np.linspace(0, n_cells, n_yticks)
@@ -138,9 +143,11 @@ pylab.rcParams.update(rcP)
 #ax2 = fig.add_subplot(412)
 #ax3 = fig.add_subplot(413)
 #ax4 = fig.add_subplot(414)
-fig = pylab.figure(figsize=(14, 12))
-ax1 = fig.add_subplot(211)
-ax2 = fig.add_subplot(212)
+fig = pylab.figure()#figsize=(14, 12))
+pylab.subplots_adjust(bottom=.15, left=.15)#hspace=.03)
+ax1 = fig.add_subplot(111)
+#fig2 = pylab.figure(figsize=(14, 12))
+#ax2 = fig2.add_subplot(111)
 #ax3 = fig.add_subplot(413)
 #ax4 = fig.add_subplot(414)
 
@@ -155,20 +162,24 @@ ax2 = fig.add_subplot(212)
 
 
 # x-position
-plot_input_spikes_sorted_in_space(ax1, c='b', sort_idx=0) 
-plot_output_spikes_sorted_in_space(ax1, 'exc', c='k', sort_idx=0) 
+plot_input_spikes_sorted_in_space(ax1, c='b', sort_idx=0, ms=3) 
+plot_output_spikes_sorted_in_space(ax1, 'exc', c='k', sort_idx=0, ms=3) 
 
 # sorted by velocity in direction x / y
-plot_input_spikes_sorted_in_space(ax2, c='b', sort_idx=2)
-plot_output_spikes_sorted_in_space(ax2, 'exc', c='k', sort_idx=2) 
+#plot_input_spikes_sorted_in_space(ax2, c='b', sort_idx=2, ms=3)
+#plot_output_spikes_sorted_in_space(ax2, 'exc', c='k', sort_idx=2, ms=3) 
 
 
 #plot_spikes(ax3, fn_exc, params['n_exc'])
 #plot_spikes(ax4, fn_inh, params['n_inh'])
 
 
+xticks = [0, 500, 1000, 1500]
+ax1.set_xticks(xticks)
+ax1.set_xticklabels(['%d' % i for i in xticks])
+ax1.set_yticklabels(['', '.2', '.4', '.6', '.8', '1.0'])
 ax1.set_xlabel('Time [ms]')
-ax2.set_xlabel('Time [ms]')
+#ax2.set_xlabel('Time [ms]')
 #ax3.set_xlabel('Time [ms]')
 #ax4.set_xlabel('Time [ms]')
 
@@ -178,7 +189,9 @@ ax2.set_xlabel('Time [ms]')
 #ax4.set_ylim((0, params['n_inh'] + 1))
 
 ax1.set_xlim((0, params['t_sim']))
-ax2.set_xlim((0, params['t_sim']))
+#ax2.set_xlim((0, params['t_sim']))
+#ax2.set_ylim((-3, 3))
+
 #ax3.set_xlim((0, params['t_sim']))
 #ax4.set_xlim((0, params['t_sim']))
 

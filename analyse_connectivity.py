@@ -362,8 +362,8 @@ class ConnectivityAnalyser(object):
 
         c_x /= n_tgt
         c_v /= n_tgt
-#        c_x *= self.params['scale_latency']
-#        c_v *= self.params['scale_latency']
+#        c_x *= self.params['connectivity_radius']
+#        c_v *= self.params['connectivity_radius']
         return c_x, c_v
 #        n_tgt =
 
@@ -398,9 +398,9 @@ class ConnectivityAnalyser(object):
             for src in xrange(n_src):
                 if conn_type[0] == conn_type[1]: # no self-connection
                     if (src != tgt):
-                        p[src], latency[src] = CC.get_p_conn(self.tp_src[src, :], self.tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
+                        p[src], latency[src] = CC.get_p_conn(self.tp_src[src, :], self.tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['connectivity_radius'])
                 else: # different populations --> same indices mean different cells, no check for src != tgt
-                    p[src], latency[src] = CC.get_p_conn(self.tp_src[src, :], self.tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['scale_latency'])
+                    p[src], latency[src] = CC.get_p_conn(self.tp_src[src, :], self.tp_tgt[tgt, :], params['w_sigma_x'], params['w_sigma_v'], params['connectivity_radius'])
             # sort connection probabilities and select remaining connections
             sorted_indices = np.argsort(p)
             if conn_type[0] == 'e':
@@ -412,10 +412,9 @@ class ConnectivityAnalyser(object):
                     sources = sorted_indices[:n_src_cells_per_neuron]
             w = (self.params['w_tgt_in_per_cell_%s' % conn_type] / p[sources].sum()) * p[sources]
             for i in xrange(len(sources)):
-                if w[i] > self.params['w_thresh_connection']:
-                    delay = min(max(latency[sources[i]] * self.params['delay_scale'], self.params['delay_range'][0]), self.params['delay_range'][1])  # map the delay into the valid range
-                    # create adjacency list for all local cells and store connection in class container
-                    self.target_adj_list[i_].append(sources[i])
+                delay = min(max(latency[sources[i]] * self.params['delay_scale'], self.params['delay_range'][0]), self.params['delay_range'][1])  # map the delay into the valid range
+                # create adjacency list for all local cells and store connection in class container
+                self.target_adj_list[i_].append(sources[i])
 
 
         # communicate the resulting target_adj_list to the root process
@@ -476,10 +475,11 @@ if __name__ == '__main__':
         else:
             param_fn = sys.argv[1]
             if os.path.isdir(param_fn):
-                param_fn += '/Parameters/simulation_parameters.info'
+                param_fn += '/Parameters/simulation_parameters.json'
             print 'Trying to load parameters from', param_fn
-            import NeuroTools.parameters as NTP
-            params = NTP.ParameterSet(utils.convert_to_url(param_fn))
+            import json
+            f = file(param_fn, 'r')
+            params = json.load(f)
     else:
         print '\nLoading the parameters currently in simulation_parameters.py\n'
         network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters

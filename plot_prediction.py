@@ -3,7 +3,6 @@ matplotlib.use('Agg')
 import pylab
 import PlotPrediction as P
 import sys
-import NeuroTools.parameters as ntp
 import simulation_parameters
 import os
 import utils
@@ -35,8 +34,8 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
     # fig 1
     # neuronal level
-    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_delayScale%d_scaleLatency%.2f_wee%.2f' % (params['prediction_fig_fn_base'], params['connectivity_code'], \
-            params['w_sigma_x'], params['w_sigma_v'], params['delay_scale'], params['scale_latency'], params['w_tgt_in_per_cell_ee'])
+    output_fn_base = '%s%s_wsigmaX_%.2f_wsigmaV%.2f_delayScale%d_connRadius%.2f_wee%.2f' % (params['prediction_fig_fn_base'], params['connectivity_code'], \
+            params['w_sigma_x'], params['w_sigma_v'], params['delay_scale'], params['connectivity_radius'], params['w_tgt_in_per_cell_ee'])
 
 
     plotter.create_fig()  # create an empty figure
@@ -90,21 +89,22 @@ def plot_prediction(params=None, data_fn=None, inh_spikes = None):
 
     # fig 3
     # population level, long time-scale
-    plotter.n_fig_x = 1
-    plotter.n_fig_y = 4
-    pylab.rcParams['legend.fontsize'] = 10
-    pylab.subplots_adjust(hspace=0.5)
-    plotter.create_fig()
-    plotter.plot_fullrun_estimates_vx(1)
-    plotter.plot_fullrun_estimates_vy(2)
-    plotter.plot_fullrun_estimates_theta(3)
-    plotter.plot_nspike_histogram(4)
-    output_fn = output_fn_base + '_2.png'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
-    output_fn = output_fn_base + '_2.pdf'
-    print 'Saving figure to:', output_fn
-    pylab.savefig(output_fn, dpi=200)
+
+#    plotter.n_fig_x = 1
+#    plotter.n_fig_y = 4
+#    pylab.rcParams['legend.fontsize'] = 10
+#    pylab.subplots_adjust(hspace=0.5)
+#    plotter.create_fig()
+#    plotter.plot_fullrun_estimates_vx(1)
+#    plotter.plot_fullrun_estimates_vy(2)
+#    plotter.plot_fullrun_estimates_theta(3)
+#    plotter.plot_nspike_histogram(4)
+#    output_fn = output_fn_base + '_2.png'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
+#    output_fn = output_fn_base + '_2.pdf'
+#    print 'Saving figure to:', output_fn
+#    pylab.savefig(output_fn, dpi=200)
 #    output_fn = output_fn_base + '_2.eps'
 #    print 'Saving figure to:', output_fn
 #    pylab.savefig(output_fn, dpi=200)
@@ -174,12 +174,12 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         param_fn = sys.argv[1]
         if os.path.isdir(param_fn):
-            param_fn += '/Parameters/simulation_parameters.info'
-        import NeuroTools.parameters as NTP
-        fn_as_url = utils.convert_to_url(param_fn)
-        print 'debug ', fn_as_url
-        params = NTP.ParameterSet(fn_as_url)
+            param_fn += '/Parameters/simulation_parameters.json'
+
+        import json
+        f = file(param_fn, 'r')
         print 'Loading parameters from', param_fn
+        params = json.load(f)
         plot_prediction(params=params)
 
     else:

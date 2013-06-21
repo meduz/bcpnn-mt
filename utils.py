@@ -780,10 +780,7 @@ def get_min_distance_to_stim(mp, tp_cell, params):
     tp_cell : same format as mp
     n_steps: steps for calculating the motion path
     """
-    if params['abstract']:
-        time = np.arange(0, params['t_sim'], params['dt_rate'])
-    else: # use larger time step to numerically find minimum distance --> faster
-        time = np.arange(0, params['t_sim'], 50 * params['dt_rate'])
+    time = np.arange(0, params['t_sim'], 50 * params['dt_rate'])
     spatial_dist = np.zeros(time.shape[0])
     for i_time, time_ in enumerate(time):
         x_pos_stim = mp[0] + mp[2] * time_ / params['t_stimulus']
@@ -1014,7 +1011,6 @@ def get_pmax(p_effective, w_sigma, conn_type):
     elif conn_type == 'ii':
         fit_wsigma = [2.21668319e+46,   9.05343215e-03,   1.76483061e+00, 4.01129051e-02]
     gradient  = fit_wsigma[0] * np.exp( - w_sigma**fit_wsigma[3] / fit_wsigma[1]) + fit_wsigma[2]
-    print 'debug utils.get_pmax gradient for %s ws %.1e: %.3e' % (conn_type, w_sigma, gradient)
     p_max = gradient * p_effective
 
     return p_max

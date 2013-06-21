@@ -8,7 +8,7 @@ PS = simulation_parameters.parameter_storage()
 params = PS.load_params()                       # params stores cell numbers, etc as a dictionary
 
 
-n_frames_per_stim = 80
+n_frames_per_stim = 100 * int(params['t_sim'] / params['t_stimulus'])
 n_theta = params['n_theta']
 n_speeds = params['n_speeds']
 n_cycles = params['n_cycles']
@@ -32,7 +32,7 @@ pylab.rcParams.update(rcParams)
 
 # setup
 fig = pylab.figure()
-ax = fig.add_subplot(111)
+ax = fig.add_subplot(111,aspect=1.)
 ax.set_xlim((-0.2, 1.2))
 ax.set_ylim((-0.2, 1.2))
 
@@ -62,7 +62,8 @@ def animate_trace(i):
     stim_id = i / n_frames_per_stim
     rnd_stim = rnd_idx[stim_id]
     theta = all_thetas[rnd_stim]
-    v = 5 * all_speeds[rnd_stim]
+#    v = 5 * all_speeds[rnd_stim]
+    v = all_speeds[rnd_stim]
     t0 = stim_id * n_frames_per_stim
     vx, vy = v * np.cos(theta), - v * np.sin(theta)
     x0, y0 = all_starting_pos[rnd_stim, :]
@@ -79,7 +80,7 @@ def animate_trace(i):
 #                               frames=300, interval=20, blit=True)
 
 anim_trace = animation.FuncAnimation(fig, animate_trace, init_func=init_rect,
-                               frames=n_frames_total, interval=10, blit=True)
+                               frames=n_frames_total, interval=5, blit=True)
 
 # save the animation as an mp4.  This requires ffmpeg or mencoder to be
 # installed.  The extra_args ensure that the x264 codec is used, so that

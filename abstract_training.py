@@ -33,7 +33,7 @@ class AbstractTrainer(object):
             self.tuning_prop = np.loadtxt(self.params['tuning_prop_means_fn'])
         except:
             print 'Tuning properties file not found: %s\n Will create new ones' % self.params['tuning_prop_means_fn']
-            self.tuning_prop = utils.set_tuning_prop(self.params, mode='hexgrid', v_max=self.params['v_max'])
+            self.tuning_prop = utils.set_tuning_prop(self.params, mode='hexgrid', cell_type='exc')
             np.savetxt(self.params['tuning_prop_means_fn'], self.tuning_prop)
 
         if comm != None:
@@ -94,7 +94,6 @@ class AbstractTrainer(object):
                 i += 1
         print 'Saving input params to:', self.params['parameters_folder'] + 'input_params.txt'
         np.savetxt(self.params['parameters_folder'] + 'input_params.txt', mp)
-
 
         stim = 0
         for cycle in xrange(self.params['n_cycles']):
@@ -194,6 +193,7 @@ class AbstractTrainer(object):
         dt = self.params['dt_rate'] # [ms] time step for the non-homogenous Poisson process 
         time = np.arange(0, params['t_sim'], dt)
         L_input = np.zeros((n_cells, time.shape[0]))
+
         for i_time, time_ in enumerate(time):
             if (i_time % 100 == 0):
                 print "t:", time_
@@ -519,16 +519,16 @@ class AbstractTrainer(object):
 
 if __name__ == '__main__':
 
-    try:
-        from mpi4py import MPI
-        USE_MPI = True
-        comm = MPI.COMM_WORLD
-        pc_id, n_proc = comm.rank, comm.size
-        print "USE_MPI:", USE_MPI, 'pc_id, n_proc:', pc_id, n_proc
-    except:
-        USE_MPI = False
-        pc_id, n_proc, comm = 0, 1, None
-        print "MPI not used"
+#    try:
+#        from mpi4py import MPI
+#        USE_MPI = True
+#        comm = MPI.COMM_WORLD
+#        pc_id, n_proc = comm.rank, comm.size
+#        print "USE_MPI:", USE_MPI, 'pc_id, n_proc:', pc_id, n_proc
+#    except:
+    USE_MPI = False
+    pc_id, n_proc, comm = 0, 1, None
+    print "MPI not used"
 
 
     PS = simulation_parameters.parameter_storage()
@@ -551,7 +551,7 @@ if __name__ == '__main__':
                 selected_connections.append((src, tgt))
     AT.set_selected_connections(selected_connections)
 #    AT.create_stimuli_going_through_center(random_order=False, test_stim=False)
-    AT.create_stimuli(random_order=False, test_stim=False)
+    AT.create_stimuli(random_order=True, test_stim=False)
     AT.merge_abstract_input_files()
 #    AT.train()
 #    n_iterations_total = params['n_theta'] * params['n_speeds'] * params['n_cycles'] * params['n_stim_per_direction']

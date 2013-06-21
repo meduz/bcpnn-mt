@@ -1,6 +1,8 @@
 import matplotlib
 #matplotlib.use('Agg')
-import pylab
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import ImageGrid
+#import pylab
 import numpy as np
 import sys
 # --------------------------------------------------------------------------
@@ -25,12 +27,12 @@ params2 = {'backend': 'png',
           'figure.figsize': get_figsize(800)}
 
 def set_figsize(fig_width_pt):
-    pylab.rcParams['figure.figsize'] = get_figsize(fig_width_pt)
+    plt.rcParams['figure.figsize'] = get_figsize(fig_width_pt)
 
-pylab.rcParams.update(params2)
+plt.rcParams.update(params2)
 
 
-def plot_histogram(d, fig, gid=None, time_range=(0, 1000)):
+def plot_histogram(d, grid, gid=None, time_range=(0, 1000)):
     binsize = 50
     n_bins = (time_range[1] - time_range[0]) / binsize
 
@@ -43,7 +45,7 @@ def plot_histogram(d, fig, gid=None, time_range=(0, 1000)):
     # transform into rate
     n = n * (1000. / binsize)
     
-    ax = fig.add_subplot(212)
+    ax = grid[1]
     ax.bar(bins[:-1], n, width=binsize)
     ax.set_xlim(time_range)
     print 'n, bins', n, bins
@@ -58,8 +60,9 @@ for fn in fns:
     except:
         d = np.load(fn)
 
-    gid = 5444
-    time_range = (0, 3000)
+    gid = None
+#    gid = 5444
+    time_range = (0, 2000)
 
     if gid != None:
         spikes = d[d[:, 1] == gid, 0]
@@ -68,8 +71,12 @@ for fn in fns:
         spikes = d[:, 0]
         gids = d[:, 1]
 
-    fig = pylab.figure()
-    ax = fig.add_subplot(211)
+    fig = plt.figure()
+#    grid = ImageGrid(fig, 212, nrows_ncols=(2, 1), aspect=False)#, axes_pad=.1)
+#    grid = ImageGrid(fig, 211, nrows_ncols=(2, 1), aspect='auto')
+    grid = ImageGrid(fig, 211, nrows_ncols=(2, 1), aspect=False)
+     
+    ax = grid[0]
     if (d.ndim == 1):
         x_axis = np.arange(d.size)
         ax.scatter(x_axis, d)
@@ -78,16 +85,16 @@ for fn in fns:
     ax.set_title(fn)
 #    ax.set_xlim((0, 1000))
 #    print 'xlim:', ax.get_xlim()
-    ax.set_ylim((d[:, 1].min()-1, d[:, 1].max()+1))
+#    ax.set_ylim((d[:, 1].min()-1, d[:, 1].max()+1))
     ax.set_xlim(time_range)
 
-    plot_histogram(d, fig, gid, time_range=time_range)
+    plot_histogram(d, grid, gid, time_range=time_range)
 
-pylab.show()
+plt.show()
 
 #output_fn = 'delme.dat'
 #np.savetxt(output_fn, d)
 #output_fn = 'delme.png'
 #print output_fn
 #pylab.savefig(output_fn)
-pylab.show()
+plt.show()

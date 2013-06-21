@@ -5,6 +5,7 @@ import numpy as np
 import simulation_parameters
 import utils
 from matplotlib import cm
+import os
 
 class PlotPrediction(object):
     def __init__(self, params=None, data_fn=None):
@@ -55,7 +56,8 @@ class PlotPrediction(object):
         self.vx_tuning = self.tuning_prop[:, 2].copy()
         self.vx_tuning.sort()
         self.sorted_indices_vx = self.tuning_prop[:, 2].argsort()
-        self.vx_min, self.vx_max = .7 * self.tuning_prop[:, 2].min(), .7 * self.tuning_prop[:, 2].max()
+        self.vx_min, self.vx_max = -1.5, 1.5
+#        self.vx_min, self.vx_max = .3 * self.tuning_prop[:, 2].min(), .3 * self.tuning_prop[:, 2].max()
         # maximal range of vx_speeds
 #        self.vx_min, self.vx_max = np.min(self.vx_tuning), np.max(self.vx_tuning)
         self.vx_grid = np.linspace(self.vx_min, self.vx_max, self.n_vx_bins, endpoint=True)
@@ -65,8 +67,8 @@ class PlotPrediction(object):
         self.vy_tuning = self.tuning_prop[:, 3].copy()
         self.vy_tuning.sort()
         self.sorted_indices_vy = self.tuning_prop[:, 3].argsort()
-#        self.vy_min, self.vy_max = -0.5, 0.5
-        self.vy_min, self.vy_max = self.tuning_prop[:, 3].min(), self.tuning_prop[:, 3].max()
+        self.vy_min, self.vy_max = -1.5, 1.5
+#        self.vy_min, self.vy_max = self.tuning_prop[:, 3].min(), self.tuning_prop[:, 3].max()
 #        self.vy_min, self.vy_max = np.min(self.vy_tuning), np.max(self.vy_tuning)
         self.vy_grid = np.linspace(self.vy_min, self.vy_max, self.n_vy_bins, endpoint=True)
 
@@ -94,8 +96,8 @@ class PlotPrediction(object):
         fig_height = fig_width*golden_mean      # height in inches
         fig_size =  [fig_width,fig_height]
         params = {#'backend': 'png',
-                  'titel.fontsize': 16,
-                  'axes.labelsize': 14,
+                  'title.fontsize': 16,
+                  'axes.labelsize': 16,
 #                  'text.fontsize': 10,
 #                  'legend.fontsize': 10,
 #                  'xtick.labelsize': 8,
@@ -450,8 +452,9 @@ class PlotPrediction(object):
     def create_fig(self):
         print "plotting ...."
         self.fig = pylab.figure(figsize=self.fig_size)
-        pylab.subplots_adjust(hspace=0.4)
-        pylab.subplots_adjust(wspace=0.35)
+        pylab.subplots_adjust(hspace=0.02)
+        pylab.subplots_adjust(wspace=0.18)
+        pylab.subplots_adjust(top=0.97, right=0.97)
 
     def load_spiketimes(self, cell_type):
         if cell_type == 'inh':
@@ -499,7 +502,68 @@ class PlotPrediction(object):
         if show_blank:
             self.plot_blank(ax)
 
-    def plot_network_activity(self, cell_type, fig_cnt=1):
+
+    def plot_input_spikes_sorted_in_space(self, fig_cnt=1, shift=0., m='o', c='g', sort_idx=0, ms=2):
+        ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
+        sorted_idx = self.tuning_prop[:, sort_idx].argsort()
+
+        if sort_idx == 0 or sort_idx == 1:
+            ylim = (0, 1)
+        else: # it's a velocity --> adjust the range to plot
+            crop = .8
+            ylim = (crop * self.tuning_prop[:, sort_idx].min(), crop * self.tuning_prop[:, sort_idx].max())
+        ylen = (abs(ylim[0] - ylim[1]))
+        for i in xrange(self.params['n_exc']):
+            cell = sorted_idx[i]
+            fn = self.params['input_st_fn_base'] + str(cell) + '.npy'
+            if os.path.exists(fn):
+                spiketimes = np.load(fn)
+                nspikes = len(spiketimes)
+                if sort_idx == 0:
+                    y_pos = (self.tuning_prop[cell, sort_idx] % 1.) / ylen * (abs(ylim[0] - ylim[1]))
+                else:
+                    y_pos = (self.tuning_prop[cell, sort_idx]) / ylen * (abs(ylim[0] - ylim[1]))
+                ax.plot(spiketimes, y_pos * np.ones(nspikes) + shift, m, color=c, alpha=.05, markersize=2)
+
+        if sort_idx == 0:
+            ylabel_txt ='Neurons sorted\nby x-pos'
+        elif sort_idx == 1:
+            ylabel_txt ='Neurons sorted\nby y-pos'
+        elif sort_idx == 2:
+            ylabel_txt ='Neurons sorted\nby x-direction'
+        elif sort_idx == 3:
+            ylabel_txt ='Neurons sorted\nby y-direction'
+
+        ax.set_ylabel(ylabel_txt)
+
+
+
+    def plot_output_spikes_sorted_in_space(self, fig_cnt, cell_type, shift=0., m='o', c='g', sort_idx=0, ms=2):
+        ax = self.fig.add_subplot(self.n_fig_y, self.n_fig_x, fig_cnt)
+        n_cells = self.params['n_%s' % cell_type]
+        fn = self.params['%s_spiketimes_fn_merged' % cell_type] + '.ras'
+        nspikes, spiketimes = utils.get_nspikes(fn, n_cells, get_spiketrains=True)
+        sorted_idx = self.tuning_prop[:, sort_idx].argsort()
+
+        if sort_idx == 0:
+            ylim = (0, 1)
+        else:
+#            crop = .8
+#            ylim = (crop * self.tuning_prop[:, sort_idx].min(), crop * self.tuning_prop[:, sort_idx].max())
+            ylim = (-4, 4)
+            print '\n', 'sort_idx', sort_idx, ylim, 
+        ylen = (abs(ylim[0] - ylim[1]))
+        for i in xrange(n_cells):
+            cell = sorted_idx[i]
+            if sort_idx == 0:
+                y_pos = (self.tuning_prop[cell, sort_idx] % 1.) / ylen * (abs(ylim[0] - ylim[1]))
+            else:
+                y_pos = (self.tuning_prop[cell, sort_idx]) / ylen * (abs(ylim[0] - ylim[1]))
+            ax.plot(spiketimes[cell], y_pos * np.ones(nspikes[cell]), 'o', color='k', markersize=ms)
+            ax.set_ylim(ylim)
+
+
+    def plot_network_activity(self, cell_type, fig_cnt=1, set_ylabel=True):
 
         if cell_type == 'exc':
             n_cells = self.params['n_exc']
@@ -526,30 +590,33 @@ class PlotPrediction(object):
         ax.set_xlim((0, self.params['t_sim']))
         bins = np.linspace(0, self.params['t_sim'], n_bins, endpoint=True)
         ax.bar(bins, avg_activity, width=bins[1]-bins[0], )
-        ax.set_xlabel('Time [ms]')
-        ax.set_ylabel('Average firing rate [Hz]')
+#        ax.set_xlabel('Time [ms]')
+        ax.set_xticklabels([])
+        if set_ylabel:
+            ax.set_ylabel('Average firing rate [Hz]')
         ax.set_title('Activity of %s cells' % cell_type)
 
 
     def plot_vx_grid_vs_time(self, fig_cnt=1):
         print 'plot_vx_grid_vs_time ... '
-        xlabel = 'Time [ms]'
+        xlabel = ''#Time [ms]'
         ylabel = '$v_x$'
 #        title = '$v_x$ binned vs time'
         title = ''
         vx_grid, v_edges = self.bin_estimates(self.vx_grid, index=2)
-        self.plot_grid_vs_time(vx_grid, title, xlabel, ylabel, v_edges, fig_cnt)
+        self.plot_grid_vs_time(vx_grid, title, xlabel, ylabel, v_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=False)
         self.data_to_store['vx_grid.dat'] = {'data' : vx_grid, 'edges': v_edges}
 
 
 
     def plot_vy_grid_vs_time(self, fig_cnt=1):
         print 'plot_vy_grid_vs_time ...'
-        xlabel = 'Time [ms]'
+        xlabel = ''
+#        xlabel = 'Time [ms]'
         ylabel = '$v_y$'
         title = ''#$v_y$ binned vs time'
         vy_grid, v_edges = self.bin_estimates(self.vy_grid, index=3)
-        self.plot_grid_vs_time(vy_grid, title, xlabel, ylabel, v_edges, fig_cnt)
+        self.plot_grid_vs_time(vy_grid, title, xlabel, ylabel, v_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=False)
         self.data_to_store['vy_grid.dat'] = {'data' : vy_grid, 'edges': v_edges}
 
 
@@ -560,7 +627,8 @@ class PlotPrediction(object):
             ylabel = '$x_{predicted}$'
         title = ''#$x_{predicted}$ binned vs time'
         x_grid, x_edges = self.bin_estimates(self.x_grid, index=0)
-        self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt)
+#        self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=True)
+        self.plot_grid_vs_time(x_grid, title, xlabel, ylabel, x_edges, fig_cnt, max_conf=.05, set_colorbar=True, set_xlabels=True)
         self.data_to_store['xpos_grid.dat'] = {'data' : x_grid, 'edges': x_edges}
 
 
@@ -571,11 +639,12 @@ class PlotPrediction(object):
             ylabel = '$y_{predicted}$'
         title = ''#$y_{predicted}$ binned vs time'
         y_grid, y_edges = self.bin_estimates(self.y_grid, index=1)
-        self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt)
+#        self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt, max_conf=.05, set_colorbar=False, set_xlabels=True)
+        self.plot_grid_vs_time(y_grid, title, xlabel, ylabel, y_edges, fig_cnt, max_conf=.05, set_colorbar=True, set_xlabels=True)
         self.data_to_store['ypos_grid.dat'] = {'data' : y_grid, 'edges': y_edges}
 
 
-    def plot_grid_vs_time(self, data, title='', xlabel='', ylabel='', yticks=[], fig_cnt=1, show_blank=None):
+    def plot_grid_vs_time(self, data, title='', xlabel='', ylabel='', yticks=[], fig_cnt=1, show_blank=None, max_conf=None, set_colorbar=True, set_xlabels=True):
         """
         Plots a colormap / grid versus time
         """
@@ -594,32 +663,43 @@ class PlotPrediction(object):
         ax.set_yticks(y_ticks)
         ax.set_yticklabels(['%.2f' %i for i in yticks[::5]])
 
-        n_x_bins = len(self.t_ticks)
-        x_bin_labels = ['%d' % i for i in self.t_ticks]
-        ax.set_xticks(np.linspace(0, self.n_bins, n_x_bins))#range(self.n_bins)[::4])
-        ax.set_xticklabels(x_bin_labels)
 #        print  '\nDEBUG\n\t ticks', self.t_ticks
 #        ax.set_xticks(self.t_ticks)
 #        ax.set_xticklabels(['%d' %i for i in self.t_ticks])
 #        color_boundaries = (0., .5)
 
 #        max_conf = min(data.mean() + data.std(), data.max())
-        max_conf = data.max()
+        if max_conf == None:
+            max_conf = data.max()
         norm = matplotlib.mpl.colors.Normalize(vmin=0, vmax=max_conf)
         m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cm.jet)#jet)
         m.set_array(np.arange(0., max_conf, 0.01))
-        cb = pylab.colorbar(m, orientation='horizontal', aspect=40, anchor=(.5, .0))
-        ticklabels = cb.ax.get_xticklabels()
-#        print 'ticklabels', ticklabels, type(ticklabels)
-#        ticklabels = list(ticklabels)
-        ticklabel_texts = []
-        for text in ticklabels:
-            ticklabel_texts.append('%s' % text.get_text())
-        ticklabel_texts[-1] = '> %.1f' % max_conf
-        for i_, text in enumerate(ticklabels):
-            text.set_text(ticklabel_texts[i_])
-        cb.ax.set_xticklabels(ticklabel_texts)
-        cb.set_label('Prediction confidence')
+        if set_colorbar:
+
+            cb = pylab.colorbar(m, orientation='horizontal', aspect=40, anchor=(.5, .0))
+            ticklabels = cb.ax.get_xticklabels()
+    #        print 'ticklabels', ticklabels, type(ticklabels)
+    #        ticklabels = list(ticklabels)
+            ticklabel_texts = []
+            for text in ticklabels:
+                ticklabel_texts.append('%s' % text.get_text())
+            ticklabel_texts[-1] = '> %.2f' % max_conf
+            for i_, text in enumerate(ticklabels):
+                text.set_text(ticklabel_texts[i_])
+            cb.ax.set_xticklabels(ticklabel_texts)
+            cb.set_label('Prediction confidence')
+
+        if set_xlabels:
+            n_x_bins = len(self.t_ticks)
+            x_bin_labels = ['%d' % i for i in self.t_ticks]
+            ax.set_xticks(np.linspace(0, self.n_bins, n_x_bins))#range(self.n_bins)[::4])
+            ax.set_xticklabels(x_bin_labels)
+
+
+        else:
+            ax.set_xticks([])
+#            ax.set_xticklabels([])
+
         if show_blank:
             self.plot_blank_on_cmap(cax, txt='blank')
 
@@ -781,6 +861,11 @@ class PlotPrediction(object):
         ax.set_xlim((0, self.params['t_sim']))
         if show_blank:
             self.plot_blank(ax)
+        output_data = np.zeros((self.t_axis.size, 3))
+        output_data[:, 0] = self.t_axis
+        output_data[:, 1] = self.x_avg
+        output_data[:, 2] = self.x_stim
+        self.data_to_store['x_linear_vs_time.dat'] = {'data' : output_data}
 
 
     def plot_y_estimates(self, fig_cnt=1, show_blank=None):
@@ -807,6 +892,11 @@ class PlotPrediction(object):
         if show_blank:
             self.plot_blank(ax)
 
+        output_data = np.zeros((self.t_axis.size, 3))
+        output_data[:, 0] = self.t_axis
+        output_data[:, 1] = self.y_avg
+        output_data[:, 2] = self.y_stim
+        self.data_to_store['y_linear_vs_time.dat'] = {'data' : output_data}
 
 
     def plot_vx_estimates(self, fig_cnt=1, show_blank=None):
@@ -833,7 +923,11 @@ class PlotPrediction(object):
         if show_blank:
             self.plot_blank(ax)
 
-        output_data = np.array((self.t_axis, self.vx_avg))
+
+        output_data = np.zeros((self.t_axis.size, 3))
+        output_data[:, 0] = self.t_axis
+        output_data[:, 1] = self.vx_avg
+        output_data[:, 2] = np.ones(self.t_axis.size) * self.params['motion_params'][2]
         self.data_to_store['vx_linear_vs_time.dat'] = {'data' : output_data}
 
 
@@ -861,7 +955,10 @@ class PlotPrediction(object):
         if show_blank:
             self.plot_blank(ax)
 
-        output_data = np.array((self.t_axis, self.vy_avg))
+        output_data = np.zeros((self.t_axis.size, 3))
+        output_data[:, 0] = self.t_axis
+        output_data[:, 1] = self.vy_avg
+        output_data[:, 2] = np.ones(self.t_axis.size) * self.params['motion_params'][3]
         self.data_to_store['vy_linear_vs_time.dat'] = {'data' : output_data}
 
     def plot_theta_estimates(self, fig_cnt=1, show_blank=None):

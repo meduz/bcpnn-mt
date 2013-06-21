@@ -3,7 +3,8 @@ import re
 import json
 import sys
 
-script_name = 'plot_prediction.py'
+#script_name = 'plot_prediction.py'
+script_name = 'run_large_scale_analysis.py'
 
 
 def run_by_match(to_match):
@@ -30,10 +31,8 @@ if len(sys.argv) > 1:
     get_filenames(fn_in)
 
 
-
-
 conn_code = 'AIII'
 #to_match = '^LargeScaleModel_(.*)'
 #to_match = '^LargeScaleModel_AIII_bx1.00e-01_bv1.00e-01_wsigmax2.50e-01_wsigmav2.50e-01_wee(.*)'
 to_match = '^LargeScaleModel_AIII_(.*)'
-run_by_match(to_match)
+#run_by_match(to_match)

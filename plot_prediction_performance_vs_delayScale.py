@@ -50,7 +50,7 @@ def plot_performance_vs_scaleLatency():
     ax.plot(latencies, performance, lw=3)
 #    ax.plot(delays, performance, lw=3, label='with blank')
     ax.set_xlabel('scale latency')
-    ax.set_title('$\int_0^{t_{sim}} |x_{stim}(t) - x_{prediction}(t)| dt$ vs scale_latency')
+    ax.set_title('$\int_0^{t_{sim}} |x_{stim}(t) - x_{prediction}(t)| dt$ vs connectivity_radius')
 
 
 plot_performance_vs_scaleLatency()

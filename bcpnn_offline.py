@@ -1,73 +1,64 @@
 import numpy as np
-import time
-import os
-import re
-import utils
-import simulation_parameters
-import Bcpnn
-import CreateConnections
+import pylab
+try:
+    from mpi4py import MPI
+    USE_MPI = True
+    comm = MPI.COMM_WORLD
+    pc_id, n_proc = comm.rank, comm.size
+    print "USE_MPI:", USE_MPI, 'pc_id, n_proc:', pc_id, n_proc
+except:
+    USE_MPI = False
+    pc_id, n_proc, comm = 0, 1, None
+    print "MPI not used"
+
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
 
 pc_id, n_proc = comm.rank, comm.size
-print "Start process %d / %d " % (pc_id+1, n_proc)
 
-save_all = True # if True: z and e traces will be written to disk
+tau_dict = {'tau_zi' : 50.,    'tau_zj' : 5.,
+                'tau_ei' : 100.,   'tau_ej' : 100., 'tau_eij' : 100.,
+                'tau_pi' : 1000.,  'tau_pj' : 1000., 'tau_pij' : 1000.,
+                }
 
-network_params = simulation_parameters.parameter_storage()  # network_params class containing the simulation parameters
-params = network_params.load_params()                       # params stores cell numbers, etc as a dictionary
+# time axis
+dt = 0.1
+t_stop = 500
+t_axis = np.arange(0, t_stop, dt)
 
-CC = CreateConnections.create_initial_connection_matrix(params['n_mc'], output_fn=params['conn_mat_init'], sparseness=params['conn_mat_init_sparseness'])
-connection_matrix = np.load(params['conn_mat_init'])
-non_zeros = connection_matrix.nonzero()
-conns = zip(non_zeros[0], non_zeros[1])
-my_conns = utils.distribute_list(conns, n_proc, pc_id)
+# traces
+zi = np.zeros(t_axis.size)
 
-#for i in xrange(len(my_conns)):
-for i in xrange(2):
-    print "Pc %d conn:" % pc_id, i, my_conns[i]
-    pre_id = my_conns[i][0]
-    post_id = my_conns[i][1]
-    fn_pre = params['exc_spiketimes_fn_base'] + str(pre_id) + '.ras'
-    fn_post = params['exc_spiketimes_fn_base'] + str(post_id) + '.ras'
-    # load data
-    spiketimes_pre = np.loadtxt(fn_pre)[:, 0]
-    spiketimes_post = np.loadtxt(fn_post)[:, 0]
 
-    # convert
-#    print "spike_times_pre", spiketimes_pre
-#    print "spike_times_post", spiketimes_post
-    pre_trace = utils.convert_spiketrain_to_trace(spiketimes_pre, params['t_sim'])
-    post_trace = utils.convert_spiketrain_to_trace(spiketimes_post, params['t_sim'])
+# pre-spikes
+t_pre_start = 50.
+t_pre_stop = 150.
+n_pre = 10
 
-    # compute
-    wij, bias, pi, pj, pij, ei, ej, eij, zi, zj = Bcpnn.get_spiking_weight_and_bias(pre_trace, post_trace)
+# post-spikes
+t_post_start = 50.
+t_post_stop = 150.
+n_post = 10
 
-    # save
-    output_fn = params['weights_fn_base'] + "%d_%d.npy" % (pre_id, post_id)
-    np.save(output_fn, wij)
+spike_list_pre = np.random.uniform(t_pre_start, t_pre_stop, n_pre)
+spike_list_post = np.random.uniform(t_post_start, t_post_stop, n_post)
 
-    output_fn = params['bias_fn_base'] + "%d.npy" % (post_id)
-    np.save(output_fn, bias)
 
-    if (save_all):
-        output_fn = params['ztrace_fn_base'] + "%d.npy" % pre_id
-        np.save(output_fn, zi)
-        output_fn = params['ztrace_fn_base'] + "%d.npy" % post_id
-        np.save(output_fn, zj)
+# compute z_i trace
+for prespike in spike_list_pre:
+    idx = int(prespike / dt)
+    zi[idx:] += np.exp(-t_axis[idx:] / tau_dict['tau_zi'])
+for postspike in spike_list_post:
+    idx = int(postspike / dt)
+    zi[idx:] += np.exp(-t_axis[idx:] / tau_dict['tau_zi'])
 
-        output_fn = params['etrace_fn_base'] + "%d.npy" % pre_id
-        np.save(output_fn, ei)
-        output_fn = params['etrace_fn_base'] + "%d.npy" % post_id
-        np.save(output_fn, ej)
-        output_fn = params['etrace_fn_base'] + "%d_%d.npy" % (pre_id, post_id)
-        np.save(output_fn, eij)
 
-        output_fn = params['ptrace_fn_base'] + "%d.npy" % pre_id
-        np.save(output_fn, pi)
-        output_fn = params['ptrace_fn_base'] + "%d.npy" % post_id
-        np.save(output_fn, pj)
-        output_fn = params['ptrace_fn_base'] + "%d_%d.npy" % (pre_id, post_id)
-        np.save(output_fn, pij)
 
-#def get_spiking_weight_and_bias(pre_trace, post_trace, bin_size=1, tau_z=10, tau_e=100, tau_p=1000, dt=1, f_max=300., eps=1e-6):
+fig = pylab.figure()
+ax1 = fig.add_subplot(111)
+#ax2 = pylab.add_subplot(212)
+
+ax1.plot(t_axis, zi, label='zi')
+ax1.legend()
+
+pylab.show()
