@@ -17,25 +17,6 @@ def get_p_conn(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radius=1.0):
         \cdot exp(-\frac{(u_0-u_1)^2 + (v_0 - v_1)^2}{2 \cdot \sigma_V^2})
  
     """
-
-#    x0 = tp_src[0]
-#    y0 = tp_src[1]
-#    u0 = tp_src[2]
-#    v0 = tp_src[3]
-#    x1 = tp_tgt[0]
-#    y1 = tp_tgt[1]
-#    u1 = tp_tgt[2]
-#    v1 = tp_tgt[3]
-#    dx = utils.torus_distance(x0, x1)
-#    dy = utils.torus_distance(y0, y1)
-#    latency = np.sqrt(dx**2 + dy**2) / np.sqrt(u0**2 + v0**2)
-#    x_predicted = x0 + u0 * latency  
-#    y_predicted = y0 + v0 * latency  
-#    p = np.exp(-.5 * (utils.torus_distance(x_predicted, x1))**2 / w_sigma_x**2 \
-#               -.5 * (utils.torus_distance(y_predicted, y1))**2 / w_sigma_x**2) \
-#      * np.exp(-.5 * (u0 - u1)**2 / w_sigma_v ** 2 \
-#               -.5 * (v0 - v1)**2 / w_sigma_v ** 2)
-
     d_ij = utils.torus_distance2D(tp_src[0], tp_tgt[0], tp_src[1], tp_tgt[1])
     latency = d_ij / np.sqrt(tp_src[2]**2 + tp_src[3]**2)
 #    if latency < connectivity_radius:
@@ -54,8 +35,12 @@ def get_p_conn(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radius=1.0):
 #    else:
 #        return 0., 0.
 
-def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radius=1.0, maximal_latency=None):
+def get_p_conn_direction_based(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radius=1.0):
     """
+
+    Direction-basd connectivity
+    ---------------------------
+
     Calculates the connection probabilities for all source cells targeting one cell.
     tp_src = np.array, shape = (n_src, 4)
     tp_tgt = (x, y, u, v)
@@ -63,7 +48,7 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radius=1.0
     """
     n_src = tp_src[:, 0].size
     d_ij = utils.torus_distance2D_vec(tp_src[:, 0], tp_tgt[0] * np.ones(n_src), tp_src[:, 1], tp_tgt[1] * np.ones(n_src), w=np.ones(n_src), h=np.ones(n_src))
-    latency = d_ij / np.sqrt(tp_src[:, 2]**2 + tp_src[:, 3]**2)
+#    latency = d_ij / np.sqrt(tp_src[:, 2]**2 + tp_src[:, 3]**2)
 #    latency = d_ij / connectivity_radius
 
     v_src = np.array((tp_src[:, 2], tp_src[:, 3]))
@@ -100,10 +85,6 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radius=1.0
 #        invalid_idx = invalid_idx.nonzero()[0]
 #        p[invalid_idx] = 0.
         p[d_ij > connectivity_radius] = 0.
-    if maximal_latency != None:
-        p[latency > maximal_latency] = 0.
-
-    
     
     return p, d_ij
 #    return p, latency
@@ -112,9 +93,69 @@ def get_p_conn_vec(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radius=1.0
 #    p = np.exp(-dist_prediction_tgt**2 / (2*sigma_x**2)) * np.exp(v_cos_array/(sigma_v**2))
 
 
-
-def get_p_conn_vec_xpred(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radius=1.0):
+def get_p_conn_direction_and_orientation_based(tp_src, tp_tgt, w_sigma_x, w_sigma_v, w_sigma_theta, connectivity_radius=1.0):
     """
+
+    Direction-based + Orientation-tuning based connectivity
+    --------------------------------------------------------
+
+    Calculates the connection probabilities for all source cells targeting one cell.
+    tp_src = np.array, shape = (n_src, 4)
+    tp_tgt = (x, y, u, v)
+    """
+    n_src = tp_src[:, 0].size
+    d_ij = utils.torus_distance2D_vec(tp_src[:, 0], tp_tgt[0] * np.ones(n_src), tp_src[:, 1], tp_tgt[1] * np.ones(n_src), w=np.ones(n_src), h=np.ones(n_src))
+#    latency = d_ij / np.sqrt(tp_src[:, 2]**2 + tp_src[:, 3]**2)
+#    latency = d_ij / connectivity_radius
+
+    v_src = np.array((tp_src[:, 2], tp_src[:, 3]))
+    v_src = v_src.transpose()
+    v_tgt = np.array([tp_tgt[2], tp_tgt[3]])
+    v_tgt_norm = tp_tgt[2]**2 + tp_tgt[3]**2
+    v_src_norm = v_src[:, 0]**2 + v_src[:, 1]**2
+    v_cos_array = np.dot(v_src, v_tgt)
+    v_cos_array /= np.sqrt(v_src_norm * v_tgt_norm)
+
+    x_src = np.array((tp_src[:, 0], tp_src[:, 1]))
+    x_src = x_src.transpose()
+    x_tgt = np.array([tp_tgt[0], tp_tgt[1]])
+    x_tgt_norm = tp_tgt[0]**2 + tp_tgt[1]**2
+    x_src_norm = x_src[:, 0]**2 + x_src[:, 1]**2
+    
+    x_diff = utils.torus(x_tgt[0] * np.ones(n_src) - x_src[:, 0])
+    y_diff = utils.torus(x_tgt[1] * np.ones(n_src) - x_src[:, 1])
+
+    x_diff_ = np.array((x_diff, y_diff))
+
+    x_diff_ = x_diff_.transpose()
+    # norm of x_tgt - x_src
+    eps = 1e-20
+    x_norm = x_diff_[:, 0]**2 + x_diff_[:, 1]**2  + eps
+    
+    x_cos_array = np.dot(x_diff_, v_tgt)
+    x_cos_array /= np.sqrt(v_tgt_norm * x_norm)
+
+    p = np.exp(x_cos_array / (w_sigma_x**2)) * np.exp(v_cos_array/(w_sigma_v**2)) * np.exp(np.cos(tp_tgt[4] - tp_src[:, 4]) / w_sigma_theta**2)
+
+    if connectivity_radius < 1.0:
+#        invalid_idx = latency > connectivity_radius
+#        invalid_idx = d_ij > connectivity_radius
+#        invalid_idx = invalid_idx.nonzero()[0]
+#        p[invalid_idx] = 0.
+        p[d_ij > connectivity_radius] = 0.
+    
+    return p, d_ij
+#    return p, latency
+
+
+
+
+
+def get_p_conn_motion_based(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radius=1.0):
+    """
+    Motion-based connectivity 
+    -------------------------
+
     Calculates the connection probabilities for all source cells targeting one cell.
     tp_src = np.array, shape = (n_src, 4)
     tp_tgt = (x, y, u, v)
@@ -122,11 +163,10 @@ def get_p_conn_vec_xpred(tp_src, tp_tgt, w_sigma_x, w_sigma_v, connectivity_radi
     """
     n_src = tp_src[:, 0].size
 
-
     d_ij = utils.torus_distance2D_vec(tp_src[:, 0], tp_tgt[0] * np.ones(n_src), tp_src[:, 1], tp_tgt[1] * np.ones(n_src), w=np.ones(n_src), h=np.ones(n_src))
     latency = d_ij / np.sqrt(tp_src[:, 2]**2 + tp_src[:, 3]**2)
-    x_pred = tp_src[:, 0]  + tp_src[:, 2] * latency * connectivity_radius
-    y_pred = tp_src[:, 1]  + tp_src[:, 3] * latency * connectivity_radius
+    x_pred = tp_src[:, 0]  + tp_src[:, 2] * latency
+    y_pred = tp_src[:, 1]  + tp_src[:, 3] * latency
     d_pred_tgt = utils.torus_distance2D_vec(x_pred, tp_tgt[0] * np.ones(n_src), y_pred, tp_tgt[1] * np.ones(n_src), w=np.ones(n_src), h=np.ones(n_src))
 #    v_tuning_diff = utils.torus_distance2D_vec(tp_src[:, 2], tp_tgt[2] * np.ones(n_src), tp_src[:, 3], tp_tgt[3] * np.ones(n_src), w=np.ones(n_src), h=np.ones(n_src))
     v_tuning_diff = (tp_src[:, 2] - tp_tgt[2] * np.ones(n_src))**2 + (tp_src[:, 3] - tp_tgt[3] * np.ones(n_src))**2
