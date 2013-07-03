@@ -173,6 +173,7 @@ class parameter_storage(object):
         # SIMULATION PARAMETERS
         # ######################
         self.params['seed'] = 12345
+        self.params['motion_sequence_seed'] = 4321
         self.params['np_random_seed'] = 0
         self.params['t_sim'] = 1600.            # [ms] total simulation time
         self.params['t_stimulus'] = 1000.       # [ms] time for a stimulus of speed 1.0 to cross the whole visual field from 0 to 1.

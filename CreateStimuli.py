@@ -5,7 +5,15 @@ from matplotlib import animation
 
 
 class CreateStimuli(object):
-    def __init__(self, params, random_order):
+    def __init__():
+        pass
+
+    def create_motion_sequence_2D(params, random_order):
+        """Creates the motion parameters (x, y, u, v) for a sequence of 2-dim stimuli
+
+        Keyword arguments:
+        random_order -- (bool) if True the sequence is shuffled
+        """
 
         n_theta = params['n_theta']
         n_speeds = params['n_speeds']
@@ -127,7 +135,8 @@ if __name__ == '__main__':
     params = PS.load_params()                       # params stores cell numbers, etc as a dictionary
 
     random_order = False
-    CS = CreateStimuli(params, random_order)
+    CS = CreateStimuli()
+    CS.create_motion_sequence_2D(params, random_order)
 
     fig = pylab.figure()
     ax = fig.add_subplot(111)

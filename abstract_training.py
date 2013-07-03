@@ -79,7 +79,8 @@ class AbstractTrainer(object):
         mp = np.zeros((self.n_iterations_total, 4))
         n_iterations_per_cycle = self.params['n_theta'] * self.params['n_speeds'] * self.params['n_stim_per_direction']
             
-        CS = CreateStimuli.CreateStimuli(self.params, random_order)
+        CS = CreateStimuli.CreateStimuli()
+        CS.create_motion_sequence_2D(self.params, random_order)
         all_speeds, all_starting_pos, all_thetas = CS.get_motion_params(random_order)
 
         i = 0

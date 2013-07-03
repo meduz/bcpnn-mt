@@ -17,7 +17,8 @@ n_stim_total = n_speeds * n_theta * n_cycles * n_stim_per_direction
 n_frames_total = n_frames_per_stim * n_stim_total
 
 random_order = False
-CS = CreateStimuli.CreateStimuli(params, random_order)
+CS = CreateStimuli.CreateStimuli()
+CS.create_motion_sequence_2D(self.params, random_order)
 all_speeds, all_starting_pos, all_thetas = CS.get_motion_params(random_order=random_order)
 
 # arrays to be filled by the stimulus creation loops below
