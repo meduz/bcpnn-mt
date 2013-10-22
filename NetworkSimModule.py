@@ -12,7 +12,6 @@ t0 = time.time()
 import numpy as np
 import numpy.random as nprnd
 import sys
-#import NeuroTools.parameters as ntp
 import os
 import CreateConnections as CC
 import utils
@@ -908,7 +907,8 @@ if __name__ == '__main__':
     if pc_id == 0 and params['n_cells'] < max_neurons_to_record:
         import plot_prediction as pp
         pp.plot_prediction(params)
-        os.system('python plot_rasterplots.py %s' % ps.params['folder_name'])
+#        os.system('python plot_rasterplots.py %s' % ps.params['folder_name'])
+
 #        os.system('python plot_connectivity_profile.py %s' % ps.params['folder_name'])
 #    if pc_id == 1 or not(USE_MPI):
 #        os.system('python plot_connectivity_profile.py %s' % ps.params['folder_name'])

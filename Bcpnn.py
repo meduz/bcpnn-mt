@@ -1,7 +1,7 @@
 import numpy as np
 import utils
 import time
-from NeuroTools import signals as nts
+#from NeuroTools import signals as nts
 
 
 def bcpnn_offline_noColumns(params, conn_list, sim_cnt=0, save_all=False, comm=None):

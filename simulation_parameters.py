@@ -154,10 +154,10 @@ class parameter_storage(object):
         self.params['w_sigma_theta'] = 0.6 # how sensitive connectivity is on similarity between source and target cell
         self.params['w_sigma_isotropic'] = 0.25 # spatial reach of isotropic connectivity, should not be below 0.05 otherwise you don't get the desired p_effective 
         # for anisotropic connections each target cell receives a defined sum of incoming connection weights
-        self.params['w_tgt_in_per_cell_ee'] = 0.30 # [uS] how much input should an exc cell get from its exc source cells?
-        self.params['w_tgt_in_per_cell_ei'] = 1.50 # [uS] how much input should an inh cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ee'] = 0.16 # [uS] how much input should an exc cell get from its exc source cells?
+        self.params['w_tgt_in_per_cell_ei'] = 0.16 # [uS] how much input should an inh cell get from its exc source cells?
         self.params['w_tgt_in_per_cell_ie'] = 0.80 # [uS] how much input should an exc cell get from its inh source cells?
-        self.params['w_tgt_in_per_cell_ii'] = 0.05 # [uS] how much input should an inh cell get from its source cells?
+        self.params['w_tgt_in_per_cell_ii'] = 0.15 # [uS] how much input should an inh cell get from its source cells?
         self.params['w_tgt_in_per_cell_ee'] *= 5. / self.params['tau_syn_exc']
         self.params['w_tgt_in_per_cell_ei'] *= 5. / self.params['tau_syn_exc']
         self.params['w_tgt_in_per_cell_ie'] *= 10. / self.params['tau_syn_inh']
@@ -177,7 +177,7 @@ class parameter_storage(object):
         self.params['np_random_seed'] = 0
         self.params['t_sim'] = 1600.            # [ms] total simulation time
         self.params['t_stimulus'] = 1000.       # [ms] time for a stimulus of speed 1.0 to cross the whole visual field from 0 to 1.
-        self.params['t_blank'] = 0.           # [ms] time for 'blanked' input
+        self.params['t_blank'] = 200.           # [ms] time for 'blanked' input
         self.params['t_start'] = 0.           # [ms] Time before stimulus starts
         self.params['t_before_blank'] = self.params['t_start'] + 400.               # [ms] time when stimulus reappears, i.e. t_reappear = t_stimulus + t_blank
         self.params['tuning_prop_seed'] = 0     # seed for randomized tuning properties
@@ -293,10 +293,11 @@ class parameter_storage(object):
         self.params['connectivity_code'] = connectivity_code
 
         if folder_name == None:
-            if self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
-                folder_name = 'AdEx_a%.2e_b%.2e_' % (self.params['cell_params_exc']['a'], self.params['cell_params_exc']['b'])
-            else:
-               folder_name = 'ResultsBar_bx%.2e' % (self.params['blur_X'])
+#            if self.params['neuron_model'] == 'EIF_cond_exp_isfa_ista':
+#                folder_name = 'AdEx_a%.2e_b%.2e_' % (self.params['cell_params_exc']['a'], self.params['cell_params_exc']['b'])
+#            else:
+#               folder_name = 'ResultsBar_bx%.2e' % (self.params['blur_X'])
+            folder_name = 'ResultsTest_'
 
             folder_name += connectivity_code
             folder_name += '-'+ self.params['motion_type']
