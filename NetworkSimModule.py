@@ -17,9 +17,8 @@ import os
 import CreateConnections as CC
 import utils
 import simulation_parameters
-ps = simulation_parameters.parameter_storage()
-params = ps.params
-exec("from pyNN.%s import *" % params['simulator'])
+
+exec("from pyNN.nest import *")
 import pyNN
 import pyNN.space as space
 print 'pyNN.version: ', pyNN.__version__
@@ -909,19 +908,50 @@ class NetworkModel(object):
             fn = utils.convert_to_url(params['folder_name'] + 'times_dict_np%d.py' % self.n_proc)
 #            output = ntp.ParameterSet(output)
 #            output.save(fn)
+#             output_file = file(self.params['params_fn_json'], 'w')
+#             d = json.dump(self.params, output_file, sort_keys=True, indent=4)
 
 
 if __name__ == '__main__':
 
     input_created = False
+    # always call set_filenames to update the folder name and all depending filenames!
+    """
+    If you want to do a parameter sweep:
+        get the sys.argv:
+        e.g. 
+             w_sigma_x = float(sys.argv[1])
+             w_sigma_v = float(sys.argv[2])
+        and pass it to params
+             params['w_sigma_x'] = w_sigma_x
+             params['w_sigma_v'] = w_sigma_v
+        IMPORTANT:
+        results only get stored in different folders, when the sweep parameter (w_sigma_x/v) is contained in 
+        the main folder name params['folder_name']
+
+        set the filenames with the new parameter:
+        ps.set_filenames()
+    Alternatively, you can create the main folder name here:
+        ps.params['folder_name'] = None # sys.argv[1] + '=' + sys.argv[2] + '/' #'Sweep_%.3e' % self.params['w_tgt_in_per_cell_ee']
+        ps.set_filenames(folder_name=ps.params['folder_name'])
+    """
+
+#    fn = str(sys.argv[1])
+    ps = simulation_parameters.parameter_storage()#fn)
+    params = ps.params
+
+    w_sigma_x = float(sys.argv[1])
+    w_sigma_v = float(sys.argv[2])
+    params['w_sigma_x'] = w_sigma_x
+    params['w_sigma_v'] = w_sigma_v
 
 #    orientation = float(sys.argv[1])
 #    protocol = str(sys.argv[2])
 #    ps.params['motion_params'][4] = orientation
 #    ps.params['motion_protocol'] = protocol
 
-    # always call set_filenames to update the folder name and all depending filenames!
     ps.set_filenames()
+
 
     if pc_id == 0:
         ps.create_folders()
@@ -971,3 +1001,9 @@ if __name__ == '__main__':
     if comm != None:
         comm.Barrier()
 
+    if pc_id == 0 and params['n_cells'] < max_neurons_to_record:
+        import plot_prediction as pp
+        pp.plot_prediction(params)
+
+        os.system('python plot_rasterplots.py %s' % ps.params['folder_name'])
+        os.system('python plot_connectivity_profile.py %s' % ps.params['folder_name'])
